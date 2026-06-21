@@ -13,3 +13,5 @@ nzoyi-env/
 .pytest_cache/
 .mypy_cache/
 .DS_Store
+results/
+!results/.gitkeep

@@ -1,2 +1,4 @@
 numpy>=1.24
 pytest>=7.4
+streamlit>=1.28
+python-nmap>=0.7.1

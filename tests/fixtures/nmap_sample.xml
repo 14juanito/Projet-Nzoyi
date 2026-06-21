@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nmaprun scanner="nmap" args="nmap -sV -T3 -oX - 192.168.100.11" start="1700000000" version="7.94">
+  <host>
+    <address addr="192.168.100.11" addrtype="ipv4"/>
+    <ports>
+      <port protocol="tcp" portid="22">
+        <state state="open"/>
+        <service name="ssh" product="OpenSSH" version="8.9p1"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="open"/>
+        <service name="http" product="Apache httpd" version="2.4.52"/>
+      </port>
+      <port protocol="tcp" portid="443">
+        <state state="closed"/>
+        <service name="https"/>
+      </port>
+    </ports>
+  </host>
+</nmaprun>
