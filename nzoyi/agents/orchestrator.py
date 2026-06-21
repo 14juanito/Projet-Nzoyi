@@ -43,6 +43,15 @@ class OrchestratorAgent(BaseAgent):
         self.enumerator = EnumeratorAgent(ptt, profile)
         self.vulnerability = VulnerabilityAgent(ptt, profile)
         self.attack = AttackAgent(ptt, profile)
+        # Ordered agent list consumed by the interactive runners (nzoyi.ui).
+        self.pipeline: list[BaseAgent] = [
+            self.recon,
+            self.enumerator,
+            self.vulnerability,
+            self.evasion,
+            self.attack,
+            self.evaluation,
+        ]
 
     def _status(self, name: str, status: str, detail: str = "") -> None:
         if self.on_agent_status:

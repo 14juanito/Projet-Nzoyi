@@ -1,159 +1,229 @@
-"""Terminal UI — ASCII banner, colored boxes, and logging for NZOYI."""
+"""
+NZOYI — Terminal UI and visual styling.
+Provides the ASCII banner, colored output, and formatted logging.
+"""
 
 from __future__ import annotations
 
 import logging
+import re
 import sys
+from datetime import datetime
 from typing import Any
 
-# ── TTY detection ──────────────────────────────────────────────────────────
-_IS_TTY = hasattr(sys.stdout, "isatty") and sys.stdout.isatty()
 
+# ── ANSI color codes ─────────────────────────────────────────
 
 class Color:
-    """ANSI color codes — amber/wasp theme."""
-
     RESET = "\033[0m"
     BOLD = "\033[1m"
     DIM = "\033[2m"
 
-    AMBER = "\033[38;5;214m"
+    # Nzoyi palette : amber/gold (wasp theme)
     GOLD = "\033[38;5;220m"
+    AMBER = "\033[38;5;214m"
     ORANGE = "\033[38;5;208m"
-    HONEY = "\033[38;5;179m"
+    DARK = "\033[38;5;94m"
     WHITE = "\033[97m"
-    GREEN = "\033[38;5;82m"
+    GRAY = "\033[90m"
+    GREEN = "\033[38;5;114m"
     RED = "\033[38;5;196m"
-    CYAN = "\033[38;5;51m"
-    GREY = "\033[38;5;245m"
+    CYAN = "\033[38;5;81m"
+    YELLOW = "\033[38;5;228m"
+
+    BG_DARK = "\033[48;5;233m"
+
+    @staticmethod
+    def strip() -> bool:
+        """Disable colors if not a real terminal."""
+        return not hasattr(sys.stdout, "isatty") or not sys.stdout.isatty()
 
 
-def _c(text: str, *codes: str) -> str:
-    if not _IS_TTY:
+def c(text: str, color: str) -> str:
+    """Colorize text. Falls back to plain text if no TTY."""
+    if Color.strip():
         return text
-    return "".join(codes) + text + Color.RESET
+    return f"{color}{text}{Color.RESET}"
 
 
-def _box_line(content: str, width: int = 62) -> str:
-    inner = content[: width - 4]
-    return f"║ {inner:<{width - 4}} ║"
+# ── ASCII Art Banner ─────────────────────────────────────────
+
+BANNER = r"""
+{gold}███╗   ██╗{amber}███████╗{orange} ██████╗ {gold}██╗   ██╗{amber}██╗{reset}
+{gold}████╗  ██║{amber}╚══███╔╝{orange}██╔═══██╗{gold}╚██╗ ██╔╝{amber}██║{reset}
+{gold}██╔██╗ ██║{amber}  ███╔╝ {orange}██║   ██║{gold} ╚████╔╝ {amber}██║{reset}
+{gold}██║╚██╗██║{amber} ███╔╝  {orange}██║   ██║{gold}  ╚██╔╝  {amber}██║{reset}
+{gold}██║ ╚████║{amber}███████╗{orange}╚██████╔╝{gold}   ██║   {amber}██║{reset}
+{gold}╚═╝  ╚═══╝{amber}╚══════╝{orange} ╚═════╝ {gold}   ╚═╝   {amber}╚═╝{reset}
+"""
+
+BOX_TOP = "╭─────────────────────────────────────────────────────────────╮"
+BOX_MID = "├─────────────────────────────────────────────────────────────┤"
+BOX_BOT = "╰─────────────────────────────────────────────────────────────╯"
+BOX_W = 61  # inner width
 
 
-ASCII_LOGO = r"""
- ███╗   ██╗███████╗ ██████╗ ██╗   ██╗██╗
- ████╗  ██║╚══███╔╝██╔═══██╗╚██╗ ██╔╝██║
- ██╔██╗ ██║  ███╔╝ ██║   ██║ ╚████╔╝ ██║
- ██║╚██╗██║ ███╔╝  ██║   ██║  ╚██╔╝  ██║
- ██║ ╚████║███████╗╚██████╔╝   ██║   ██║
- ╚═╝  ╚═══╝╚══════╝ ╚═════╝    ╚═╝   ╚═╝
-""".strip("\n")
+def _pad(text: str, width: int = BOX_W - 4) -> str:
+    """Pad text to fixed width inside box, accounting for ANSI codes."""
+    clean = re.sub(r"\033\[[0-9;]*m", "", text)
+    padding = max(0, width - len(clean))
+    return text + " " * padding
 
 
-def print_banner(version: str) -> None:
-    lines = ASCII_LOGO.split("\n")
-    for line in lines:
-        print(_c(line, Color.BOLD, Color.ORANGE))
-    print()
+def print_banner(version: str = "0.1.0") -> None:
+    """Print the full NZOYI startup banner."""
+    if Color.strip():
+        formatted = BANNER.format(gold="", amber="", orange="", reset="")
+    else:
+        formatted = BANNER.format(
+            gold=Color.GOLD, amber=Color.AMBER, orange=Color.ORANGE, reset=Color.RESET
+        )
 
-    border = _c("╔" + "═" * 62 + "╗", Color.AMBER)
-    footer = _c("╚" + "═" * 62 + "╝", Color.AMBER)
-    print(border)
-    for text in (
-        f"🐝 NZOYI v{version} — Multi-Agent IDS Resilience Framework",
-        "⚡ Adaptive Q-Learning Evasion Engine",
-        "🛡️ Defensive Research · IDS Robustness Testing",
-        "🔬 Cybernetic Feedback Loop · 7 Autonomous Agents",
-    ):
-        print(_c(_box_line(text), Color.GOLD))
-    print(footer)
+    print(formatted)
+
+    g, a, o, w, d, rst = (
+        Color.GOLD, Color.AMBER, Color.ORANGE, Color.WHITE, Color.DIM, Color.RESET,
+    )
+    gn, cy, rd = Color.GREEN, Color.CYAN, Color.RED
+
+    if Color.strip():
+        g = a = o = w = d = rst = gn = cy = rd = ""
+
+    print(f"  {a}{BOX_TOP}{rst}")
+    print(f"  {a}│{rst}  {g}🐝 NZOYI v{version}{rst} {d}— Multi-Agent IDS Resilience Framework{rst}   {a}│{rst}")
+    print(f"  {a}{BOX_MID}{rst}")
+    print(f"  {a}│{rst}  {cy}⚡{rst} {w}Adaptive Q-Learning Evasion Engine{rst}                     {a}│{rst}")
+    print(f"  {a}│{rst}  {gn}🛡️{rst}  {w}Defensive Research · IDS Robustness Testing{rst}            {a}│{rst}")
+    print(f"  {a}│{rst}  {o}🔬{rst} {w}Cybernetic Feedback Loop · 7 Autonomous Agents{rst}         {a}│{rst}")
+    print(f"  {a}{BOX_BOT}{rst}")
     print()
 
 
 def print_config_box(
     target: str,
     profile: str,
-    mode: str,
-    cycles: int,
-    eve_log: str | None,
+    mode: str = "pipeline",
+    cycles: int | None = None,
+    eve_log: str | None = None,
 ) -> None:
-    border = _c("┌" + "─" * 50 + "┐", Color.HONEY)
-    footer = _c("└" + "─" * 50 + "┘", Color.HONEY)
-    print(border)
-    rows = [
-        ("Target", target),
-        ("Profile", profile),
-        ("Mode", mode),
-        ("Cycles", str(cycles)),
-        ("EVE log", eve_log or "(simulated)"),
+    """Print a styled configuration summary box."""
+    g, a, w, d, gn, cy, rst = (
+        Color.GOLD, Color.AMBER, Color.WHITE, Color.DIM,
+        Color.GREEN, Color.CYAN, Color.RESET,
+    )
+    if Color.strip():
+        g = a = w = d = gn = cy = rst = ""
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    print(f"  {d}{'─' * 61}{rst}")
+
+    entries = [
+        ("🎯 Target", target),
+        ("⚙️  Profile", profile),
+        ("📋 Mode", mode),
     ]
-    for label, value in rows:
-        line = f"│ {label:<10} {_c(value, Color.WHITE)}"
-        print(_c(line, Color.HONEY) if _IS_TTY else f"│ {label:<10} {value}")
-    print(footer)
+    if cycles is not None:
+        entries.append(("🔄 Cycles", str(cycles)))
+    if eve_log:
+        entries.append(("📊 EVE Log", eve_log))
+    entries.append(("🕐 Started", now))
+
+    for icon_label, value in entries:
+        print(f"  {d}│{rst}  {cy}{icon_label:<14}{rst} {w}{value}{rst}")
+
+    print(f"  {d}{'─' * 61}{rst}")
     print()
 
 
-def print_agent_status(name: str, status: str, detail: str = "") -> None:
-    icons = {"running": "▶", "done": "✓", "error": "✗", "skip": "○"}
-    colors = {
-        "running": Color.AMBER,
-        "done": Color.GREEN,
-        "error": Color.RED,
-        "skip": Color.GREY,
+# ── Styled Logger ────────────────────────────────────────────
+
+class NzoyiFormatter(logging.Formatter):
+    """Custom log formatter with colors and icons."""
+
+    LEVEL_STYLES = {
+        logging.DEBUG: (Color.DIM, "DBG"),
+        logging.INFO: (Color.CYAN, "INF"),
+        logging.WARNING: (Color.YELLOW, "WRN"),
+        logging.ERROR: (Color.RED, "ERR"),
+        logging.CRITICAL: (Color.RED, "CRT"),
     }
-    icon = icons.get(status, "·")
-    color = colors.get(status, Color.WHITE)
-    msg = f"  {icon} {_c(name.upper(), Color.BOLD, color):<16}"
-    if detail:
-        msg += _c(detail, Color.DIM)
-    print(msg)
+
+    def format(self, record: logging.LogRecord) -> str:
+        color, tag = self.LEVEL_STYLES.get(record.levelno, (Color.WHITE, "???"))
+        ts = datetime.fromtimestamp(record.created).strftime("%H:%M:%S")
+
+        if Color.strip():
+            return f"{ts} [{tag}] {record.name.split('.')[-1]:>12} │ {record.getMessage()}"
+
+        name = record.name.replace("nzoyi.", "")
+        return (
+            f"{Color.DIM}{ts}{Color.RESET} "
+            f"{color}[{tag}]{Color.RESET} "
+            f"{Color.GOLD}{name:>12}{Color.RESET} "
+            f"{Color.DIM}│{Color.RESET} "
+            f"{record.getMessage()}"
+        )
+
+
+def setup_logging(level: int = logging.INFO) -> logging.Logger:
+    """Configure NZOYI-styled console logging."""
+    handler = logging.StreamHandler()
+    handler.setFormatter(NzoyiFormatter())
+    handler.setLevel(level)
+
+    logger = logging.getLogger("nzoyi")
+    logger.setLevel(level)
+    logger.handlers.clear()
+    logger.addHandler(handler)
+    return logger
+
+
+# ── Progress & Status ────────────────────────────────────────
+
+def print_agent_status(name: str, status: str, detail: str = "") -> None:
+    """Print a single agent execution status line."""
+    icons = {
+        "running": f"{Color.AMBER}⏳{Color.RESET}",
+        "done": f"{Color.GREEN}✓{Color.RESET}",
+        "fail": f"{Color.RED}✗{Color.RESET}",
+        "error": f"{Color.RED}✗{Color.RESET}",
+        "skip": f"{Color.DIM}○{Color.RESET}",
+    }
+    if Color.strip():
+        icons = {
+            "running": "...", "done": "[OK]", "fail": "[FAIL]",
+            "error": "[FAIL]", "skip": "[-]",
+        }
+
+    icon = icons.get(status, "?")
+    det = f" {Color.DIM}({detail}){Color.RESET}" if detail else ""
+    if Color.strip() and detail:
+        det = f" ({detail})"
+
+    print(f"  {icon} {name:<20}{det}")
 
 
 def print_result_box(title: str, data: dict[str, Any]) -> None:
-    print(_c(f"┌─ {title} " + "─" * max(0, 44 - len(title)), Color.ORANGE))
-    for key, value in data.items():
-        print(_c(f"│ {key}: ", Color.HONEY) + str(value))
-    print(_c("└" + "─" * 48, Color.ORANGE))
+    """Print a styled result summary."""
+    a, w, d, gn, rst = Color.AMBER, Color.WHITE, Color.DIM, Color.GREEN, Color.RESET
+    if Color.strip():
+        a = w = d = gn = rst = ""
+
+    print()
+    print(f"  {a}{'═' * 50}{rst}")
+    print(f"  {a}  {title}{rst}")
+    print(f"  {a}{'═' * 50}{rst}")
+    for key, val in data.items():
+        print(f"  {d}│{rst}  {w}{key:<25}{rst} {gn}{val}{rst}")
+    print(f"  {a}{'═' * 50}{rst}")
     print()
 
 
 def print_test_result(name: str, passed: bool) -> None:
+    """Print a single test result line."""
     if passed:
-        print(_c(f"  ✓ {name}", Color.GREEN))
+        icon = f"{Color.GREEN}✓{Color.RESET}" if not Color.strip() else "[PASS]"
     else:
-        print(_c(f"  ✗ {name}", Color.RED))
-
-
-class NzoyiFormatter(logging.Formatter):
-  """Colored log formatter with agent icons."""
-
-  ICONS = {
-      logging.DEBUG: "🔍",
-      logging.INFO: "🐝",
-      logging.WARNING: "⚠️",
-      logging.ERROR: "❌",
-      logging.CRITICAL: "🔥",
-  }
-
-  def format(self, record: logging.LogRecord) -> str:
-      icon = self.ICONS.get(record.levelno, "·")
-      if _IS_TTY:
-          level_color = {
-              logging.DEBUG: Color.GREY,
-              logging.INFO: Color.AMBER,
-              logging.WARNING: Color.GOLD,
-              logging.ERROR: Color.RED,
-          }.get(record.levelno, Color.WHITE)
-          level = _c(record.levelname, level_color)
-          return f"{icon} {level} {_c(record.name, Color.DIM)} — {record.getMessage()}"
-      return f"{icon} {record.levelname} {record.name} — {record.getMessage()}"
-
-
-def setup_logging(level: str = "INFO") -> logging.Logger:
-    logger = logging.getLogger("nzoyi")
-    logger.setLevel(getattr(logging, level.upper(), logging.INFO))
-    if not logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(NzoyiFormatter())
-        logger.addHandler(handler)
-    return logger
+        icon = f"{Color.RED}✗{Color.RESET}" if not Color.strip() else "[FAIL]"
+    print(f"  {icon} {name}")

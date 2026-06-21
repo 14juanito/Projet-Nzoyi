@@ -1,5 +1,7 @@
 from nzoyi.ui.banner import (
+    Color,
     NzoyiFormatter,
+    c,
     print_agent_status,
     print_banner,
     print_config_box,
@@ -7,13 +9,35 @@ from nzoyi.ui.banner import (
     print_test_result,
     setup_logging,
 )
+from nzoyi.ui.interactive import (
+    AutonomousRunner,
+    GuidedRunner,
+    InteractiveSession,
+    LearningRunner,
+    print_section,
+    prompt,
+    prompt_choice,
+    prompt_confirm,
+    typewrite,
+)
 
 __all__ = [
+    "Color",
     "NzoyiFormatter",
+    "c",
     "print_agent_status",
     "print_banner",
     "print_config_box",
     "print_result_box",
     "print_test_result",
     "setup_logging",
+    "AutonomousRunner",
+    "GuidedRunner",
+    "InteractiveSession",
+    "LearningRunner",
+    "print_section",
+    "prompt",
+    "prompt_choice",
+    "prompt_confirm",
+    "typewrite",
 ]
