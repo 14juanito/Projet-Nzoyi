@@ -2,7 +2,7 @@
   <img src="assets/openzoyi-logo.png" alt="OpenZoyi — Multi-agent automated intrusion system" width="480">
 </p>
 
-<h1 align="center">OpenZoyi / NZOYI</h1>
+<h1 align="center">OpenZoyi</h1>
 
 <p align="center">
   <strong>Système multi-agents d'intrusion automatisée avec évasion adaptative des IDS</strong>
