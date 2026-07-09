@@ -5,11 +5,29 @@ Cockpit de contrôle du système multi-agent :
   Page 1 · Mission Control  — configuration + lancement
   Page 2 · Live Operations  — exécution temps réel (simulation dry-run)
 
-Lancement :  streamlit run nzoyi/dashboard/app.py
-Aucune dépendance aux modules nzoyi — toute la simulation vit ici.
+Lancement :
+  python3 nzoyi/dashboard/app.py          # auto (venv + streamlit)
+  streamlit run nzoyi/dashboard/app.py
+  ./run_dashboard.sh
 """
 
 from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+# Permet `python3 app.py` : relance via streamlit + venv du projet.
+if __name__ == "__main__" and "streamlit" not in sys.modules:
+    import subprocess
+
+    _root = Path(__file__).resolve().parents[2]
+    _venv_py = _root / "venv" / "bin" / "python"
+    _python = str(_venv_py) if _venv_py.is_file() else sys.executable
+    raise SystemExit(
+        subprocess.call(
+            [_python, "-m", "streamlit", "run", str(Path(__file__).resolve()), *sys.argv[1:]]
+        )
+    )
 
 import json
 import os

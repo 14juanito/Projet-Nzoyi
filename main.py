@@ -69,10 +69,18 @@ def run_validation_tests() -> int:
     return 0 if passed == total else 1
 
 
+def _python_exe() -> str:
+    """Prefer project venv Python when available."""
+    venv_python = Path(__file__).parent / "venv" / "bin" / "python"
+    if venv_python.is_file():
+        return str(venv_python)
+    return sys.executable
+
+
 def run_dashboard() -> int:
     app_path = Path(__file__).parent / "nzoyi" / "dashboard" / "app.py"
     subprocess.run(
-        [sys.executable, "-m", "streamlit", "run", str(app_path)],
+        [_python_exe(), "-m", "streamlit", "run", str(app_path)],
         check=False,
     )
     return 0

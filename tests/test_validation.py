@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
 from nzoyi.agents.orchestrator import OrchestratorAgent
@@ -86,8 +88,55 @@ def test_nmap_wrapper_cli_parse() -> bool:
 
 
 def test_suricata_log_reader() -> bool:
-    reader = SuricataLogReader(str(FIXTURES / "eve_sample.json"))
-    alerts = reader.get_recent_alerts(seconds=999999, source_ip="192.168.100.10")
+    # Generate a fresh EVE fixture so the time-window filter is deterministic
+    # regardless of the current date.
+    now = datetime.now(timezone.utc)
+    events = [
+        {
+            "timestamp": now.strftime("%Y-%m-%dT%H:%M:%S.%f+0000"),
+            "event_type": "alert",
+            "src_ip": "192.168.100.10",
+            "dest_ip": "192.168.100.11",
+            "src_port": 54321,
+            "dest_port": 22,
+            "proto": "TCP",
+            "alert": {
+                "signature": "ET SCAN Nmap Scripting Engine User-Agent",
+                "signature_id": 2012888,
+                "severity": 2,
+                "category": "Potentially Bad Traffic",
+            },
+        },
+        {"timestamp": now.strftime("%Y-%m-%dT%H:%M:%S.%f+0000"),
+         "event_type": "flow", "src_ip": "192.168.100.10", "dest_ip": "192.168.100.11"},
+        {
+            "timestamp": now.strftime("%Y-%m-%dT%H:%M:%S.%f+0000"),
+            "event_type": "alert",
+            "src_ip": "192.168.100.10",
+            "dest_ip": "192.168.100.11",
+            "src_port": 54322,
+            "dest_port": 80,
+            "proto": "TCP",
+            "alert": {
+                "signature": "GPL ATTACK_RESPONSE id check returned root",
+                "signature_id": 2100498,
+                "severity": 1,
+                "category": "Potentially Compromised Host",
+            },
+        },
+    ]
+    tmp = FIXTURES / "eve_generated.json"
+    tmp.parent.mkdir(parents=True, exist_ok=True)
+    with open(tmp, "w", encoding="utf-8") as handle:
+        for event in events:
+            handle.write(json.dumps(event) + "\n")
+
+    try:
+        reader = SuricataLogReader(str(tmp))
+        alerts = reader.get_recent_alerts(seconds=300, source_ip="192.168.100.10")
+    finally:
+        tmp.unlink(missing_ok=True)
+
     return len(alerts) == 2 and alerts[0]["signature_id"] == 2012888
 
 
