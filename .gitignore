@@ -16,3 +16,4 @@ nzoyi-env/
 results/
 !results/.gitkeep
 nzoyi/dashboard/config/
+config/

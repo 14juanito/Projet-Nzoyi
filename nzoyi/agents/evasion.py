@@ -7,7 +7,8 @@ import random
 from typing import Any
 
 from nzoyi.agents.base import BaseAgent
-from nzoyi.rl.qlearning import EvasionQLearner, EvasionState
+from nzoyi.rl.qlearning import EvasionAction, EvasionQLearner, EvasionState
+from nzoyi.rl.reward import compute_reward
 
 logger = logging.getLogger("nzoyi.agents.evasion")
 
@@ -18,8 +19,14 @@ class EvasionAgent(BaseAgent):
     def __init__(self, ptt, profile, learner: EvasionQLearner | None = None) -> None:
         super().__init__(ptt, profile)
         self.learner = learner or EvasionQLearner()
+        # RL bookkeeping for a single transition s --a--> s':
+        #   _last_prev_state  = s   (state the agent acted from)
+        #   _last_action      = a   (action chosen in s)
+        #   _last_state       = s'  (observed next state, also the start of the
+        #                            next run() so the episode keeps progressing)
+        self._last_prev_state: EvasionState | None = None
+        self._last_action: EvasionAction | None = None
         self._last_state: EvasionState | None = None
-        self._last_action = None
 
     def _initial_state(self) -> EvasionState:
         timing_map = {"T2": 2, "T3": 3, "T4": 4}
@@ -37,8 +44,12 @@ class EvasionAgent(BaseAgent):
 
         action = self.learner.choose_action(state, rng)
         next_state = self.learner.apply_action(state, action)
-        self._last_state = next_state
+        # Remember the full transition AFTER choosing the action so learn() can
+        # perform a correct update(s, a, r, s'). _last_state becomes s' so the
+        # next run() continues the episode from the observed next state.
+        self._last_prev_state = state
         self._last_action = action
+        self._last_state = next_state
 
         if detected is None:
             detected = (
@@ -64,26 +75,51 @@ class EvasionAgent(BaseAgent):
         self.ptt.add(self.name, "evasion_step", result, allow_duplicate=True)
         return result
 
-    def learn(self, detected: bool) -> dict[str, Any]:
-        """Apply Q-Learning update from IDS feedback."""
-        if self._last_state is None or self._last_action is None:
+    def learn(
+        self, observed_detected: bool, p_detect: float | None = None
+    ) -> dict[str, Any]:
+        """Apply a Q-Learning update from the observed IDS feedback.
+
+        Uses the *real* transition recorded during :meth:`run` — the action
+        was chosen in ``s`` (``self._last_prev_state``) and led to the observed
+        next state ``s'`` (``self._last_state``). The reward is shaped by
+        :func:`compute_reward` from the detection probability.
+
+        Args:
+            observed_detected: Whether the IDS raised an alert for the step.
+            p_detect: Detection probability in ``[0, 1]``. When ``None`` it is
+                derived from ``observed_detected`` (1.0 if detected else 0.0)
+                for backward compatibility with the binary simulation.
+
+        Returns:
+            A summary dict with the applied reward and learner state.
+        """
+        if p_detect is None:
+            p_detect = 1.0 if observed_detected else 0.0
+
+        if self._last_prev_state is None or self._last_action is None:
+            # No transition recorded yet: bootstrap one from the initial state.
             state = self._initial_state()
             action = self.learner.choose_action(state, random.Random())
             next_state = self.learner.apply_action(state, action)
         else:
-            state = self._last_state
+            state = self._last_prev_state
             action = self._last_action
-            next_state = state
+            next_state = self._last_state if self._last_state is not None else state
 
-        reward = -1.0 if detected else 1.0
+        reward = compute_reward(next_state, p_detect)
         self.learner.update(state, action, reward, next_state)
 
         result = {
             "learned": True,
-            "detected": detected,
+            "detected": observed_detected,
+            "p_detect": p_detect,
             "reward": reward,
             "epsilon": round(self.learner.epsilon, 4),
             "iterations": self.learner.iterations,
         }
-        logger.debug("Q-Learning update: reward=%.1f epsilon=%.4f", reward, self.learner.epsilon)
+        logger.debug(
+            "Q-Learning update: p_detect=%.3f reward=%.3f epsilon=%.4f",
+            p_detect, reward, self.learner.epsilon,
+        )
         return result

@@ -41,6 +41,27 @@ from nzoyi.ui.interactive import (
 )
 
 
+def _load_dotenv(path: str = ".env") -> None:
+    """Load KEY=VALUE pairs from a local .env into os.environ.
+
+    Secrets (e.g. ANTHROPIC_API_KEY) stay in this git-ignored file and never
+    touch the source tree. Existing environment variables win over the file so
+    an explicit `export` always takes precedence.
+    """
+    env_file = Path(path)
+    if not env_file.is_file():
+        return
+    for raw in env_file.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
 def _save_convergence(convergence: list) -> str:
     os.makedirs("results", exist_ok=True)
     conv_path = "results/convergence.json"
@@ -86,14 +107,74 @@ def run_dashboard() -> int:
     return 0
 
 
-def _build_orchestrator(target: str, profile_name: str, eve_log: str | None):
+def _build_orchestrator(
+    target: str,
+    profile_name: str,
+    eve_log: str | None,
+    use_llm: bool = True,
+):
     profile = load_profile(profile_name)
     ptt = PentestTree(target=target)
-    orchestrator = OrchestratorAgent(ptt, profile, eve_log=eve_log)
+    orchestrator = OrchestratorAgent(ptt, profile, eve_log=eve_log, use_llm=use_llm)
     return profile, ptt, orchestrator
 
 
-def run_interactive() -> int:
+def run_train_offline(model_path: str, cycles: int) -> int:
+    """Offline pre-training phase against the RF oracle (network-free)."""
+    from nzoyi.training.offline import pretrain
+
+    print_banner(__version__)
+    setup_logging()
+    print(f"  🧠 Pré-entraînement offline (oracle RF) — modèle: {model_path}\n")
+    try:
+        learner = pretrain(model_path, episodes=cycles)
+    except FileNotFoundError as exc:
+        print(f"  {Color.RED}✗ {exc}{Color.RESET}\n")
+        return 1
+    print_result_box("Pré-entraînement terminé", {
+        "Épisodes": cycles,
+        "Itérations Q": learner.iterations,
+        "Epsilon final": f"{learner.epsilon:.4f}",
+        "Q-table": "results/qtable_offline.json",
+    })
+    return 0
+
+
+def run_finetune(
+    qtable_path: str,
+    target: str,
+    profile_name: str,
+    eve_log: str | None,
+    cycles: int,
+    use_llm: bool,
+) -> int:
+    """Online fine-tuning phase against a real Suricata IDS."""
+    _, _, orchestrator = _build_orchestrator(target, profile_name, eve_log, use_llm)
+
+    print_banner(__version__)
+    setup_logging()
+    print(f"  🎯 Affinage online (Suricata réel) — warm Q-table: {qtable_path}\n")
+    try:
+        result = orchestrator.finetune_online(qtable_path, cycles=cycles)
+    except FileNotFoundError as exc:
+        print(f"  {Color.RED}✗ Q-table introuvable: {exc}{Color.RESET}\n")
+        return 1
+    print_result_box("Affinage online terminé", {
+        "Cycles": result["cycles"],
+        "Détection online": f"{result['online_final_detection_rate']:.1%}",
+        "Détection offline": (
+            f"{result['offline_final_detection_rate']:.1%}"
+            if result["offline_final_detection_rate"] is not None else "N/A"
+        ),
+        "Sim-to-real gap": (
+            f"{result['sim_to_real_gap']:+.4f}"
+            if result["sim_to_real_gap"] is not None else "N/A"
+        ),
+    })
+    return 0
+
+
+def run_interactive(use_llm: bool = True) -> int:
     """Interactive mode — the default user experience."""
     session = InteractiveSession(version=__version__)
     params = session.start()
@@ -101,7 +182,7 @@ def run_interactive() -> int:
         return 0
 
     profile, ptt, orchestrator = _build_orchestrator(
-        params["target"], params["profile"], params.get("eve_log")
+        params["target"], params["profile"], params.get("eve_log"), use_llm=use_llm
     )
     setup_logging()
     print_section("EXÉCUTION")
@@ -161,9 +242,12 @@ def run_direct(
     eve_log: str | None,
     mode: str,
     cycles: int,
+    use_llm: bool = True,
 ) -> int:
     """Direct CLI mode (non-interactive)."""
-    profile, ptt, orchestrator = _build_orchestrator(target, profile_name, eve_log)
+    profile, ptt, orchestrator = _build_orchestrator(
+        target, profile_name, eve_log, use_llm=use_llm
+    )
 
     print_banner(__version__)
     setup_logging()
@@ -217,11 +301,29 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cycles", type=int, default=100, help="Learning loop iterations")
     parser.add_argument("--dry-run", action="store_true", help="Simulate without network")
     parser.add_argument("--eve-log", default=None, help="Path to Suricata eve.json")
+    parser.add_argument(
+        "--train-offline",
+        metavar="MODEL_PATH",
+        default=None,
+        help="Pré-entraîne le Q-Learner offline avec un modèle RF (joblib)",
+    )
+    parser.add_argument(
+        "--finetune",
+        metavar="QTABLE_PATH",
+        default=None,
+        help="Affine online une Q-table offline contre Suricata réel",
+    )
+    parser.add_argument(
+        "--no-llm",
+        action="store_true",
+        help="Force le fallback heuristique (reproductibilité hors-ligne)",
+    )
     parser.add_argument("--version", action="version", version=f"NZOYI {__version__}")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
+    _load_dotenv()
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -232,6 +334,19 @@ def main(argv: list[str] | None = None) -> int:
         return run_validation_tests()
 
     try:
+        if args.train_offline:
+            return run_train_offline(args.train_offline, cycles=args.cycles)
+
+        if args.finetune:
+            return run_finetune(
+                qtable_path=args.finetune,
+                target=args.target or "192.168.100.11",
+                profile_name=args.profile,
+                eve_log=args.eve_log,
+                cycles=args.cycles,
+                use_llm=not args.no_llm,
+            )
+
         if args.target:
             return run_direct(
                 target=args.target,
@@ -240,8 +355,9 @@ def main(argv: list[str] | None = None) -> int:
                 eve_log=args.eve_log,
                 mode=args.mode,
                 cycles=args.cycles,
+                use_llm=not args.no_llm,
             )
-        return run_interactive()
+        return run_interactive(use_llm=not args.no_llm)
     except KeyboardInterrupt:
         print(f"\n\n  {Color.DIM}Interrompu. À bientôt.{Color.RESET}\n")
         return 0

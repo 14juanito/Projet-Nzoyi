@@ -14,8 +14,9 @@ from nzoyi.agents.evaluation import EvaluationAgent
 from nzoyi.agents.evasion import EvasionAgent
 from nzoyi.agents.recon import ReconAgent
 from nzoyi.agents.vulnerability import VulnerabilityAgent
-from nzoyi.core.config import AttackProfile
+from nzoyi.core.config import AttackProfile, load_profile
 from nzoyi.core.ptt import PentestTree
+from nzoyi.llm.orchestrator_llm import LLMOrchestrator
 from nzoyi.rl.qlearning import EvasionQLearner
 
 logger = logging.getLogger("nzoyi.agents.orchestrator")
@@ -31,11 +32,13 @@ class OrchestratorAgent(BaseAgent):
         eve_log: str | None = None,
         attacker_ip: str | None = None,
         on_agent_status: Callable[[str, str, str], None] | None = None,
+        use_llm: bool = True,
     ) -> None:
         super().__init__(ptt, profile)
         self.eve_log = eve_log
         self.attacker_ip = attacker_ip
         self.on_agent_status = on_agent_status
+        self.use_llm = use_llm
         self.learner = EvasionQLearner()
         self.evasion = EvasionAgent(ptt, profile, learner=self.learner)
         self.evaluation = EvaluationAgent(ptt, profile, attacker_ip=attacker_ip)
@@ -57,7 +60,31 @@ class OrchestratorAgent(BaseAgent):
         if self.on_agent_status:
             self.on_agent_status(name, status, detail)
 
+    def _apply_profile(self, profile: AttackProfile) -> None:
+        """Propagate a (possibly new) profile to the orchestrator and agents."""
+        self.profile = profile
+        for agent in self.pipeline:
+            agent.profile = profile
+
+    def _strategic_plan(self) -> dict[str, Any]:
+        """Run the strategic LLM layer ONCE (never inside the RL loop).
+
+        Calls :class:`LLMOrchestrator` to pick the attack profile and port
+        priorities, applies the chosen profile to every agent, and records the
+        decision in the PTT. Uses the deterministic fallback when ``use_llm`` is
+        ``False`` or no API key is available.
+        """
+        planner = LLMOrchestrator(enabled=self.use_llm)
+        plan = planner.decide(self.ptt.summary())
+        try:
+            self._apply_profile(load_profile(plan["profil"]))
+        except (KeyError, ValueError) as exc:
+            logger.warning("Profil LLM invalide (%s) — profil courant conservé.", exc)
+        self.ptt.add(self.name, "llm_strategy", plan, allow_duplicate=True)
+        return plan
+
     def run(self, dry_run: bool = False) -> dict[str, Any]:
+        self._strategic_plan()
         results: dict[str, Any] = {}
         pipeline: list[tuple[str, BaseAgent, dict[str, Any]]] = [
             ("recon", self.recon, {"dry_run": dry_run}),
@@ -83,6 +110,7 @@ class OrchestratorAgent(BaseAgent):
 
     def learning_loop(self, cycles: int = 100, dry_run: bool = True) -> dict[str, Any]:
         """Run recon pipeline then iterative evasion → attack → evaluation → learn."""
+        self._strategic_plan()
         convergence: list[dict[str, Any]] = []
         detections = 0
 
@@ -143,4 +171,127 @@ class OrchestratorAgent(BaseAgent):
             "final_detection_rate": convergence[-1]["detection_rate"] if convergence else 0,
             "qtable_path": str(results_dir / "qtable.json"),
             "convergence_path": str(results_dir / "convergence.json"),
+        }
+
+    @staticmethod
+    def _offline_final_detection_rate() -> float | None:
+        """Read the final offline detection rate from convergence_offline.json."""
+        path = Path("results") / "convergence_offline.json"
+        if not path.is_file():
+            return None
+        try:
+            with open(path, encoding="utf-8") as handle:
+                data = json.load(handle)
+        except (OSError, json.JSONDecodeError):
+            return None
+        if not data:
+            return None
+        return float(data[-1].get("detection_rate", 0.0))
+
+    def finetune_online(
+        self,
+        warm_qtable: str,
+        cycles: int = 50,
+        epsilon: float = 0.05,
+        alert_threshold: int = 3,
+    ) -> dict[str, Any]:
+        """Fine-tune an offline-trained Q-table against a real Suricata IDS.
+
+        Warm-starts the learner from ``warm_qtable`` with a low exploration
+        rate, then runs the tactical loop reading REAL detection feedback from
+        ``self.evaluation.run(eve_log=...)`` (Suricata eve.json) instead of the
+        simulation. The strategic LLM layer runs once beforehand.
+
+        Args:
+            warm_qtable: Path to the offline Q-table (JSON) to warm-start from.
+            cycles: Number of online fine-tuning cycles.
+            epsilon: Forced (low) exploration rate for online refinement.
+            alert_threshold: Alert count mapped to ``p_detect == 1.0``;
+                ``p_detect = min(1.0, alert_count / alert_threshold)``.
+
+        Returns:
+            A dict with convergence data, output paths and the sim-to-real gap
+            (online final detection rate minus offline final detection rate).
+        """
+        self._strategic_plan()
+
+        learner = EvasionQLearner.load(warm_qtable)
+        learner.epsilon = epsilon
+        learner.epsilon_min = min(learner.epsilon_min, epsilon)
+        self.learner = learner
+        self.evasion.learner = learner
+
+        for name, agent, kwargs in [
+            ("recon", self.recon, {"dry_run": False}),
+            ("enumerator", self.enumerator, {"dry_run": False}),
+            ("vulnerability", self.vulnerability, {"dry_run": False}),
+        ]:
+            self._status(name, "running")
+            agent.run(**kwargs)
+            self._status(name, "done")
+
+        convergence: list[dict[str, Any]] = []
+        detections = 0
+
+        for cycle in range(1, cycles + 1):
+            self._status("evasion", "running", f"cycle {cycle}/{cycles}")
+            self.evasion.run(dry_run=False)
+            self.attack.run(dry_run=False)
+            eval_result = self.evaluation.run(dry_run=False, eve_log=self.eve_log)
+
+            alert_count = int(eval_result.get("alert_count", 0))
+            detected = bool(eval_result.get("detected", alert_count > 0))
+            p_detect = min(1.0, alert_count / alert_threshold) if alert_threshold else float(detected)
+
+            learn_result = self.evasion.learn(detected, p_detect=p_detect)
+
+            if detected:
+                detections += 1
+            detection_rate = detections / cycle
+
+            convergence.append({
+                "cycle": cycle,
+                "detected": detected,
+                "alert_count": alert_count,
+                "p_detect": round(p_detect, 4),
+                "reward": round(learn_result["reward"], 4),
+                "epsilon": round(learn_result["epsilon"], 4),
+                "detection_rate": round(detection_rate, 4),
+            })
+
+            if cycle % 10 == 0:
+                logger.info(
+                    "Online cycle %d/%d — detection_rate=%.2f epsilon=%.4f",
+                    cycle, cycles, detection_rate, learn_result["epsilon"],
+                )
+
+        results_dir = Path("results")
+        results_dir.mkdir(exist_ok=True)
+        self.learner.save(results_dir / "qtable_online.json")
+        with open(results_dir / "convergence_online.json", "w", encoding="utf-8") as handle:
+            json.dump(convergence, handle, indent=2)
+
+        online_final = convergence[-1]["detection_rate"] if convergence else 0.0
+        offline_final = self._offline_final_detection_rate()
+        sim_to_real_gap = (
+            round(online_final - offline_final, 4)
+            if offline_final is not None
+            else None
+        )
+
+        self.ptt.add(self.name, "finetune_complete", {
+            "cycles": cycles,
+            "online_final_detection_rate": online_final,
+            "offline_final_detection_rate": offline_final,
+            "sim_to_real_gap": sim_to_real_gap,
+        })
+
+        return {
+            "cycles": cycles,
+            "convergence": convergence,
+            "online_final_detection_rate": online_final,
+            "offline_final_detection_rate": offline_final,
+            "sim_to_real_gap": sim_to_real_gap,
+            "qtable_path": str(results_dir / "qtable_online.json"),
+            "convergence_path": str(results_dir / "convergence_online.json"),
         }
