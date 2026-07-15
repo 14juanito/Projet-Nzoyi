@@ -89,12 +89,23 @@ def print_banner(version: str = "0.1.0") -> None:
     if Color.strip():
         g = a = o = w = d = rst = gn = cy = rd = ""
 
+    inner = len(BOX_TOP) - 2  # largeur utile entre les bordures │ │
+
+    def _row(marker: str, marker_col: str, text: str, text_col: str) -> str:
+        """Construit une ligne alignee ; le padding se calcule sur le texte brut."""
+        plain = f"  {marker}  {text}"
+        pad = " " * max(0, inner - len(plain))
+        return (
+            f"  {a}│{rst}  {marker_col}{marker}{rst}  "
+            f"{text_col}{text}{rst}{pad}{a}│{rst}"
+        )
+
     print(f"  {a}{BOX_TOP}{rst}")
-    print(f"  {a}│{rst}  {g}🐝 NZOYI v{version}{rst} {d}— Multi-Agent IDS Resilience Framework{rst}   {a}│{rst}")
+    print(_row("", "", f"NZOYI v{version} · Multi-Agent IDS Resilience Framework", g))
     print(f"  {a}{BOX_MID}{rst}")
-    print(f"  {a}│{rst}  {cy}⚡{rst} {w}Adaptive Q-Learning Evasion Engine{rst}                     {a}│{rst}")
-    print(f"  {a}│{rst}  {gn}🛡️{rst}  {w}Defensive Research · IDS Robustness Testing{rst}            {a}│{rst}")
-    print(f"  {a}│{rst}  {o}🔬{rst} {w}Cybernetic Feedback Loop · 7 Autonomous Agents{rst}         {a}│{rst}")
+    print(_row("[>]", cy, "Adaptive Q-Learning Evasion Engine", w))
+    print(_row("[#]", gn, "Defensive Research · IDS Robustness Testing", w))
+    print(_row("[~]", o, "Cybernetic Feedback Loop · 7 Autonomous Agents", w))
     print(f"  {a}{BOX_BOT}{rst}")
     print()
 
