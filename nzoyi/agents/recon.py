@@ -1,4 +1,4 @@
-"""Reconnaissance agent — network discovery via Nmap."""
+"""Agent de reconnaissance — découverte réseau via Nmap."""
 
 from __future__ import annotations
 
@@ -10,50 +10,48 @@ from nzoyi.tools.nmap_wrapper import NmapWrapper
 
 logger = logging.getLogger("nzoyi.agents.recon")
 
-PROFILE_SCAN: dict[str, tuple[str, int]] = {
-    "stealth": ("stealth", 2),
-    "default": ("version", 3),
-    "aggressive": ("version", 4),
-}
-
-SIMULATED_PORTS = [22, 80, 443, 21]
+_TIMING_MAP: dict[str, int] = {"T2": 2, "T3": 3, "T4": 4}
 
 
 class ReconAgent(BaseAgent):
+    """Scanne la cible avec Nmap (détection de version) et alimente le PTT."""
+
     name = "recon"
 
     def run(self, dry_run: bool = False) -> dict[str, Any]:
-        scan_type, timing = PROFILE_SCAN.get(
-            self.profile.name, ("version", 3)
-        )
+        timing = _TIMING_MAP.get(self.profile.nmap_timing, 3)
 
-        if dry_run:
-            ports = [
-                {"host": self.ptt.target, "port": p, "state": "open", "service": ""}
-                for p in SIMULATED_PORTS
-            ]
-            result = {
-                "target": self.ptt.target,
-                "open_ports": SIMULATED_PORTS,
-                "ports": ports,
-                "scan_type": scan_type,
-                "timing": timing,
-                "dry_run": True,
-            }
-        else:
-            wrapper = NmapWrapper()
-            ports = wrapper.scan(self.ptt.target, scan_type=scan_type, timing=timing)
-            open_ports = [p["port"] for p in ports if p.get("state") == "open"]
-            result = {
-                "target": self.ptt.target,
-                "open_ports": open_ports,
-                "ports": ports,
-                "scan_type": scan_type,
-                "timing": timing,
-                "dry_run": False,
-            }
-            logger.info("Nmap found %d open ports on %s", len(open_ports), self.ptt.target)
+        wrapper = NmapWrapper()
+        try:
+            raw_ports = wrapper.scan(self.ptt.target, scan_type="version", timing=timing)
+        except (FileNotFoundError, TimeoutError) as exc:
+            logger.warning("Scan Nmap indisponible sur %s: %s", self.ptt.target, exc)
+            raw_ports = []
 
-        self.ptt.set_recon_results(result["ports"])
+        ports = [
+            {
+                "host": p.get("host", self.ptt.target),
+                "port": p["port"],
+                "state": p.get("state", "unknown"),
+                "service": p.get("service", ""),
+                "product": p.get("product", ""),
+                "version": p.get("version", ""),
+            }
+            for p in raw_ports
+            if p.get("state") == "open"
+        ]
+        open_ports = [p["port"] for p in ports]
+
+        result = {
+            "target": self.ptt.target,
+            "open_ports": open_ports,
+            "ports": ports,
+            "scan_type": "version",
+            "timing": timing,
+            "dry_run": dry_run,
+        }
+        logger.info("Nmap a trouvé %d ports ouverts sur %s", len(open_ports), self.ptt.target)
+
+        self.ptt.set_recon_results(ports)
         self.ptt.add(self.name, "port_scan", result)
         return result

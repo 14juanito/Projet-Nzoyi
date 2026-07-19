@@ -333,22 +333,20 @@ class LearningRunner:
         total_detected = 0
 
         for i in range(1, cycles + 1):
-            ev_result = evasion_agent.run(dry_run=dry_run) if evasion_agent else {}
+            if evasion_agent:
+                evasion_agent.run(dry_run=dry_run)
             if attack_agent:
                 attack_agent.run(dry_run=dry_run)
             eval_result = (
                 eval_agent.run(dry_run=dry_run, eve_log=eve_log) if eval_agent else {}
             )
 
-            # Prefer the IDS verdict when Suricata feedback is available.
-            if eval_result.get("source", "simulated") not in ("simulated", ""):
-                detected = bool(eval_result.get("detected", False))
-            else:
-                detected = bool(ev_result.get("detected", False))
+            # Verdict fusionné Suricata + RF (voir EvaluationAgent).
+            detected = bool(eval_result.get("detected", False))
 
             # Close the cybernetic loop: update Q-Learning from feedback.
             if evasion_agent:
-                learn_result = evasion_agent.learn(detected)
+                learn_result = evasion_agent.learn(detected, p_detect=eval_result.get("rf_proba"))
                 reward = learn_result["reward"]
                 epsilon = evasion_agent.learner.epsilon
             else:

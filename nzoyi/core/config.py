@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
+
+# ── Configuration runtime (surchargeable via variables d'environnement) ────
+rf_endpoint: str = os.environ.get(
+    "NZOYI_RF_ENDPOINT", "http://192.168.100.11:5000/predict"
+)
+rf_threshold: float = float(os.environ.get("NZOYI_RF_THRESHOLD", "0.5"))
+rf_model_path: str = os.environ.get("NZOYI_RF_MODEL_PATH", "models/rf_unsw.pkl")
+eve_log: str = os.environ.get("NZOYI_EVE_LOG", "/var/log/suricata/eve.json")
 
 
 @dataclass(frozen=True)

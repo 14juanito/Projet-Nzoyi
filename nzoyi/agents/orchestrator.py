@@ -1,4 +1,4 @@
-"""Orchestrator agent — coordinates the full pentest pipeline."""
+"""Agent orchestrateur — coordonne le pipeline complet de pentest."""
 
 from __future__ import annotations
 
@@ -67,12 +67,12 @@ class OrchestratorAgent(BaseAgent):
             agent.profile = profile
 
     def _strategic_plan(self) -> dict[str, Any]:
-        """Run the strategic LLM layer ONCE (never inside the RL loop).
+        """Exécute la couche stratégique LLM UNE fois (jamais dans la boucle RL).
 
-        Calls :class:`LLMOrchestrator` to pick the attack profile and port
-        priorities, applies the chosen profile to every agent, and records the
-        decision in the PTT. Uses the deterministic fallback when ``use_llm`` is
-        ``False`` or no API key is available.
+        Appelle :class:`LLMOrchestrator` pour choisir le profil d'attaque et les
+        ports prioritaires, applique le profil choisi à tous les agents, et
+        enregistre la décision dans le PTT. Utilise le repli déterministe quand
+        ``use_llm`` est ``False`` ou qu'aucune clé API n'est disponible.
         """
         planner = LLMOrchestrator(enabled=self.use_llm)
         plan = planner.decide(self.ptt.summary())
@@ -83,19 +83,25 @@ class OrchestratorAgent(BaseAgent):
         self.ptt.add(self.name, "llm_strategy", plan, allow_duplicate=True)
         return plan
 
-    def run(self, dry_run: bool = False) -> dict[str, Any]:
-        self._strategic_plan()
-        results: dict[str, Any] = {}
-        pipeline: list[tuple[str, BaseAgent, dict[str, Any]]] = [
-            ("recon", self.recon, {"dry_run": dry_run}),
-            ("enumerator", self.enumerator, {"dry_run": dry_run}),
-            ("vulnerability", self.vulnerability, {"dry_run": dry_run}),
-            ("evasion", self.evasion, {"dry_run": dry_run}),
-            ("attack", self.attack, {"dry_run": dry_run}),
-            ("evaluation", self.evaluation, {"dry_run": dry_run, "eve_log": self.eve_log}),
-        ]
+    def _strategic_replan(self) -> dict[str, Any]:
+        """Ré-évalue la stratégie UNE seule fois, avec le PTT enrichi par recon/enum/vuln.
 
-        for name, agent, kwargs in pipeline:
+        Ne doit jamais être appelée à l'intérieur de la boucle Q-Learning : la
+        couche stratégique (LLM) reste distincte de la couche tactique (RL).
+        """
+        planner = LLMOrchestrator(enabled=self.use_llm)
+        plan = planner.decide(self.ptt.summary())
+        try:
+            self._apply_profile(load_profile(plan["profil"]))
+        except (KeyError, ValueError) as exc:
+            logger.warning("Profil LLM invalide en replan (%s) — profil courant conservé.", exc)
+        self.ptt.add(self.name, "llm_replan", plan, allow_duplicate=True)
+        return plan
+
+    def _run_agents(
+        self, results: dict[str, Any], steps: list[tuple[str, BaseAgent, dict[str, Any]]]
+    ) -> None:
+        for name, agent, kwargs in steps:
             self._status(name, "running")
             try:
                 results[name] = agent.run(**kwargs)
@@ -105,11 +111,29 @@ class OrchestratorAgent(BaseAgent):
                 self._status(name, "error", str(exc))
                 raise
 
+    def run(self, dry_run: bool = False) -> dict[str, Any]:
+        self._strategic_plan()
+        results: dict[str, Any] = {}
+
+        self._run_agents(results, [
+            ("recon", self.recon, {"dry_run": dry_run}),
+            ("enumerator", self.enumerator, {"dry_run": dry_run}),
+            ("vulnerability", self.vulnerability, {"dry_run": dry_run}),
+        ])
+
+        self._strategic_replan()
+
+        self._run_agents(results, [
+            ("evasion", self.evasion, {"dry_run": dry_run}),
+            ("attack", self.attack, {"dry_run": dry_run}),
+            ("evaluation", self.evaluation, {"dry_run": dry_run, "eve_log": self.eve_log}),
+        ])
+
         self.ptt.add(self.name, "pipeline_complete", self.ptt.summary())
         return {"agents": results, "ptt": self.ptt.summary()}
 
     def learning_loop(self, cycles: int = 100, dry_run: bool = True) -> dict[str, Any]:
-        """Run recon pipeline then iterative evasion → attack → evaluation → learn."""
+        """Exécute recon/enum/vuln puis la boucle évasion → attaque → évaluation → apprentissage."""
         self._strategic_plan()
         convergence: list[dict[str, Any]] = []
         detections = 0
@@ -123,6 +147,8 @@ class OrchestratorAgent(BaseAgent):
             agent.run(**kwargs)
             self._status(name, "done")
 
+        self._strategic_replan()
+
         for cycle in range(1, cycles + 1):
             self._status("evasion", "running", f"cycle {cycle}/{cycles}")
             evasion_result = self.evasion.run(dry_run=dry_run)
@@ -131,7 +157,7 @@ class OrchestratorAgent(BaseAgent):
                 dry_run=dry_run, eve_log=self.eve_log
             )
             detected = eval_result.get("detected", False)
-            learn_result = self.evasion.learn(detected)
+            learn_result = self.evasion.learn(detected, p_detect=eval_result.get("rf_proba"))
 
             if detected:
                 detections += 1
