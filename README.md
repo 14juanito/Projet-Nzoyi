@@ -1,18 +1,31 @@
 <p align="center">
-  <img src="assets/openzoyi-logo.png" alt="OpenZoyi — Multi-agent automated intrusion system" width="480">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:00ff41,100:0d1117&height=200&section=header&text=OpenZoyi&fontSize=64&fontAlignY=38&fontColor=39FF14&animation=fadeIn&desc=Multi-Agent%20Adaptive%20Intrusion%20Framework&descAlignY=58&descSize=17&descColor=39FF14" alt="OpenZoyi banner" width="100%">
 </p>
 
-<h1 align="center">OpenZoyi</h1>
+<p align="center">
+  <img src="assets/openzoyi-logo.png" alt="OpenZoyi — Multi-agent automated intrusion system" width="200">
+</p>
+
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=2800&pause=900&color=39FF14&center=true&vCenter=true&width=700&lines=%5B*%5D+Initialisation+du+Pentest+Tree+(PTT)...;%5B*%5D+Chargement+de+7+agents+sp%C3%A9cialis%C3%A9s...;%5B*%5D+Evasion+Agent+%E2%80%94+Q-Learning+actif...;%5B*%5D+Analyse+des+alertes+Suricata+(eve.json)...;%5B%2B%5D+Syst%C3%A8me+multi-agents+op%C3%A9rationnel." alt="Typing SVG">
+</p>
 
 <p align="center">
   <strong>Système multi-agents d'intrusion automatisée avec évasion adaptative des IDS</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/14juanito/Projet-Nzoyi"><img src="https://img.shields.io/badge/version-0.1.0-orange?style=flat-square" alt="Version"></a>
-  <a href="https://github.com/14juanito/Projet-Nzoyi"><img src="https://img.shields.io/badge/python-3.11+-blue?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
-  <a href="docs/LAB_SETUP.md"><img src="https://img.shields.io/badge/lab-isol%C3%A9-green?style=flat-square" alt="Lab isolé"></a>
-  <a href="https://github.com/14juanito/Projet-Nzoyi"><img src="https://img.shields.io/badge/licence-recherche-lightgrey?style=flat-square" alt="Licence"></a>
+  <a href="https://github.com/14juanito/Projet-Nzoyi"><img src="https://img.shields.io/badge/version-0.1.0-39FF14?style=flat-square&labelColor=0d1117" alt="Version"></a>
+  <a href="https://github.com/14juanito/Projet-Nzoyi"><img src="https://img.shields.io/badge/python-3.11+-39FF14?style=flat-square&logo=python&logoColor=39FF14&labelColor=0d1117" alt="Python"></a>
+  <a href="docs/LAB_SETUP.md"><img src="https://img.shields.io/badge/lab-isol%C3%A9-39FF14?style=flat-square&labelColor=0d1117" alt="Lab isolé"></a>
+  <a href="https://github.com/14juanito/Projet-Nzoyi"><img src="https://img.shields.io/badge/licence-recherche-39FF14?style=flat-square&labelColor=0d1117" alt="Licence"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/stars/14juanito/Projet-Nzoyi?style=flat-square&color=39FF14&labelColor=0d1117" alt="Stars">
+  <img src="https://img.shields.io/github/forks/14juanito/Projet-Nzoyi?style=flat-square&color=39FF14&labelColor=0d1117" alt="Forks">
+  <img src="https://img.shields.io/github/last-commit/14juanito/Projet-Nzoyi?style=flat-square&color=39FF14&labelColor=0d1117" alt="Last commit">
+  <img src="https://img.shields.io/github/issues/14juanito/Projet-Nzoyi?style=flat-square&color=39FF14&labelColor=0d1117" alt="Issues">
 </p>
 
 ---
@@ -29,6 +42,24 @@ Contrairement aux outils de pentest classiques, NZOYI combine :
 - un **Evaluation Agent** qui lit le feedback des alertes IDS (Suricata `eve.json`).
 
 > Projet de fin de cycle — Faculté des Sciences Informatiques, Université Protestante au Congo (UPC).
+
+---
+
+## Aperçu terminal
+
+```ansi
+[38;5;46m┌──(nzoyi㉿kali)-[~/Projet-Nzoyi][0m
+[38;5;46m└─$[0m python main.py --target 192.168.100.11 --profile stealth
+
+[38;5;46m[*][0m Orchestrator      : pipeline initialisé (7 agents)
+[38;5;46m[*][0m Recon Agent       : 3 hôtes actifs détectés sur 192.168.100.0/24
+[38;5;46m[*][0m Enumerator Agent  : services fingerprintés (22/tcp, 80/tcp, 443/tcp)
+[38;5;46m[*][0m Vuln Analyzer     : 2 vecteurs exploitables identifiés
+[38;5;46m[*][0m Evasion Agent     : Q-table chargée — profil stealth (T2, delay=500ms, frag=on)
+[38;5;226m[~][0m Evaluation Agent  : lecture eve.json (Suricata)...
+[38;5;46m[+][0m Aucune alerte critique — score de furtivité : 0.92
+[38;5;46m[+][0m Rapport généré → results/report_2026-07-21.json
+```
 
 ---
 
@@ -197,4 +228,8 @@ Faculté des Sciences Informatiques — Université Protestante au Congo
 
 <p align="center">
   <sub>OpenZoyi v0.1.0 — Multi-agent automated intrusion system</sub>
+</p>
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:00ff41,100:0d1117&height=120&section=footer" alt="footer" width="100%">
 </p>
