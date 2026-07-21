@@ -1,346 +1,216 @@
-# NZOYI — Guide d'installation du Lab
+# Configuration du laboratoire — Réseau isolé KVM/libvirt
 
-## Architecture cible
+> Environnement expérimental du projet NZOYI.
+> Deux machines sur un réseau isolé, virtualisées via KVM/QEMU (libvirt) sur un hôte Kali Linux bare-metal.
+> Objectif : garantir un banc de test **reproductible** et **hermétique** pour la mesure de résilience des IDS.
+
+---
+
+## 1. Topologie
+
+| Machine | Rôle | Interface | Réseau libvirt | IP |
+| --- | --- | --- | --- | --- |
+| **Attaquant** — Kali Linux (hôte bare-metal) | NZOYI, Nmap, orchestrateur | — | `nzoyi-lab` | `192.168.100.10` |
+| **Cible/Défenseur** — Ubuntu Server 24.04.4 LTS (VM) | Suricata, RF Oracle (Flask), SSH, Apache | `enp2s0` | `nzoyi-lab` (isolé) | `192.168.100.11` |
+| — | Provisioning / mises à jour | `enp1s0` | `default` (NAT) | `192.168.122.x` (DHCP) |
+
+La VM cible possède **deux cartes réseau** :
+
+- `enp2s0` → réseau **isolé** `nzoyi-lab` (192.168.100.0/24) — **plan expérimental**, aucun egress.
+- `enp1s0` → réseau **NAT** `default` (192.168.122.0/24) — uniquement pour l'installation des paquets et mises à jour. À déconnecter avant toute campagne de mesure formelle si l'on veut un isolement strict.
+
+---
+
+## 2. Réseaux libvirt
+
+Deux réseaux distincts sont définis côté hôte :
+
+```bash
+# Vérifier les réseaux existants
+virsh net-list --all
+```
+
+Résultat attendu :
 
 ```
-PC 1 (16GB) — Kali Linux bare-metal         PC 2 (8GB) — Ubuntu Server bare-metal
-🗡️ ATTAQUANT                                🛡️ DÉFENSEUR + CIBLE
-─────────────────────────────                ─────────────────────────────
-• NZOYI (agents Python)                      • Ubuntu Server 22.04
-• Ollama + Mistral 7B                        • Suricata (NIDS)
-• Wazuh Manager (optionnel, Docker)          • Services vulnérables intentionnels
-• Python 3.11+                               • Wazuh Agent (optionnel)
+ Name        State    Autostart   Persistent
+--------------------------------------------------
+ default     active   yes         yes
+ nzoyi-lab   active   yes         yes
+```
 
-         eth0: 192.168.100.10                         eth0: 192.168.100.11
-              │                                            │
-              └──────── câble Ethernet direct ─────────────┘
-                    ou switch dédié (réseau isolé)
-                    Subnet: 192.168.100.0/24
+### 2.1 Réseau isolé `nzoyi-lab`
+
+Définition (`nzoyi-lab.xml`) — réseau **isolé** (pas de `<forward>`, donc aucun routage vers l'extérieur) :
+
+```xml
+<network>
+  <name>nzoyi-lab</name>
+  <bridge name='virbr-nzoyi' stp='on' delay='0'/>
+  <ip address='192.168.100.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.100.10' end='192.168.100.50'/>
+    </dhcp>
+  </ip>
+</network>
+```
+
+> **Note d'isolement** : l'absence de balise `<forward mode='nat'/>` est volontaire. C'est ce qui garantit qu'aucun paquet ne quitte le réseau `nzoyi-lab`. Exigence éthique + validité expérimentale.
+
+Application :
+
+```bash
+virsh net-define nzoyi-lab.xml
+virsh net-start nzoyi-lab
+virsh net-autostart nzoyi-lab
+```
+
+### 2.2 URI libvirt par défaut
+
+Pour éviter de préfixer chaque commande `virsh` par `qemu:///system`, ajouter dans `~/.zshrc` (Kali) :
+
+```bash
+export LIBVIRT_DEFAULT_URI=qemu:///system
+```
+
+Puis :
+
+```bash
+source ~/.zshrc
 ```
 
 ---
 
-## ÉTAPE 1 — Installer Ubuntu Server sur PC 2
+## 3. Vérification de la connectivité (banc validé)
 
-### 1.1 Télécharger l'ISO
-Depuis le PC 1 (Kali), télécharge sur une clé USB :
+### 3.1 Adresses de la cible
+
+Sur la VM cible :
+
 ```bash
-# Télécharger Ubuntu Server 22.04 LTS
-wget https://releases.ubuntu.com/22.04/ubuntu-22.04.4-live-server-amd64.iso
-
-# Créer la clé USB bootable (remplace /dev/sdX par ta clé)
-sudo dd if=ubuntu-22.04.4-live-server-amd64.iso of=/dev/sdX bs=4M status=progress
+ip a
 ```
 
-### 1.2 Installation
-- Boot PC 2 sur la clé USB
-- Langue : français ou anglais
-- **Réseau** : configurer en IP statique pendant l'installation si possible,
-  sinon on le fera après
-- **Nom utilisateur** : `defender` (ou ce que tu veux)
-- **Nom machine** : `nzoyi-target`
-- Cocher **OpenSSH Server** quand proposé
-- Pas besoin de snaps supplémentaires
+On doit retrouver **les deux** interfaces :
 
-### 1.3 Premier boot — mise à jour
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y net-tools curl wget vim htop
 ```
+enp1s0 → 192.168.122.x/24   (NAT, provisioning)
+enp2s0 → 192.168.100.11/24  (isolé, plan expérimental)
+```
+
+> **Piège** : l'écran de bienvenue d'Ubuntu (MOTD) n'affiche que la première interface (`enp1s0`, 192.168.122.x). Ce n'est **pas** un signe que la cible est mal configurée — vérifier systématiquement avec `ip a`.
+
+### 3.2 Atteignabilité depuis l'attaquant
+
+Depuis Kali :
+
+```bash
+ping -c 4 192.168.100.11
+```
+
+Attendu : `0% packet loss`, latence < 1 ms (réseau virtuel local).
 
 ---
 
-## ÉTAPE 2 — Configurer le réseau isolé
+## 4. Détecteur de signature — Suricata
 
-### 2.1 Connexion physique
-Connecte les deux PC avec un **câble Ethernet direct** (ou via un switch dédié).
-⚠️ Ce réseau doit être **isolé d'Internet** pendant les tests.
+### 4.1 État du service
 
-### 2.2 Sur PC 2 (Ubuntu Server) — IP statique
-```bash
-# Identifier l'interface réseau
-ip link show
-# Note le nom (ex: enp0s3, eth0, ens33...)
-
-# Configurer l'IP statique via Netplan
-sudo nano /etc/netplan/00-installer-config.yaml
-```
-
-Contenu :
-```yaml
-network:
-  version: 2
-  ethernets:
-    enp0s3:          # <-- remplace par ton interface
-      addresses:
-        - 192.168.100.11/24
-      routes:
-        - to: 192.168.100.0/24
-          via: 192.168.100.11
-```
+Sur la cible :
 
 ```bash
-sudo netplan apply
-```
-
-### 2.3 Sur PC 1 (Kali) — IP statique
-```bash
-# Identifier l'interface
-ip link show
-
-# Configurer temporairement
-sudo ip addr add 192.168.100.10/24 dev eth0  # remplace eth0
-sudo ip link set eth0 up
-
-# OU configurer de manière permanente via /etc/network/interfaces
-sudo nano /etc/network/interfaces
-```
-
-Ajouter :
-```
-auto eth0
-iface eth0 inet static
-    address 192.168.100.10
-    netmask 255.255.255.0
-```
-
-```bash
-sudo systemctl restart networking
-```
-
-### 2.4 Test de connectivité
-```bash
-# Depuis Kali (PC 1)
-ping 192.168.100.11
-
-# Depuis Ubuntu (PC 2)
-ping 192.168.100.10
-```
-
-✅ Si les pings passent, le réseau isolé fonctionne.
-
----
-
-## ÉTAPE 3 — Installer Suricata sur PC 2
-
-### 3.1 Installation
-```bash
-sudo apt install -y software-properties-common
-sudo add-apt-repository ppa:oisf/suricata-stable -y
-sudo apt update
-sudo apt install -y suricata suricata-update
-```
-
-### 3.2 Configuration de base
-```bash
-# Identifier l'interface réseau à surveiller
-ip link show
-# C'est la même interface que celle configurée en 192.168.100.11
-
-# Configurer Suricata
-sudo nano /etc/suricata/suricata.yaml
-```
-
-Modifications clés dans `suricata.yaml` :
-```yaml
-# Chercher HOME_NET et remplacer
-vars:
-  address-groups:
-    HOME_NET: "[192.168.100.0/24]"
-    EXTERNAL_NET: "!$HOME_NET"
-
-# Chercher af-packet et configurer l'interface
-af-packet:
-  - interface: enp0s3      # <-- ton interface
-    cluster-id: 99
-    cluster-type: cluster_flow
-    defrag: yes
-
-# Activer le logging EVE JSON (essentiel pour NZOYI)
-outputs:
-  - eve-log:
-      enabled: yes
-      filetype: regular
-      filename: /var/log/suricata/eve.json
-      types:
-        - alert:
-            tagged-packets: yes
-        - stats:
-            totals: yes
-```
-
-### 3.3 Mettre à jour les règles de détection
-```bash
-sudo suricata-update
-sudo suricata-update list-sources
-sudo suricata-update enable-source et/open
-sudo suricata-update
-```
-
-### 3.4 Démarrer Suricata
-```bash
-# Test de configuration
-sudo suricata -T -c /etc/suricata/suricata.yaml
-
-# Démarrer
-sudo systemctl enable suricata
-sudo systemctl start suricata
 sudo systemctl status suricata
 ```
 
-### 3.5 Vérifier que Suricata fonctionne
+Points à confirmer :
+
+- `Active: active (running)`
+- Version affichée (à épingler pour la reproductibilité) : **Suricata 8.0.6 RELEASE**, mode `SYSTEM`.
+
+### 4.2 Interface écoutée — vérification par la preuve
+
+Plutôt que d'auditer le YAML (chemin variable, droits root), **prouver** que Suricata voit le trafic du réseau isolé :
+
 ```bash
-# Surveiller les alertes en temps réel
-sudo tail -f /var/log/suricata/eve.json | jq '.event_type'
+# Terminal cible : logs en direct
+sudo tail -f /var/log/suricata/eve.json
+```
+
+```bash
+# Terminal attaquant : générer du trafic
+nmap -sV 192.168.100.11
+```
+
+Le fichier `eve.json` doit se remplir pendant le scan. Indicateurs de bon fonctionnement observés dans le flux `stats` :
+
+- `rules_loaded: 52058` — ruleset ET Open chargé.
+- `alert: > 0` — Suricata a réagi au trafic (537 alertes lors de notre scan de validation).
+- `tcp / syn` incrémentés — capture effective du scan TCP.
+
+> **Conclusion** : si `eve.json` bouge pendant le nmap, Suricata écoute la bonne carte (`enp2s0`). Inutile de modifier `suricata.yaml`.
+
+### 4.3 Ruleset — épinglage de version (reproductibilité)
+
+Consigner dans le dépôt la version exacte du ruleset et du moteur :
+
+```
+Suricata : 8.0.6 RELEASE
+Règles chargées : 52058 (ET Open)
+Date de capture baseline : 2026-07-21
 ```
 
 ---
 
-## ÉTAPE 4 — Rendre PC 2 intentionnellement vulnérable
+## 5. Points de vigilance connus
 
-⚠️ Ces services sont installés UNIQUEMENT sur le réseau isolé.
-Ne JAMAIS exposer cette machine à Internet.
+### 5.1 Socket Suricata (non bloquant)
 
-### 4.1 Serveur SSH (déjà installé)
-```bash
-# Vérifier que SSH tourne
-sudo systemctl status ssh
+Au démarrage, Suricata peut afficher :
 
-# Le rendre légèrement plus permissif pour les tests
-sudo nano /etc/ssh/sshd_config
-# Ajouter : PermitRootLogin yes
-# Ajouter : PasswordAuthentication yes
-sudo systemctl restart ssh
+```
+E: unix-manager: failed to create socket directory /var/run/suricata/: Permission denied
+W: unix-manager: Unable to create unix command socket
 ```
 
-### 4.2 Serveur Web Apache
-```bash
-sudo apt install -y apache2
-sudo systemctl enable apache2
-sudo systemctl start apache2
+Cela casse **uniquement** l'interrogation en direct via `suricatasc`. Comme l'agent Evaluation lit directement `eve.json`, ce n'est pas bloquant. À corriger seulement si un accès socket devient nécessaire.
 
-# Vérifier
-curl http://localhost
+### 5.2 Offloading NIC — À DÉSACTIVER pour les tests d'évasion
+
+Sur `enp2s0` de la cible, les optimisations d'offloading coalescent les paquets et **annulent** les actions d'évasion par fragmentation / taille de paquet. À désactiver de façon persistante **avant la phase d'évasion** :
+
+```bash
+sudo ethtool -k enp2s0 | grep -E "generic|tcp-segmentation|large-receive"
+# generic-receive-offload, generic-segmentation-offload,
+# tcp-segmentation-offload, large-receive-offload  → doivent être "off"
 ```
 
-### 4.3 Serveur FTP
-```bash
-sudo apt install -y vsftpd
-sudo nano /etc/vsftpd.conf
-# Mettre : anonymous_enable=YES
-sudo systemctl restart vsftpd
-```
+> Non bloquant pour un run **sans évasion** (baseline), mais **critique** dès l'introduction de l'agent Evasion.
 
-### 4.4 Créer un utilisateur avec mot de passe faible (pour les tests brute force)
+### 5.3 Snapshot de référence
+
+Créer un snapshot propre de la cible pour réinitialiser l'état des flux Suricata entre les épisodes RL :
+
 ```bash
-sudo useradd -m -s /bin/bash testuser
-echo "testuser:password123" | sudo chpasswd
+virsh snapshot-create-as --domain <nom-vm-cible> --name clean-baseline \
+  --description "Etat propre avant campagne de mesure"
+# Restauration entre épisodes :
+virsh snapshot-revert --domain <nom-vm-cible> --snapshotname clean-baseline
 ```
 
 ---
 
-## ÉTAPE 5 — Test de baseline (validation manuelle)
+## 6. Checklist de pré-vol (avant tout lancement NZOYI)
 
-C'est le test le plus important : vérifier que Suricata détecte
-un scan Nmap AVANT d'écrire le moindre code agent.
-
-### 5.1 Depuis Kali (PC 1), lancer un scan
-```bash
-nmap -sV -sC 192.168.100.11
-```
-
-### 5.2 Sur PC 2, vérifier les alertes Suricata
-```bash
-sudo cat /var/log/suricata/eve.json | jq 'select(.event_type=="alert")' | tail -20
-```
-
-✅ Si tu vois des alertes liées au scan Nmap → **le baseline fonctionne**.
-C'est exactement ce que NZOYI va ensuite apprendre à contourner.
-
-### 5.3 Documenter le baseline (pour le mémoire)
-```bash
-# Compter les alertes générées par un scan standard
-sudo cat /var/log/suricata/eve.json | jq 'select(.event_type=="alert")' | wc -l
-
-# Sauvegarder ce résultat — c'est ton point de comparaison
-# Exemple : "Un scan Nmap -sV standard génère 47 alertes Suricata"
-```
+| Vérification | Commande | Attendu |
+| --- | --- | --- |
+| Cible sur réseau isolé | `ip a` (cible) | `enp2s0 → 192.168.100.11` |
+| Attaquant → cible | `ping 192.168.100.11` (Kali) | 0% packet loss |
+| Suricata actif | `systemctl status suricata` | active (running) |
+| Suricata voit le trafic | `tail -f eve.json` + `nmap` | eve.json se remplit |
+| Services cibles présents | `nmap -sV 192.168.100.11` | ports 22 / 80 / 5000 ouverts |
+| API RF (Flask) joignable | `nmap -sV 192.168.100.11` | port **5000** Werkzeug/Python |
+| Offloading désactivé (si évasion) | `ethtool -k enp2s0` | GRO/GSO/TSO/LRO = off |
 
 ---
 
-## ÉTAPE 6 — Installer les outils sur Kali (PC 1)
-
-### 6.1 Python et dépendances NZOYI
-```bash
-# Kali a déjà Python 3, vérifier la version
-python3 --version
-
-# Installer pip si nécessaire
-sudo apt install -y python3-pip python3-venv
-
-# Créer un environnement virtuel pour NZOYI
-cd ~
-python3 -m venv nzoyi-env
-source nzoyi-env/bin/activate
-
-# Installer les dépendances de base
-pip install numpy pytest
-```
-
-### 6.2 Installer Ollama + Mistral (LLM local)
-```bash
-# Installer Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Télécharger Mistral 7B (~4GB)
-ollama pull mistral
-
-# Tester
-ollama run mistral "Quelle est la capitale de la RDC ?"
-# Réponse attendue : Kinshasa
-# Ctrl+D pour quitter
-```
-
-### 6.3 Vérifier Nmap et Metasploit (déjà sur Kali)
-```bash
-nmap --version
-msfconsole --version
-```
-
----
-
-## ÉTAPE 7 — Déployer le code NZOYI
-
-### 7.1 Extraire le projet
-```bash
-cd ~
-source nzoyi-env/bin/activate
-tar xzf nzoyi_v0.1.0.tar.gz
-cd nzoyi
-```
-
-### 7.2 Lancer les tests de validation
-```bash
-python main.py --test
-```
-
-✅ Résultat attendu : 4/4 tests passent.
-
-### 7.3 Premier lancement
-```bash
-python main.py --target 192.168.100.11 --profile stealth
-```
-
----
-
-## Checklist finale
-
-- [ ] PC 2 : Ubuntu Server installé
-- [ ] Réseau : câble Ethernet entre les 2 PC
-- [ ] Réseau : PC 1 = 192.168.100.10, PC 2 = 192.168.100.11
-- [ ] Réseau : ping bidirectionnel OK
-- [ ] Suricata : installé et configuré sur PC 2
-- [ ] Services : SSH + Apache + FTP sur PC 2
-- [ ] Baseline : scan Nmap depuis PC 1 → alertes Suricata sur PC 2
-- [ ] Kali : Python venv + NZOYI + Ollama + Mistral
-- [ ] NZOYI : `python main.py --test` → 4/4 OK
+*Banc validé le 2026-07-21 — Ubuntu Server 24.04.4 LTS, Suricata 8.0.6, KVM/QEMU sur Kali Linux.*

@@ -53,7 +53,7 @@ Contrairement aux outils de pentest classiques, NZOYI combine :
 
 [38;5;46m[*][0m Orchestrator      : pipeline initialisé (7 agents)
 [38;5;46m[*][0m Recon Agent       : 3 hôtes actifs détectés sur 192.168.100.0/24
-[38;5;46m[*][0m Enumerator Agent  : services fingerprintés (22/tcp, 80/tcp, 443/tcp)
+[38;5;46m[*][0m Enumerator Agent  : services fingerprintés (22/tcp, 80/tcp, 5000/tcp)
 [38;5;46m[*][0m Vuln Analyzer     : 2 vecteurs exploitables identifiés
 [38;5;46m[*][0m Evasion Agent     : Q-table chargée — profil stealth (T2, delay=500ms, frag=on)
 [38;5;226m[~][0m Evaluation Agent  : lecture eve.json (Suricata)...
@@ -109,14 +109,16 @@ Contrairement aux outils de pentest classiques, NZOYI combine :
 
 ## Environnement de lab
 
-Le projet est conçu pour un **réseau isolé** à deux machines :
+Le projet s'exécute sur un **banc KVM/libvirt** hébergé sur Kali Linux bare-metal — réseau isolé `nzoyi-lab` (192.168.100.0/24), sans egress :
 
-| Machine | Rôle | IP |
-|---------|------|-----|
-| **PC 1 — Kali Linux** | Attaquant : NZOYI, Ollama, Nmap | `192.168.100.10` |
-| **PC 2 — Ubuntu Server 22.04** | Défenseur + cible : Suricata, SSH, Apache, FTP | `192.168.100.11` |
+| Machine | Rôle | Réseau | IP |
+|---------|------|--------|-----|
+| **Kali Linux** (hôte bare-metal) | Attaquant : NZOYI, Nmap, orchestrateur | `nzoyi-lab` | `192.168.100.10` |
+| **Ubuntu Server 24.04.4 LTS** (VM) | Défenseur + cible : Suricata 8.0.6, RF Oracle (Flask), SSH, Apache | `enp2s0` → `nzoyi-lab` | `192.168.100.11` |
 
-Le guide complet d'installation pas à pas est disponible dans [`docs/LAB_SETUP.md`](docs/LAB_SETUP.md).
+La VM cible possède une seconde carte (`enp1s0` → réseau NAT `default`) réservée au provisioning. Banc validé le 2026-07-21.
+
+Le guide complet de configuration est dans [`docs/LAB_SETUP.md`](docs/LAB_SETUP.md).
 
 ---
 
@@ -125,8 +127,8 @@ Le guide complet d'installation pas à pas est disponible dans [`docs/LAB_SETUP.
 ### Prérequis
 
 - Python 3.11+
-- Kali Linux (PC attaquant)
-- Ubuntu Server 22.04 + Suricata (PC cible, réseau isolé)
+- Kali Linux bare-metal avec KVM/QEMU (libvirt)
+- VM Ubuntu Server 24.04.4 LTS sur réseau isolé `nzoyi-lab` — Suricata 8.0.6, services cibles (22 / 80 / 5000)
 
 ### Installation
 
@@ -188,7 +190,7 @@ Projet-Nzoyi/
 ├── assets/
 │   └── openzoyi-logo.png       # Logo du projet
 ├── docs/
-│   └── LAB_SETUP.md            # Guide d'installation du lab
+│   └── LAB_SETUP.md            # Configuration lab KVM/libvirt
 ├── nzoyi/
 │   ├── agents/                 # 7 agents spécialisés
 │   ├── core/                   # PTT, profils d'attaque
