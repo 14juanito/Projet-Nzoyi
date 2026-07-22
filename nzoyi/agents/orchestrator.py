@@ -33,6 +33,7 @@ class OrchestratorAgent(BaseAgent):
         attacker_ip: str | None = None,
         on_agent_status: Callable[[str, str, str], None] | None = None,
         use_llm: bool = True,
+        use_rf_online: bool = True,
     ) -> None:
         super().__init__(ptt, profile)
         self.eve_log = eve_log
@@ -42,7 +43,9 @@ class OrchestratorAgent(BaseAgent):
         self.current_plan: dict[str, Any] = {}
         self.learner = EvasionQLearner()
         self.evasion = EvasionAgent(ptt, profile, learner=self.learner)
-        self.evaluation = EvaluationAgent(ptt, profile, attacker_ip=attacker_ip)
+        self.evaluation = EvaluationAgent(
+            ptt, profile, attacker_ip=attacker_ip, use_rf_online=use_rf_online
+        )
         self.recon = ReconAgent(ptt, profile)
         self.enumerator = EnumeratorAgent(ptt, profile)
         self.vulnerability = VulnerabilityAgent(ptt, profile)

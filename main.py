@@ -112,10 +112,13 @@ def _build_orchestrator(
     profile_name: str,
     eve_log: str | None,
     use_llm: bool = True,
+    use_rf_online: bool = True,
 ):
     profile = load_profile(profile_name)
     ptt = PentestTree(target=target)
-    orchestrator = OrchestratorAgent(ptt, profile, eve_log=eve_log, use_llm=use_llm)
+    orchestrator = OrchestratorAgent(
+        ptt, profile, eve_log=eve_log, use_llm=use_llm, use_rf_online=use_rf_online
+    )
     return profile, ptt, orchestrator
 
 
@@ -147,9 +150,12 @@ def run_finetune(
     eve_log: str | None,
     cycles: int,
     use_llm: bool,
+    use_rf_online: bool = True,
 ) -> int:
     """Online fine-tuning phase against a real Suricata IDS."""
-    _, _, orchestrator = _build_orchestrator(target, profile_name, eve_log, use_llm)
+    _, _, orchestrator = _build_orchestrator(
+        target, profile_name, eve_log, use_llm, use_rf_online=use_rf_online
+    )
 
     print_banner(__version__)
     setup_logging()
@@ -174,7 +180,7 @@ def run_finetune(
     return 0
 
 
-def run_interactive(use_llm: bool = True) -> int:
+def run_interactive(use_llm: bool = True, use_rf_online: bool = True) -> int:
     """Interactive mode — the default user experience."""
     session = InteractiveSession(version=__version__)
     params = session.start()
@@ -182,7 +188,8 @@ def run_interactive(use_llm: bool = True) -> int:
         return 0
 
     profile, ptt, orchestrator = _build_orchestrator(
-        params["target"], params["profile"], params.get("eve_log"), use_llm=use_llm
+        params["target"], params["profile"], params.get("eve_log"),
+        use_llm=use_llm, use_rf_online=use_rf_online,
     )
     setup_logging()
     print_section("EXÉCUTION")
@@ -243,10 +250,11 @@ def run_direct(
     mode: str,
     cycles: int,
     use_llm: bool = True,
+    use_rf_online: bool = True,
 ) -> int:
     """Direct CLI mode (non-interactive)."""
     profile, ptt, orchestrator = _build_orchestrator(
-        target, profile_name, eve_log, use_llm=use_llm
+        target, profile_name, eve_log, use_llm=use_llm, use_rf_online=use_rf_online
     )
 
     print_banner(__version__)
@@ -318,6 +326,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Force le fallback heuristique (reproductibilité hors-ligne)",
     )
+    parser.add_argument(
+        "--no-rf-online",
+        action="store_true",
+        help="Désactive le signal RF online (endpoint Flask) — évaluation Suricata seule",
+    )
     parser.add_argument("--version", action="version", version=f"NZOYI {__version__}")
     return parser
 
@@ -345,6 +358,7 @@ def main(argv: list[str] | None = None) -> int:
                 eve_log=args.eve_log,
                 cycles=args.cycles,
                 use_llm=not args.no_llm,
+                use_rf_online=not args.no_rf_online,
             )
 
         if args.target:
@@ -356,8 +370,9 @@ def main(argv: list[str] | None = None) -> int:
                 mode=args.mode,
                 cycles=args.cycles,
                 use_llm=not args.no_llm,
+                use_rf_online=not args.no_rf_online,
             )
-        return run_interactive(use_llm=not args.no_llm)
+        return run_interactive(use_llm=not args.no_llm, use_rf_online=not args.no_rf_online)
     except KeyboardInterrupt:
         print(f"\n\n  {Color.DIM}Interrompu. À bientôt.{Color.RESET}\n")
         return 0

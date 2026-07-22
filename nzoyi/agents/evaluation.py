@@ -23,10 +23,20 @@ class EvaluationAgent(BaseAgent):
 
     name = "evaluation"
 
-    def __init__(self, ptt, profile, attacker_ip: str | None = None) -> None:
+    def __init__(
+        self,
+        ptt,
+        profile,
+        attacker_ip: str | None = None,
+        use_rf_online: bool = True,
+    ) -> None:
+        """Si ``use_rf_online`` est False, le client RF n'est pas instancié :
+        le signal RF reste neutre (None) en permanence, sans warning, et la
+        fusion de détection repose uniquement sur Suricata."""
         super().__init__(ptt, profile)
         self.attacker_ip = attacker_ip
-        self.rf_client = RFClient(config.rf_endpoint)
+        self.use_rf_online = use_rf_online
+        self.rf_client = RFClient(config.rf_endpoint) if use_rf_online else None
         self._total_scans = 0
         self._total_detections = 0
 
@@ -55,12 +65,15 @@ class EvaluationAgent(BaseAgent):
 
         rf_proba = 0.0
         rf_detected = False
-        prediction = self.rf_client.predict(self._current_features())
-        if prediction is not None:
-            rf_proba = prediction["proba"]
-            rf_detected = rf_proba >= config.rf_threshold
-        else:
-            logger.warning("Endpoint RF injoignable (%s) — signal RF neutre.", config.rf_endpoint)
+        if self.rf_client is not None:
+            prediction = self.rf_client.predict(self._current_features())
+            if prediction is not None:
+                rf_proba = prediction["proba"]
+                rf_detected = rf_proba >= config.rf_threshold
+            else:
+                logger.warning(
+                    "Endpoint RF injoignable (%s) — signal RF neutre.", config.rf_endpoint
+                )
 
         detected = suricata_detected or rf_detected
         if detected:
