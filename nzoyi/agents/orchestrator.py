@@ -39,6 +39,7 @@ class OrchestratorAgent(BaseAgent):
         self.attacker_ip = attacker_ip
         self.on_agent_status = on_agent_status
         self.use_llm = use_llm
+        self.current_plan: dict[str, Any] = {}
         self.learner = EvasionQLearner()
         self.evasion = EvasionAgent(ptt, profile, learner=self.learner)
         self.evaluation = EvaluationAgent(ptt, profile, attacker_ip=attacker_ip)
@@ -66,6 +67,17 @@ class OrchestratorAgent(BaseAgent):
         for agent in self.pipeline:
             agent.profile = profile
 
+    def _apply_plan(self, plan: dict[str, Any]) -> None:
+        """Fait exécuter par le pipeline la décision stratégique du LLM.
+
+        Ordonne les cibles d'attaque selon ``ports_cibles`` et transmet ce
+        classement, ainsi que ``services_focus``, à :class:`AttackAgent` via
+        les attributs ``target_ports``/``focus_services`` — c'est
+        :meth:`AttackAgent.run` qui applique concrètement ce filtrage/tri.
+        """
+        self.attack.target_ports = list(plan.get("ports_cibles", []))
+        self.attack.focus_services = list(plan.get("services_focus", []))
+
     def _strategic_plan(self) -> dict[str, Any]:
         """Exécute la couche stratégique LLM UNE fois (jamais dans la boucle RL).
 
@@ -80,6 +92,7 @@ class OrchestratorAgent(BaseAgent):
             self._apply_profile(load_profile(plan["profil"]))
         except (KeyError, ValueError) as exc:
             logger.warning("Profil LLM invalide (%s) — profil courant conservé.", exc)
+        self.current_plan = plan
         self.ptt.add(self.name, "llm_strategy", plan, allow_duplicate=True)
         return plan
 
@@ -95,6 +108,7 @@ class OrchestratorAgent(BaseAgent):
             self._apply_profile(load_profile(plan["profil"]))
         except (KeyError, ValueError) as exc:
             logger.warning("Profil LLM invalide en replan (%s) — profil courant conservé.", exc)
+        self.current_plan = plan
         self.ptt.add(self.name, "llm_replan", plan, allow_duplicate=True)
         return plan
 
@@ -121,19 +135,29 @@ class OrchestratorAgent(BaseAgent):
             ("vulnerability", self.vulnerability, {"dry_run": dry_run}),
         ])
 
-        self._strategic_replan()
+        plan = self._strategic_replan()
+        self.ptt.add(self.name, "llm_decision", plan, allow_duplicate=True)
 
-        self._run_agents(results, [
-            ("evasion", self.evasion, {"dry_run": dry_run}),
-            ("attack", self.attack, {"dry_run": dry_run}),
-            ("evaluation", self.evaluation, {"dry_run": dry_run, "eve_log": self.eve_log}),
-        ])
+        if not plan["lancer_boucle_evasion"]:
+            logger.info("Boucle d'évasion avortée: %s", plan["raison"])
+            self.ptt.add(self.name, "evasion_aborted", plan)
+        else:
+            self._apply_plan(plan)
+            self._run_agents(results, [
+                ("evasion", self.evasion, {"dry_run": dry_run}),
+                ("attack", self.attack, {"dry_run": dry_run}),
+                ("evaluation", self.evaluation, {"dry_run": dry_run, "eve_log": self.eve_log}),
+            ])
 
         self.ptt.add(self.name, "pipeline_complete", self.ptt.summary())
         return {"agents": results, "ptt": self.ptt.summary()}
 
-    def learning_loop(self, cycles: int = 100, dry_run: bool = True) -> dict[str, Any]:
-        """Exécute recon/enum/vuln puis la boucle évasion → attaque → évaluation → apprentissage."""
+    def learning_loop(self, cycles: int | None = None, dry_run: bool = True) -> dict[str, Any]:
+        """Exécute recon/enum/vuln puis la boucle évasion → attaque → évaluation → apprentissage.
+
+        ``cycles`` prime sur la décision du LLM quand il est fourni ; sinon le
+        nombre de cycles vient de ``plan["cycles"]`` (couche stratégique).
+        """
         self._strategic_plan()
         convergence: list[dict[str, Any]] = []
         detections = 0
@@ -147,7 +171,33 @@ class OrchestratorAgent(BaseAgent):
             agent.run(**kwargs)
             self._status(name, "done")
 
-        self._strategic_replan()
+        plan = self._strategic_replan()
+        self.ptt.add(self.name, "llm_decision", plan, allow_duplicate=True)
+
+        if not plan["lancer_boucle_evasion"]:
+            logger.info("Boucle d'évasion avortée: %s", plan["raison"])
+            self.ptt.add(self.name, "evasion_aborted", plan)
+            results_dir = Path("results")
+            results_dir.mkdir(exist_ok=True)
+            self.learner.save(results_dir / "qtable.json")
+            with open(results_dir / "convergence.json", "w", encoding="utf-8") as handle:
+                json.dump(convergence, handle, indent=2)
+            self.ptt.add(self.name, "learning_complete", {
+                "cycles": 0,
+                "final_detection_rate": 0,
+                "final_epsilon": self.learner.epsilon,
+            })
+            return {
+                "cycles": 0,
+                "convergence": convergence,
+                "final_detection_rate": 0,
+                "qtable_path": str(results_dir / "qtable.json"),
+                "convergence_path": str(results_dir / "convergence.json"),
+            }
+
+        self._apply_plan(plan)
+        if cycles is None:
+            cycles = plan["cycles"]
 
         for cycle in range(1, cycles + 1):
             self._status("evasion", "running", f"cycle {cycle}/{cycles}")

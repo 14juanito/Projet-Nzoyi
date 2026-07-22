@@ -18,12 +18,34 @@ class AttackAgent(BaseAgent):
 
     ``dry_run`` ne fait plus que basculer entre exécution réelle et mode plan :
     la commande est construite mais jamais lancée sur le réseau.
+
+    ``target_ports``/``focus_services`` sont fixés par
+    :meth:`OrchestratorAgent._apply_plan` (décision stratégique du LLM) : quand
+    présents, ils priorisent/filtrent les ports du PTT sans jamais intervenir
+    dans la boucle Q-Learning.
     """
 
     name = "attack"
+    target_ports: list[int] | None = None
+    focus_services: list[str] | None = None
+
+    def _select_targets(self, open_ports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Filtre par ``focus_services`` puis ordonne selon ``target_ports``."""
+        targets = open_ports
+        if self.focus_services:
+            targets = [
+                entry for entry in targets
+                if entry.get("service") in self.focus_services
+            ]
+        if self.target_ports:
+            priority = {port: i for i, port in enumerate(self.target_ports)}
+            targets = sorted(
+                targets, key=lambda entry: priority.get(entry["port"], len(priority))
+            )
+        return targets
 
     def run(self, dry_run: bool = False) -> dict[str, Any]:
-        open_ports = self.ptt.get_recon_results()
+        open_ports = self._select_targets(self.ptt.get_recon_results())
         timing = _TIMING_MAP.get(self.profile.nmap_timing, 3)
         scan_type = "stealth" if self.profile.packet_fragment else "version"
 

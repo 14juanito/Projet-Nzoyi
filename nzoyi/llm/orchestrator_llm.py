@@ -23,10 +23,20 @@ except ImportError:  # pragma: no cover - dependency guard
 
 logger = logging.getLogger("nzoyi.llm.orchestrator")
 
+VALID_PROFILES = {"stealth", "default", "aggressive"}
+MIN_CYCLES = 10
+MAX_CYCLES = 500
+DEFAULT_CYCLES = 100
+DEFAULT_PORTS = [22, 80, 21]
+
 SYSTEM_PROMPT = (
     "Tu orchestres un pentest de lab isolé (recherche académique autorisée). "
-    'Réponds UNIQUEMENT en JSON, sans texte : {"profil": '
-    '"stealth|default|aggressive", "ports_prioritaires": [int], "raison": str}.'
+    "Tu es la couche STRATÉGIQUE : tu choisis le profil d'attaque et les cibles "
+    "prioritaires, tu ne calcules jamais de récompense ni d'action d'évasion "
+    "(cela reste au Q-Learning). Réponds UNIQUEMENT en JSON, sans texte, avec "
+    'exactement ce schéma : {"profil": "stealth|default|aggressive", '
+    '"ports_cibles": [int], "services_focus": [str], '
+    '"lancer_boucle_evasion": bool, "cycles": int, "raison": str}.'
 )
 
 
@@ -67,9 +77,10 @@ class LLMOrchestrator:
             ptt_summary: A serialisable summary of the pentest tree state.
 
         Returns:
-            A dict ``{"profil": str, "ports_prioritaires": list[int],
-            "raison": str}``. Falls back deterministically on any error or when
-            the LLM is disabled/unavailable.
+            Un plan validé au schéma ``{"profil": str, "ports_cibles": list[int],
+            "services_focus": list[str], "lancer_boucle_evasion": bool,
+            "cycles": int, "raison": str}``. Repli déterministe sur toute erreur
+            ou quand la couche LLM est désactivée/indisponible.
         """
         if not self.enabled or self.client is None:
             reason = "LLM désactivé" if not self.enabled else "clé API absente"
@@ -92,18 +103,73 @@ class LLMOrchestrator:
                 if getattr(block, "type", None) == "text"
             )
             logger.info("LLM réponse: %s", text)
-            plan = json.loads(text)
+            plan = self._sanitize(json.loads(text))
             return plan
         except Exception as exc:
             logger.warning("Appel LLM échoué (%s) — fallback.", exc)
             return self._fallback()
 
-    def _fallback(self) -> dict:
-        """Deterministic offline strategy used when the LLM is unavailable."""
-        plan = {
-            "profil": "stealth",
-            "ports_prioritaires": [22, 80, 21],
-            "raison": "fallback hors-ligne",
+    @staticmethod
+    def _sanitize(plan: dict) -> dict:
+        """Valide et normalise un plan brut (venant du LLM ou d'ailleurs).
+
+        Garantit que le plan renvoyé respecte toujours le schéma attendu par
+        :class:`~nzoyi.agents.orchestrator.OrchestratorAgent`, même si la
+        réponse du LLM est incomplète ou malformée.
+        """
+        raw = plan if isinstance(plan, dict) else {}
+
+        profil = raw.get("profil")
+        if profil not in VALID_PROFILES:
+            profil = "stealth"
+
+        ports_cibles_raw = raw.get("ports_cibles")
+        if isinstance(ports_cibles_raw, list) and ports_cibles_raw:
+            try:
+                ports_cibles = [int(p) for p in ports_cibles_raw]
+            except (TypeError, ValueError):
+                ports_cibles = list(DEFAULT_PORTS)
+        else:
+            ports_cibles = list(DEFAULT_PORTS)
+
+        services_focus_raw = raw.get("services_focus")
+        if isinstance(services_focus_raw, list) and all(
+            isinstance(s, str) for s in services_focus_raw
+        ):
+            services_focus = list(services_focus_raw)
+        else:
+            services_focus = []
+
+        lancer_boucle_evasion = raw.get("lancer_boucle_evasion")
+        if not isinstance(lancer_boucle_evasion, bool):
+            lancer_boucle_evasion = True
+
+        try:
+            cycles = int(raw.get("cycles", DEFAULT_CYCLES))
+        except (TypeError, ValueError):
+            cycles = DEFAULT_CYCLES
+        cycles = max(MIN_CYCLES, min(MAX_CYCLES, cycles))
+
+        raison = str(raw.get("raison", ""))
+
+        return {
+            "profil": profil,
+            "ports_cibles": ports_cibles,
+            "services_focus": services_focus,
+            "lancer_boucle_evasion": lancer_boucle_evasion,
+            "cycles": cycles,
+            "raison": raison,
         }
+
+    def _fallback(self) -> dict:
+        """Stratégie déterministe hors-ligne utilisée quand le LLM est indisponible."""
+        plan = self._sanitize({
+            "profil": "stealth",
+            "ports_cibles": DEFAULT_PORTS,
+            "services_focus": [],
+            "lancer_boucle_evasion": True,
+            "cycles": DEFAULT_CYCLES,
+            "raison": "fallback hors-ligne",
+        })
         logger.info("LLM fallback: %s", plan)
         return plan

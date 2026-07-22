@@ -22,6 +22,7 @@ from nzoyi.agents.recon import ReconAgent
 from nzoyi.agents.vulnerability import VulnerabilityAgent
 from nzoyi.core.config import load_profile
 from nzoyi.core.ptt import PentestTree
+from nzoyi.llm.orchestrator_llm import LLMOrchestrator
 from nzoyi.rl.qlearning import EvasionAction, EvasionQLearner, EvasionState
 from nzoyi.tools.ids_log_reader import SuricataLogReader
 from nzoyi.tools.nmap_wrapper import parse_nmap_xml
@@ -475,6 +476,77 @@ def test_full_pipeline_online_signals() -> bool:
     )
 
 
+# ── Couche stratégique LLM (sanitize + gating de la boucle d'évasion) ──────
+
+def test_llm_orchestrator_sanitize_clamps_and_validates() -> bool:
+    """_sanitize doit clamper `cycles` hors bornes et rejeter un profil invalide."""
+    too_high = LLMOrchestrator._sanitize({
+        "profil": "profil-inexistant",
+        "cycles": 9999,
+    })
+    too_low = LLMOrchestrator._sanitize({"cycles": 1})
+    valid = LLMOrchestrator._sanitize({
+        "profil": "aggressive",
+        "ports_cibles": ["80", 443],
+        "services_focus": ["http"],
+        "lancer_boucle_evasion": False,
+        "cycles": 42,
+        "raison": "test",
+    })
+    return (
+        too_high["profil"] == "stealth"  # profil invalide -> repli
+        and too_high["cycles"] == 500  # clampé au maximum
+        and too_low["cycles"] == 10  # clampé au minimum
+        and valid["profil"] == "aggressive"
+        and valid["ports_cibles"] == [80, 443]
+        and valid["lancer_boucle_evasion"] is False
+        and valid["cycles"] == 42
+    )
+
+
+def test_llm_orchestrator_fallback_schema() -> bool:
+    """Le repli hors-ligne doit respecter le schéma complet attendu par l'orchestrateur."""
+    planner = LLMOrchestrator(enabled=False)
+    plan = planner.decide({"target": "192.168.100.11"})
+    return (
+        plan["profil"] == "stealth"
+        and plan["ports_cibles"] == [22, 80, 21]
+        and plan["services_focus"] == []
+        and plan["lancer_boucle_evasion"] is True
+        and plan["cycles"] == 100
+        and isinstance(plan["raison"], str)
+    )
+
+
+def test_learning_loop_aborted_by_llm() -> bool:
+    """lancer_boucle_evasion=False doit sauter la boucle Q-Learning entièrement."""
+    ptt = PentestTree("192.168.100.11")
+    orchestrator = OrchestratorAgent(ptt, load_profile("stealth"), use_llm=False)
+    aborted_plan = {
+        "profil": "stealth",
+        "ports_cibles": [22],
+        "services_focus": [],
+        "lancer_boucle_evasion": False,
+        "cycles": 50,
+        "raison": "cible jugée non prioritaire",
+    }
+    fake_ports = [
+        {"host": "192.168.100.11", "port": 22, "state": "open", "service": "ssh"},
+    ]
+
+    with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", return_value=fake_ports) as mock_scan, \
+         patch.object(OrchestratorAgent, "_strategic_replan", return_value=aborted_plan):
+        result = orchestrator.learning_loop(dry_run=True)
+
+    return (
+        result["cycles"] == 0
+        and result["convergence"] == []
+        and mock_scan.call_count == 1  # seul recon a scanné, pas la boucle évasion/attaque
+        and len(ptt.find(kind="evasion_aborted")) == 1
+        and ptt.find(kind="evasion_aborted")[0].data["raison"] == "cible jugée non prioritaire"
+    )
+
+
 def run_all_tests() -> dict[str, bool]:
     return {
         "PTT shared memory": test_ptt_shared_memory(),
@@ -502,4 +574,7 @@ def run_all_tests() -> dict[str, bool]:
         "Orchestrator 7-agent pipeline": test_orchestrator_pipeline(),
         "Pipeline complet — mode plan dry-run": test_full_pipeline_dry_run_plan_mode(),
         "Pipeline complet — signaux online distincts": test_full_pipeline_online_signals(),
+        "LLM stratégique — sanitize clamp/validation": test_llm_orchestrator_sanitize_clamps_and_validates(),
+        "LLM stratégique — schéma du repli hors-ligne": test_llm_orchestrator_fallback_schema(),
+        "Boucle d'évasion avortée par le LLM": test_learning_loop_aborted_by_llm(),
     }
