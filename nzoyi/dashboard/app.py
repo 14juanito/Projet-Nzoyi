@@ -1,10 +1,15 @@
 """
-NZOYI — Console C2 Streamlit (standalone).
+NZOYI — Console C2 Streamlit (visualiseur pur).
 
 Esthetique "cyber ops console" : fond noir, neon vert, monospace, panneaux a
-coins en crochets, matrix rain + scanlines CRT. Deux pages :
-  Page 1 · Mission Control  — configuration + lancement
-  Page 2 · Live Ops         — execution temps reel (simulation dry-run)
+coins en crochets, matrix rain + scanlines CRT.
+
+Ce dashboard ne simule RIEN : il lit en continu les fichiers d'etat ecrits par
+le CLI (main.py + orchestrator) dans results/ :
+  - results/run_state.json      agent courant + statut
+  - results/evasion_state.json  cycle / epsilon / alerts / p_detect
+  - results/ptt.json            arbre du Pentest Tree
+  - results/convergence.json    courbe de detection
 
 Lancement :
   python3 nzoyi/dashboard/app.py          # auto (venv + streamlit)
@@ -30,10 +35,7 @@ if __name__ == "__main__" and "streamlit" not in sys.modules:
     )
 
 import json
-import os
-import random
 import time
-from datetime import datetime
 
 import streamlit as st
 
@@ -69,6 +71,9 @@ except ImportError:
 
 VERSION = "0.1.0"
 
+# Répertoire des fichiers d'état écrits par le CLI.
+RESULTS = Path("results")
+
 # ── Palette "cyber ops console" ──────────────────────────────────────────────
 BG = "#050a08"        # fond global
 BG2 = "#0a120d"       # fond panneaux
@@ -87,17 +92,6 @@ CYAN = NEON_DIM
 PURPLE = NEON_DIM
 ORANGE = AMBER
 
-# ── Predefined evasion strategies ────────────────────────────────────────────
-STRATEGIES: dict[str, dict[str, float]] = {
-    "ghost":         {"rate": 0.3, "pkt": 80,   "frag": 4, "jitter": 2.0, "ttl": 52},
-    "ultra_stealth": {"rate": 0.5, "pkt": 64,   "frag": 3, "jitter": 1.5, "ttl": 58},
-    "slow_frag":     {"rate": 1.0, "pkt": 128,  "frag": 2, "jitter": 0.8, "ttl": 64},
-    "adaptive_v1":   {"rate": 1.5, "pkt": 192,  "frag": 2, "jitter": 1.0, "ttl": 60},
-    "adaptive_v2":   {"rate": 0.8, "pkt": 96,   "frag": 3, "jitter": 1.2, "ttl": 55},
-    "balanced":      {"rate": 5.0, "pkt": 512,  "frag": 0, "jitter": 0.2, "ttl": 128},
-    "fast":          {"rate": 10.0, "pkt": 1024, "frag": 0, "jitter": 0.0, "ttl": 128},
-}
-
 AGENTS = ["recon", "enumerator", "vulnerability", "evasion", "attack", "evaluation"]
 # Mappe chaque agent a une icone Lucide (remplace les anciens emojis).
 AGENT_ICONS = {
@@ -109,8 +103,34 @@ AGENT_ICONS = {
     "evaluation": "shield",
 }
 
-# UNSW-NB15 features shown in the IDS panel and their "alert" thresholds.
-FEATURE_THRESHOLDS = {"sttl": 80, "rate": 5, "dload": 5000, "dmean": 300}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LECTURE D'ÉTAT (fichiers écrits par le CLI)
+# ═══════════════════════════════════════════════════════════════════════════
+def _read_json(name: str, default=None):
+    """Lit results/<name> en tolérant l'absence, un JSON partiel ou corrompu."""
+    try:
+        with open(RESULTS / name, encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, json.JSONDecodeError, ValueError):
+        return default
+
+
+def _autorefresh(interval_ms: int = 1500) -> None:
+    """Relit les fichiers d'état toutes les ~1.5s (lecture continue).
+
+    Utilise ``st_autorefresh`` si le composant est installé, sinon repli sur un
+    ``time.sleep`` + ``st.rerun``. Suspendu si l'utilisateur met en pause.
+    """
+    if st.session_state.get("paused_refresh"):
+        return
+    try:
+        from streamlit_autorefresh import st_autorefresh
+
+        st_autorefresh(interval=interval_ms, key="nz_refresh")
+    except Exception:
+        time.sleep(interval_ms / 1000)
+        st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -356,20 +376,19 @@ def render_clock() -> None:
     )
 
 
-def render_status_bar(cfg: dict | None, running: bool) -> None:
-    """Barre de statut C2 en haut de page."""
-    target = (cfg or {}).get("target", "192.168.100.11")
-    mode = (cfg or {}).get("mode", "standby").upper()
-    dry = "DRY-RUN" if (cfg or {}).get("dry_run", True) else "LIVE"
-    status = "ONLINE" if running else "STANDBY"
+def render_status_bar(run_state: dict | None, running: bool) -> None:
+    """Barre de statut C2 en haut de page (dérivée de run_state.json)."""
+    rs = run_state or {}
+    target = rs.get("target", "192.168.100.11")
+    agent = (rs.get("current_agent") or "standby").upper()
+    status = "ONLINE" if running else ("DONE" if rs else "STANDBY")
     scol = NEON if running else AMBER
     sep = '<span class="sep">·</span>'
     st.markdown(
         f'<div class="nz-statusbar">'
         f'{icon("cpu", 14, NEON)} STATUS: <b style="color:{scol}">{status}</b> {sep}'
         f' TARGET: <b>{target}</b> {sep}'
-        f' MODE: <b>{mode}</b> {sep}'
-        f' LINK: <b>{dry}</b> {sep}'
+        f' AGENT: <b>{agent}</b> {sep}'
         f' SEC: <b>LVL-1</b> {sep}'
         f' T<span style="color:{NEON_DIM}">//</span> <b id="nz-clock">--:--:--</b>'
         f'</div>',
@@ -386,9 +405,9 @@ def bar(value: float, vmax: float, color: str) -> str:
 
 
 def network_svg(cycle: int | None = None, active: str = "") -> str:
-    """Topologie inline KALI ─ vboxnet0 ─ TARGET (sans emoji)."""
-    cyc = f"CYCLE {cycle:02d}" if cycle is not None else "vboxnet0"
-    kali_glow = NEON if active == "attack" else NEON_DIM
+    """Topologie inline KALI ─ nzoyi-lab ─ TARGET (sans emoji)."""
+    cyc = f"CYCLE {cycle:02d}" if cycle is not None else "nzoyi-lab"
+    kali_glow = NEON if active in ("evasion", "attack") else NEON_DIM
     tgt_glow = NEON if active == "evaluation" else NEON_DIM
     return f"""
     <svg viewBox="0 0 640 130" width="100%" style="max-height:130px">
@@ -428,312 +447,33 @@ def network_svg(cycle: int | None = None, active: str = "") -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# SIMULATION ENGINE
+# PANNEAUX (lecture seule — alimentés par les fichiers results/*.json)
 # ═══════════════════════════════════════════════════════════════════════════
-def rf_predict(strat: dict[str, float]) -> float:
-    """Simulated Random-Forest intrusion score in [0,1] from strategy params."""
-    score = 0.25
-    if strat["ttl"] > 75:
-        score += 0.15
-    if strat["rate"] > 3:
-        score += 0.20
-    if strat["rate"] > 7:
-        score += 0.15
-    if strat["frag"] > 1:
-        score -= 0.10
-    if strat["jitter"] > 0.8:
-        score -= 0.12
-    if strat["pkt"] > 500:
-        score += 0.10
-    score += random.uniform(-0.05, 0.05)
-    return max(0.0, min(1.0, score))
-
-
-def features_from(strat: dict[str, float], score: float) -> dict[str, float]:
-    return {
-        "sttl": strat["ttl"],
-        "rate": strat["rate"],
-        "dload": strat["pkt"] * strat["rate"] * 8,
-        "dmean": strat["pkt"] * 0.6,
-        "sload": strat["rate"] * 40,
-        "ct_srv": round(score * 10, 1),
-    }
-
-
-def init_learning_state(cfg: dict) -> None:
-    st.session_state.sim = {
-        "cfg": cfg,
-        "phase": "recon",
-        "agent_idx": 0,
-        "cycle": 0,
-        "cycles_total": cfg.get("cycles", 100),
-        "q": {name: 0.0 for name in STRATEGIES},
-        "epsilon": 0.30,
-        "convergence": [],
-        "total_detected": 0,
-        "packets": 0,
-        "terminal": [],
-        "last": None,
-        "agent_status": {a: "pending" for a in AGENTS},
-        "done": False,
-    }
-    log("SYS", "=== NZOYI v%s // C2 ===" % VERSION)
-    log("SYS", f"target={cfg['target']} profile={cfg['profile']}")
-
-
-def log(tag: str, msg: str) -> None:
-    ts = datetime.now().strftime("%H:%M:%S")
-    st.session_state.sim["terminal"].append((ts, tag, msg))
-    # keep last 200 lines
-    st.session_state.sim["terminal"] = st.session_state.sim["terminal"][-200:]
-
-
-def run_recon_phase() -> None:
-    s = st.session_state.sim
-    s["agent_status"]["recon"] = "done"
-    for line in [
-        "nmap -sS -sV -T2 --max-rate 10 192.168.100.11",
-        "22/tcp  open  ssh   OpenSSH 7.2p2",
-        "80/tcp  open  http  Apache/2.4.49",
-        "21/tcp  open  ftp   vsftpd 3.0.3",
-    ]:
-        log("RCN", line)
-    s["agent_status"]["enumerator"] = "done"
-    log("ENM", "SSH-2.0-OpenSSH_7.2p2 Ubuntu-4ubuntu2.10")
-    log("ENM", "Server: Apache/2.4.49 (Unix)")
-    s["agent_status"]["vulnerability"] = "done"
-    log("VLN", "CVE-2021-41773 | CVSS 9.8 CRITICAL | Apache :80 | RCE")
-    log("VLN", "CVE-2011-2523 | CVSS 9.8 CRITICAL | vsftpd :21 | Backdoor")
-    s["phase"] = "learning"
-
-
-def step_cycle() -> None:
-    s = st.session_state.sim
-    s["cycle"] += 1
-    i = s["cycle"]
-    s["agent_status"]["evasion"] = "running"
-
-    # epsilon-greedy over strategies
-    explore = random.random() < s["epsilon"]
-    if explore:
-        name = random.choice(list(STRATEGIES))
-        mode = "E-EXPLORE"
-    else:
-        name = max(s["q"], key=s["q"].get)
-        mode = "Q-EXPLOIT"
-    strat = STRATEGIES[name]
-
-    score = rf_predict(strat)
-    detected = score >= 0.5
-    reward = -1.0 if detected else 1.0
-
-    # Q-update (alpha=0.3) + epsilon decay
-    s["q"][name] += 0.3 * (reward - s["q"][name])
-    s["epsilon"] = max(0.05, s["epsilon"] * 0.98)
-    s["packets"] += int(strat["pkt"])
-
-    if detected:
-        s["total_detected"] += 1
-    det_rate = s["total_detected"] / i
-
-    s["convergence"].append({"cycle": i, "detection_rate": round(det_rate, 4),
-                             "epsilon": round(s["epsilon"], 4)})
-    s["last"] = {
-        "strategy": name, "mode": mode, "strat": strat, "score": score,
-        "detected": detected, "reward": reward,
-        "features": features_from(strat, score),
-    }
-    s["agent_status"]["attack"] = "done"
-    s["agent_status"]["evaluation"] = "done"
-    s["agent_status"]["evasion"] = "done"
-
-    # Terminal narrative
-    log("EVA", f"[{mode}] -> {name} | rate={strat['rate']} pkt={strat['pkt']} "
-               f"frag={strat['frag']} jit={strat['jitter']}")
-    log("ATK", "192.168.100.11:80 <- GET /cgi-bin/.%2e/%2e%2e/etc/passwd")
-    verdict = "[ALERT] ATTACK" if detected else "[OK] NORMAL"
-    log("IDS", f"RF predict: {score*100:.1f}% -> {verdict}")
-    log("RL", f"C{i:03d} | det={det_rate*100:.0f}% | e={s['epsilon']:.3f} "
-              f"| r={'+1' if reward>0 else '-1'} | best={max(s['q'], key=s['q'].get)}")
-
-    if i >= s["cycles_total"]:
-        s["done"] = True
-        s["phase"] = "done"
-        log("SYS", f"=== MISSION COMPLETE // {s['cycles_total']} cycles ===")
-        _persist_convergence()
-
-
-def _persist_convergence() -> None:
-    os.makedirs("results", exist_ok=True)
-    with open("results/convergence.json", "w", encoding="utf-8") as fh:
-        json.dump(st.session_state.sim["convergence"], fh, indent=2)
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# PAGE 1 — MISSION CONTROL
-# ═══════════════════════════════════════════════════════════════════════════
-def page_mission_control() -> None:
-    running = st.session_state.get("mission_running", False)
-
-    # ── Target config ──
-    st.markdown(
-        f'<div class="nz-title">{icon("share-2", 16)} TARGET CONFIG</div>',
-        unsafe_allow_html=True,
-    )
-    left, right = st.columns([1, 1.4])
-    with left:
-        target = st.text_input("Target IP", "192.168.100.11")
-        st.text_input("Attacker IP", "192.168.100.10", disabled=True)
-        st.text_input("Subnet", "192.168.100.0/24", disabled=True)
-    with right:
-        st.markdown(network_svg(), unsafe_allow_html=True)
-
-    # ── Mission parameters ──
-    with st.expander("MISSION PARAMETERS", expanded=True):
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            profile = st.radio(
-                "Attack profile",
-                ["STEALTH", "BALANCED", "AGGRESSIVE"],
-                captions=[
-                    "SYN T2, rate 10/s, fragmentation, jitter 1-3s.",
-                    "T3, rate standard. Compromis.",
-                    "T4, rate elevee. Baseline.",
-                ],
-            )
-        with c2:
-            mode = st.radio(
-                "Control mode",
-                ["GUIDED", "AUTONOMOUS", "LEARNING"],
-                index=2,
-                captions=[
-                    "Confirmation avant chaque agent.",
-                    "Execution sequentielle, observation.",
-                    "Boucle RL complete (N cycles).",
-                ],
-            )
-        with c3:
-            cycles = 100
-            if mode == "LEARNING":
-                cycles = st.number_input("Q-Learning cycles", 10, 1000, 100, 10)
-            ids = st.selectbox(
-                "IDS feedback",
-                [
-                    "IDS-ML (Random Forest) — API REST http://cible:5000",
-                    "IDS-ML (Random Forest) — fichier predictions.json",
-                    "Suricata — fichier eve.json",
-                    "Simulation (pas d'IDS reel)",
-                ],
-                index=3,
-            )
-            ids_path = ""
-            if "fichier" in ids:
-                ids_path = st.text_input("IDS log path", "results/predictions.json")
-            dry_run = st.checkbox("Dry run (simulation sans reseau)", value=True)
-
-    # ── Mission brief ──
-    profile_key = {"STEALTH": "stealth", "BALANCED": "default",
-                   "AGGRESSIVE": "aggressive"}[profile]
-    mode_key = {"GUIDED": "guided", "AUTONOMOUS": "autonomous",
-                "LEARNING": "learning"}[mode]
-
-    st.markdown(
-        f'<div class="nz-title">{icon("list", 16)} MISSION BRIEF</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        f"""<div class="recap">
-        <div><span>TARGET</span><b>{target}</b></div>
-        <div><span>PROFILE</span><b>{profile}</b></div>
-        <div><span>MODE</span><b>{mode}</b></div>
-        <div><span>CYCLES</span><b>{cycles if mode_key=='learning' else '—'}</b></div>
-        <div><span>IDS FEEDBACK</span><b>{ids.split('—')[0].strip()}</b></div>
-        <div><span>DRY RUN</span><b>{'YES' if dry_run else 'NO'}</b></div>
-        </div>""",
-        unsafe_allow_html=True,
-    )
-    st.write("")
-
-    if st.button("DEPLOY MISSION", type="primary", width="stretch"):
-        cfg = {
-            "target": target, "profile": profile_key, "mode": mode_key,
-            "cycles": int(cycles), "ids": ids, "ids_path": ids_path,
-            "dry_run": dry_run,
-        }
-        os.makedirs("config", exist_ok=True)
-        with open("config/mission_config.json", "w", encoding="utf-8") as fh:
-            json.dump(cfg, fh, indent=2)
-        st.session_state.mission_config = cfg
-        st.session_state.mission_running = True
-        st.session_state.page = "LIVE OPS"
-        init_learning_state(cfg)
-        st.rerun()
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# PAGE 2 — LIVE OPS
-# ═══════════════════════════════════════════════════════════════════════════
-def page_live_operations() -> None:
-    if "sim" not in st.session_state:
-        cfg = st.session_state.get("mission_config")
-        if not cfg and os.path.exists("config/mission_config.json"):
-            cfg = json.load(open("config/mission_config.json", encoding="utf-8"))
-        if not cfg:
-            st.warning("Aucune mission configuree. Retour a MISSION CONTROL.")
-            return
-        init_learning_state(cfg)
-
-    s = st.session_state.sim
-    if s["phase"] == "recon":
-        run_recon_phase()
-
-    col_l, col_c, col_r = st.columns([1.2, 2, 1])
-
-    # ── LEFT : agents + Q-table ──
-    with col_l:
-        _render_agents(s)
-        _render_qtable(s)
-
-    # ── CENTER : topology + terminal + convergence ──
-    with col_c:
-        active = "attack" if (s["last"] and not s["done"]) else ""
-        st.markdown(network_svg(s["cycle"] or None, active), unsafe_allow_html=True)
-        _render_terminal(s)
-        _render_convergence(s)
-
-    # ── RIGHT : IDS + strategy + reward + stats ──
-    with col_r:
-        _render_ids(s)
-        _render_strategy(s)
-        _render_reward(s)
-        _render_stats(s)
-
-    # ── Auto-advance loop ──
-    paused = st.session_state.get("paused", False)
-    if s["phase"] == "learning" and not s["done"] and not paused:
-        step_cycle()
-        speed = st.session_state.get("speed", 1.0)
-        time.sleep(0.35 / speed)
-        st.rerun()
-
-
-def _render_agents(s: dict) -> None:
+def render_agents(run_state: dict | None) -> None:
+    """AGENT CHAIN dérivée de run_state (agent courant + statut)."""
     st.markdown(
         f'<div class="nz-title">{icon("layers", 16)} AGENT CHAIN</div>',
         unsafe_allow_html=True,
     )
-    badge = {"pending": "b-pending", "running": "b-run",
-             "done": "b-done", "error": "b-err"}
-    subinfo = {
-        "recon": "4 ports found", "enumerator": "2 banners",
-        "vulnerability": "2 CVEs mapped",
-        "evasion": s["last"]["strategy"] if s["last"] else "—",
-        "attack": "payload sent", "evaluation": "IDS polled",
-    }
+    badge = {"pending": "b-pending", "running": "b-run", "done": "b-done", "error": "b-err"}
+    rs = run_state or {}
+    current = rs.get("current_agent")
+    status = rs.get("status", "")
+    done_all = status == "complete"
+    idx = AGENTS.index(current) if current in AGENTS else -1
+    summary = rs.get("result", {}) or {}
     rows = ""
-    for a in AGENTS:
-        stt = s["agent_status"][a]
-        info = subinfo[a] if stt == "done" else ""
+    for i, a in enumerate(AGENTS):
+        if done_all:
+            stt = "done"
+        elif idx == -1:
+            stt = "pending"
+        elif i < idx:
+            stt = "done"
+        elif i == idx:
+            stt = status if status in ("running", "done", "error") else "running"
+        else:
+            stt = "pending"
         col = NEON if stt == "done" else (AMBER if stt == "running" else TXT_DIM)
         rows += (
             f'<div style="display:flex;justify-content:space-between;'
@@ -742,75 +482,68 @@ def _render_agents(s: dict) -> None:
             f'<span style="letter-spacing:1px">{a}</span></span>'
             f'<span class="badge {badge[stt]}">{stt.upper()}</span></div>'
         )
-        if info:
+        if i == idx and stt == "done" and summary:
+            info = " · ".join(f"{k}={v}" for k, v in summary.items())
             rows += (f'<div style="color:{NEON_DIM};font-size:0.72rem;'
                      f'margin:-3px 0 4px 24px">{info}</div>')
     st.markdown(f'<div class="nz-card">{rows}</div>', unsafe_allow_html=True)
 
 
-def _render_qtable(s: dict) -> None:
+def render_ptt(ptt: dict | None) -> None:
+    """PENTEST TREE — rendu de results/ptt.json (arbre ou résumé)."""
     st.markdown(
-        f'<div class="nz-title">{icon("cpu", 16)} POLICY TABLE // TOP ACTIONS</div>',
+        f'<div class="nz-title">{icon("share-2", 16)} PENTEST TREE // PTT</div>',
         unsafe_allow_html=True,
     )
-    ranked = sorted(s["q"].items(), key=lambda kv: kv[1], reverse=True)[:7]
-    qmax = max((abs(v) for _, v in ranked), default=1.0) or 1.0
-    rows = ""
-    for i, (name, val) in enumerate(ranked):
-        color = NEON if i == 0 else TXT
-        star = ">" if i == 0 else " "
-        rows += (
-            f'<div style="color:{color};font-size:0.8rem;">'
-            f'{star} {name:<14} {val:+.3f}</div>'
-            f'{bar(abs(val), qmax, NEON if val>=0 else ALERT)}'
+    if not ptt:
+        st.markdown(
+            f'<div class="nz-card"><span style="color:{TXT_DIM}">'
+            f'PTT vide — en attente d\'un run…</span></div>',
+            unsafe_allow_html=True,
         )
-    st.markdown(f'<div class="nz-card">{rows}</div>', unsafe_allow_html=True)
+        return
 
+    target = ptt.get("target", "—")
+    nodes = ptt.get("nodes")
+    if isinstance(nodes, list):  # arbre complet (to_dict)
+        node_count = len(nodes)
+        agents = sorted({n.get("agent", "?") for n in nodes})
+        kinds = sorted({n.get("kind", "?") for n in nodes})
+        vulns = len(ptt.get("vulnerabilities", []))
+    else:  # résumé (summary)
+        node_count = ptt.get("node_count", 0)
+        agents = ptt.get("agents", [])
+        kinds = ptt.get("kinds", [])
+        vulns = None
 
-def _render_terminal(s: dict) -> None:
-    tag_col = {
-        "SYS": NEON, "RCN": NEON_DIM, "ENM": NEON_DIM, "VLN": AMBER,
-        "ATK": AMBER, "IDS": NEON, "EVA": AMBER, "RL": NEON,
-    }
-    lines = ""
-    for ts, tag, msg in s["terminal"][-80:]:
-        col = tag_col.get(tag, TXT)
-        if tag == "IDS" and "ATTACK" in msg:
-            col = ALERT
-        lines += (
-            f'<span style="color:{TXT_DIM}">{ts}</span> '
-            f'<span style="color:{col};font-weight:700">[{tag}]</span> '
-            f'<span style="color:{TXT}">{msg}</span>\n'
-        )
-    lines += '<span class="cur">&#9608;</span>'
+    agent_rows = "".join(
+        f'<div style="color:{TXT};font-size:0.8rem;padding:2px 0">'
+        f'{icon(AGENT_ICONS.get(a, "circle"), 14, NEON_DIM)} {a}</div>'
+        for a in agents
+    )
+    meta = f'nodes={node_count} · kinds={len(kinds)}'
+    if vulns is not None:
+        meta += f' · vulns={vulns}'
     st.markdown(
-        f'<div class="nz-title">{icon("terminal", 16)} AGENT TERMINAL</div>',
+        f'<div class="nz-card">'
+        f'<div style="color:{NEON};font-size:.8rem">TARGET <b>{target}</b></div>'
+        f'<div style="color:{TXT};font-size:.75rem;margin-bottom:6px">{meta}</div>'
+        f'{agent_rows}</div>',
         unsafe_allow_html=True,
     )
-    st.markdown(f'<div class="term" id="nz-term">{lines}</div>', unsafe_allow_html=True)
-    # Auto-scroll du terminal vers le bas (via document parent).
-    _inject_html(
-        """
-    <script>
-    const el = window.parent.document.getElementById('nz-term');
-    if (el) { el.scrollTop = el.scrollHeight; }
-    </script>
-    """,
-        height=0,
-    )
 
 
-def _render_convergence(s: dict) -> None:
+def render_convergence(convergence: list) -> None:
+    """Courbe de convergence lue depuis results/convergence.json."""
     st.markdown(
         f'<div class="nz-title">{icon("bar-chart", 16)} CONVERGENCE // DETECTION RATE</div>',
         unsafe_allow_html=True,
     )
-    conv = s["convergence"]
-    if not conv:
-        st.caption("En attente des premiers cycles...")
+    if not convergence:
+        st.caption("En attente des premiers cycles…")
         return
-    xs = [c["cycle"] for c in conv]
-    ys = [c["detection_rate"] * 100 for c in conv]
+    xs = [c.get("cycle") for c in convergence]
+    ys = [c.get("detection_rate", 0) * 100 for c in convergence]
 
     if HAS_PLOTLY:
         fig = go.Figure()
@@ -834,97 +567,153 @@ def _render_convergence(s: dict) -> None:
         st.line_chart({"detection_%": ys}, height=200)
 
 
-def _render_ids(s: dict) -> None:
-    last = s["last"]
-    title = f'<div class="nz-title">{icon("radar", 16)} IDS // RANDOM FOREST</div>'
-    if not last:
+def render_evasion(evasion_state: dict | None) -> None:
+    """État d'évasion (cycle/epsilon/alerts/p_detect) lu depuis evasion_state.json."""
+    title = f'<div class="nz-title">{icon("eye-off", 16, AMBER)} EVASION STATE</div>'
+    if not evasion_state:
         st.markdown(
-            f'<div class="nz-card">{title}'
-            f'<span style="color:{TXT_DIM}">En attente...</span></div>',
+            f'<div class="nz-card nz-card-amber">{title}'
+            f'<span style="color:{TXT_DIM}">Pas de boucle RL active.</span></div>',
             unsafe_allow_html=True,
         )
         return
-    detected = last["detected"]
+
+    detected = evasion_state.get("detected")
     card = "nz-card-red" if detected else "nz-card-green"
-    verdict = ("INTRUSION DETECTED" if detected else "TRAFFIC NORMAL")
-    vcol = ALERT if detected else NEON
-    feats = ""
-    for name, val in last["features"].items():
-        thr = FEATURE_THRESHOLDS.get(name)
-        hot = thr is not None and val > thr
-        col = ALERT if hot else NEON_DIM
-        vmax = (thr * 1.5) if thr else max(val * 1.2, 1)
-        feats += f'<div style="font-size:0.72rem;color:{TXT}">{name} = {val:.0f}</div>'
-        feats += bar(val, vmax, col)
-    conf = last["score"] * 100
-    checks = s["cycle"]
+    p = evasion_state.get("p_detect") or 0.0
     st.markdown(
         f'<div class="nz-card {card}">{title}'
-        f'{feats}'
-        f'<div style="font-size:0.72rem;color:{TXT};margin-top:4px">Confidence</div>'
-        f'{bar(conf, 100, vcol)}'
-        f'<div style="text-align:center;color:{vcol};font-weight:700;'
-        f'letter-spacing:1px;text-shadow:0 0 8px {vcol};margin:6px 0">{verdict}</div>'
-        f'<div style="font-size:0.72rem;color:{TXT_DIM};text-align:center">'
-        f'ALERTS {s["total_detected"]} / CHECKS {checks}</div></div>',
+        f'<div style="color:{NEON};font-weight:700;letter-spacing:1px">'
+        f'ACTION: {evasion_state.get("last_action", "—")}</div>'
+        f'<div style="font-size:.72rem;color:{TXT};margin-top:4px">p_detect = {p:.2f}</div>'
+        f'{bar(p * 100, 100, ALERT if detected else NEON)}'
+        f'<div style="font-size:.72rem;color:{TXT}">alerts = {evasion_state.get("alerts", 0)}</div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
-
-
-def _render_strategy(s: dict) -> None:
-    last = s["last"]
-    if not last:
-        return
-    strat = last["strat"]
-    # green = stealthy, red = noisy
-    params = [
-        ("rate", strat["rate"], 10, True),
-        ("packet", strat["pkt"], 1024, True),
-        ("frag", strat["frag"], 4, False),
-        ("jitter", strat["jitter"], 2.0, False),
-        ("TTL", strat["ttl"], 128, True),
-    ]
-    rows = ""
-    for name, val, vmax, noisy_high in params:
-        ratio = val / vmax if vmax else 0
-        noisy = ratio if noisy_high else (1 - ratio)
-        col = ALERT if noisy > 0.6 else (AMBER if noisy > 0.3 else NEON)
-        rows += f'<div style="font-size:0.72rem;color:{TXT}">{name} = {val}</div>'
-        rows += bar(val, vmax, col)
-    st.markdown(
-        f'<div class="nz-card nz-card-amber">'
-        f'<div class="nz-title">{icon("eye-off", 16, AMBER)} EVASION STRATEGY</div>'
-        f'<div style="color:{NEON};font-weight:700;letter-spacing:1px">{last["strategy"]} '
-        f'<span style="font-size:0.7rem;color:{NEON_DIM}">[{last["mode"]}]</span></div>'
-        f'{rows}</div>',
-        unsafe_allow_html=True,
-    )
-
-
-def _render_reward(s: dict) -> None:
-    last = s["last"]
-    if not last:
-        return
-    if last["reward"] > 0:
-        st.markdown('<div class="reward reward-ok">REWARD: +1.0 // EVASION SUCCESS</div>',
-                    unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="reward reward-bad">REWARD: -1.0 // DETECTED</div>',
-                    unsafe_allow_html=True)
-
-
-def _render_stats(s: dict) -> None:
-    det_rate = (s["total_detected"] / s["cycle"] * 100) if s["cycle"] else 0
-    rate_col = NEON if det_rate < 20 else (ALERT if det_rate > 40 else AMBER)
     c1, c2 = st.columns(2)
-    c1.metric("Cycle", f"{s['cycle']}/{s['cycles_total']}")
-    c2.metric("Detection", f"{det_rate:.0f}%")
+    c1.metric("Cycle", f'{evasion_state.get("cycle", 0)}/{evasion_state.get("cycles", "?")}')
+    c2.metric("Detection", f'{evasion_state.get("detection_rate", 0) * 100:.0f}%')
     c3, c4 = st.columns(2)
-    c3.metric("Epsilon", f"{s['epsilon']:.3f}")
-    c4.metric("Packets", f"{s['packets']}")
+    c3.metric("Epsilon", f'{evasion_state.get("epsilon", 0):.3f}')
+    c4.metric("Reward", f'{evasion_state.get("reward", 0):+.2f}')
+    if detected is not None:
+        cls, txt = (("reward-bad", "DETECTED") if detected
+                    else ("reward-ok", "EVASION SUCCESS"))
+        st.markdown(f'<div class="reward {cls}">{txt}</div>', unsafe_allow_html=True)
+
+
+def render_run_status(run_state: dict | None) -> None:
+    """Détail du dernier événement du pipeline (run_state.json)."""
     st.markdown(
-        f'<div style="height:4px;background:{rate_col};'
-        f'box-shadow:0 0 8px {rate_col}"></div>', unsafe_allow_html=True)
+        f'<div class="nz-title">{icon("cpu", 16)} RUN STATE</div>',
+        unsafe_allow_html=True,
+    )
+    if not run_state:
+        st.markdown(
+            f'<div class="nz-card"><span style="color:{TXT_DIM}">Aucun run.</span></div>',
+            unsafe_allow_html=True,
+        )
+        return
+    rows = ""
+    for key in ("current_agent", "status", "profile", "duration", "timestamp"):
+        if key in run_state:
+            rows += (f'<div><span>{key.upper()}</span>'
+                     f'<b>{run_state[key]}</b></div>')
+    st.markdown(f'<div class="recap">{rows}</div>', unsafe_allow_html=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PAGE 1 — MISSION CONTROL (briefing en lecture seule)
+# ═══════════════════════════════════════════════════════════════════════════
+def page_mission_control() -> None:
+    run_state = _read_json("run_state.json")
+    target = (run_state or {}).get("target", "192.168.100.11")
+    profile = (run_state or {}).get("profile", "stealth")
+
+    st.markdown(
+        f'<div class="nz-title">{icon("share-2", 16)} TARGET CONFIG</div>',
+        unsafe_allow_html=True,
+    )
+    left, right = st.columns([1, 1.4])
+    with left:
+        st.text_input("Target IP", target, disabled=True)
+        st.text_input("Attacker IP", "192.168.100.10", disabled=True)
+        st.text_input("Subnet", "192.168.100.0/24", disabled=True)
+    with right:
+        st.markdown(network_svg(), unsafe_allow_html=True)
+
+    st.markdown(
+        f'<div class="nz-title">{icon("terminal", 16)} LANCER UN RUN (CLI)</div>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "Ce dashboard est un visualiseur : il n'exécute rien. Lance le pipeline "
+        "depuis le CLI, l'affichage se met à jour automatiquement."
+    )
+    st.code(
+        "# Pipeline complet\n"
+        f"python main.py --target {target} --profile {profile}\n\n"
+        "# Boucle d'apprentissage (Q-Learning)\n"
+        f"python main.py --target {target} --mode learn --cycles 100\n\n"
+        "# Affinage online contre Suricata réel\n"
+        f"python main.py --finetune results/qtable_offline.json --target {target} "
+        "--eve-log /var/log/suricata/eve.json",
+        language="bash",
+    )
+
+    st.markdown(
+        f'<div class="nz-title">{icon("list", 16)} MISSION BRIEF</div>',
+        unsafe_allow_html=True,
+    )
+    status = (run_state or {}).get("status", "—")
+    st.markdown(
+        f"""<div class="recap">
+        <div><span>TARGET</span><b>{target}</b></div>
+        <div><span>PROFILE</span><b>{profile}</b></div>
+        <div><span>ÉTAT</span><b>{status}</b></div>
+        </div>""",
+        unsafe_allow_html=True,
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PAGE 2 — LIVE OPS (visualiseur temps réel)
+# ═══════════════════════════════════════════════════════════════════════════
+def page_live_operations() -> None:
+    run_state = _read_json("run_state.json")
+    evasion_state = _read_json("evasion_state.json")
+    ptt = _read_json("ptt.json")
+    convergence = _read_json("convergence.json", default=[]) or []
+
+    if not run_state and not convergence:
+        st.markdown(
+            f'<div class="nz-card nz-card-amber">'
+            f'<div class="nz-title">{icon("clock", 16, AMBER)} STANDBY</div>'
+            f'<span style="color:{TXT}">En attente d\'un run CLI…<br><br>'
+            f'Lance : <b>python main.py --target 192.168.100.11 --mode learn</b><br>'
+            f'Le dashboard lit results/run_state.json, evasion_state.json, '
+            f'ptt.json et convergence.json.</span></div>',
+            unsafe_allow_html=True,
+        )
+        _autorefresh()
+        return
+
+    active = (run_state or {}).get("current_agent", "")
+    cycle = (evasion_state or {}).get("cycle")
+
+    col_l, col_c, col_r = st.columns([1.2, 2, 1])
+    with col_l:
+        render_agents(run_state)
+        render_ptt(ptt)
+    with col_c:
+        st.markdown(network_svg(cycle, active), unsafe_allow_html=True)
+        render_convergence(convergence)
+    with col_r:
+        render_evasion(evasion_state)
+        render_run_status(run_state)
+
+    _autorefresh()
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -941,12 +730,12 @@ def main() -> None:
         render_boot()
         st.session_state.booted = True
 
-    st.session_state.setdefault("page", "MISSION CONTROL")
-    st.session_state.setdefault("speed", 1.0)
-    st.session_state.setdefault("paused", False)
+    st.session_state.setdefault("page", "LIVE OPS")
+    st.session_state.setdefault("paused_refresh", False)
 
-    running = st.session_state.get("mission_running", False)
-    render_status_bar(st.session_state.get("mission_config"), running)
+    run_state = _read_json("run_state.json")
+    running = bool(run_state and run_state.get("status") == "running")
+    render_status_bar(run_state, running)
 
     with st.sidebar:
         st.markdown(
@@ -954,32 +743,25 @@ def main() -> None:
             f'align-items:center;gap:8px">{icon("cpu", 22)} NZOYI</h2>',
             unsafe_allow_html=True,
         )
-        st.caption(f"v{VERSION} // C2 CONSOLE")
+        st.caption(f"v{VERSION} // C2 CONSOLE · VIEWER")
         page = st.radio("Navigation", ["MISSION CONTROL", "LIVE OPS"],
                         index=0 if st.session_state.page == "MISSION CONTROL" else 1)
         st.session_state.page = page
 
         st.divider()
-        st.session_state.speed = {
-            "0.5x": 0.5, "1x": 1.0, "2x": 2.0, "4x": 4.0
-        }[st.select_slider("Speed", ["0.5x", "1x", "2x", "4x"], value="1x")]
-
-        cc1, cc2 = st.columns(2)
-        if cc1.button("RESUME" if st.session_state.paused else "PAUSE",
-                      width="stretch"):
-            st.session_state.paused = not st.session_state.paused
+        if st.button("PAUSE REFRESH" if not st.session_state.paused_refresh else "RESUME REFRESH",
+                     width="stretch"):
+            st.session_state.paused_refresh = not st.session_state.paused_refresh
             st.rerun()
-        if cc2.button("ABORT", width="stretch"):
-            for k in ("sim", "mission_running", "mission_config"):
-                st.session_state.pop(k, None)
-            st.session_state.paused = False
+        if st.button("REFRESH NOW", width="stretch"):
             st.rerun()
 
-        if "sim" in st.session_state:
+        evasion_state = _read_json("evasion_state.json")
+        if evasion_state:
             st.markdown(
                 f'<div style="text-align:center;font-size:2.4rem;color:{NEON};'
                 f'font-weight:700;text-shadow:0 0 12px rgba(0,255,127,.4)">'
-                f'{st.session_state.sim["cycle"]}</div>'
+                f'{evasion_state.get("cycle", 0)}</div>'
                 f'<div style="text-align:center;color:{TXT_DIM};'
                 f'font-size:0.7rem;letter-spacing:2px">CYCLES</div>',
                 unsafe_allow_html=True,

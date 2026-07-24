@@ -37,26 +37,28 @@ class NmapWrapper:
         target: str,
         scan_type: str = "version",
         timing: int = 3,
+        ports: list[int] | None = None,
     ) -> list[dict[str, Any]]:
         flags = SCAN_FLAGS.get(scan_type, SCAN_FLAGS["version"])
         timing = max(0, min(5, timing))
+        port_spec = ",".join(str(p) for p in ports) if ports else None
 
         if self._use_python_nmap:
-            return self._scan_python_nmap(target, flags, timing)
-        return self._scan_cli(target, flags, timing)
+            return self._scan_python_nmap(target, flags, timing, port_spec)
+        return self._scan_cli(target, flags, timing, port_spec)
 
     def _scan_python_nmap(
-        self, target: str, flags: list[str], timing: int
+        self, target: str, flags: list[str], timing: int, port_spec: str | None
     ) -> list[dict[str, Any]]:
         import nmap
 
         scanner = nmap.PortScanner()
         args = " ".join(flags) + f" -T{timing}"
-        scanner.scan(hosts=target, arguments=args)
+        scanner.scan(hosts=target, ports=port_spec, arguments=args)
         return self._parse_python_nmap(scanner, target)
 
     def _scan_cli(
-        self, target: str, flags: list[str], timing: int
+        self, target: str, flags: list[str], timing: int, port_spec: str | None
     ) -> list[dict[str, Any]]:
         if not shutil.which("nmap"):
             raise FileNotFoundError(
@@ -66,14 +68,10 @@ class NmapWrapper:
         with tempfile.NamedTemporaryFile(suffix=".xml", delete=False) as tmp:
             xml_path = tmp.name
 
-        cmd = [
-            "nmap",
-            *flags,
-            f"-T{timing}",
-            "-oX",
-            xml_path,
-            target,
-        ]
+        cmd = ["nmap", *flags, f"-T{timing}"]
+        if port_spec:
+            cmd += ["-p", port_spec]
+        cmd += ["-oX", xml_path, target]
         logger.info("Running: %s", " ".join(cmd))
         try:
             subprocess.run(

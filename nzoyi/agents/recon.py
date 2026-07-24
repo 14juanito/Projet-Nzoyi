@@ -10,20 +10,29 @@ from nzoyi.tools.nmap_wrapper import NmapWrapper
 
 logger = logging.getLogger("nzoyi.agents.recon")
 
-_TIMING_MAP: dict[str, int] = {"T2": 2, "T3": 3, "T4": 4}
+# La découverte initiale n'a pas besoin d'être furtive : la discrétion
+# concerne la phase d'attaque (cycles d'évasion), pas le recon. Timing fixe
+# et timeout généreux, indépendants du profil, pour éviter les scans qui
+# expirent en profil stealth (T2) sur la plage de ports par défaut.
+RECON_TIMING = 4
+RECON_TIMEOUT_S = 600
 
 
 class ReconAgent(BaseAgent):
     """Scanne la cible avec Nmap (détection de version) et alimente le PTT."""
 
     name = "recon"
+    target_ports: list[int] | None = None  # restreint le scan si fourni (plan stratégique)
 
     def run(self, dry_run: bool = False) -> dict[str, Any]:
-        timing = _TIMING_MAP.get(self.profile.nmap_timing, 3)
-
-        wrapper = NmapWrapper()
+        wrapper = NmapWrapper(timeout=RECON_TIMEOUT_S)
         try:
-            raw_ports = wrapper.scan(self.ptt.target, scan_type="version", timing=timing)
+            raw_ports = wrapper.scan(
+                self.ptt.target,
+                scan_type="version",
+                timing=RECON_TIMING,
+                ports=self.target_ports,
+            )
         except (FileNotFoundError, TimeoutError) as exc:
             logger.warning("Scan Nmap indisponible sur %s: %s", self.ptt.target, exc)
             raw_ports = []
@@ -47,7 +56,7 @@ class ReconAgent(BaseAgent):
             "open_ports": open_ports,
             "ports": ports,
             "scan_type": "version",
-            "timing": timing,
+            "timing": RECON_TIMING,
             "dry_run": dry_run,
         }
         logger.info("Nmap a trouvé %d ports ouverts sur %s", len(open_ports), self.ptt.target)

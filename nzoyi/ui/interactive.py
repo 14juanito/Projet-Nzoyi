@@ -277,6 +277,7 @@ class AutonomousRunner:
         for agent in orchestrator.pipeline:
             name = agent.name
             print_agent_status(name, "running")
+            orchestrator._write_run_state(orchestrator._run_state(name, "running"))
             t0 = time.time()
 
             if isinstance(agent, EvaluationAgent):
@@ -287,11 +288,20 @@ class AutonomousRunner:
             duration = time.time() - t0
             results[name] = result
 
+            orchestrator._write_run_state(orchestrator._run_state(
+                name, "done",
+                duration=round(duration, 3),
+                result=orchestrator._summarize_result(name, result),
+            ))
+            orchestrator._write_ptt_state()
+
             if not Color.strip():
                 print("\033[A", end="")
             detail = self._short_detail(name, result)
             print_agent_status(name, "done", f"{detail} · {duration:.1f}s")
 
+        orchestrator._write_run_state(orchestrator._run_state("orchestrator", "complete"))
+        orchestrator._write_ptt_state()
         return results
 
     @staticmethod
@@ -323,7 +333,27 @@ class LearningRunner:
 
         # Run recon/enum/vuln once.
         for agent in orchestrator.pipeline[:3]:
-            agent.run(dry_run=dry_run)
+            orchestrator._write_run_state(orchestrator._run_state(agent.name, "running"))
+            step_result = agent.run(dry_run=dry_run)
+            orchestrator._write_run_state(orchestrator._run_state(
+                agent.name, "done",
+                result=orchestrator._summarize_result(agent.name, step_result),
+            ))
+            orchestrator._write_ptt_state()
+
+        if not orchestrator.ptt.get_recon_results():
+            print(
+                f"\n  {Color.RED}✗ Recon initial n'a trouvé aucun port ouvert "
+                f"— campagne annulée.{Color.RESET}\n"
+            )
+            orchestrator.ptt.add(
+                orchestrator.name, "campaign_aborted", {"reason": "recon initial vide"}
+            )
+            orchestrator._write_run_state(
+                orchestrator._run_state("orchestrator", "aborted", reason="recon_empty")
+            )
+            orchestrator._write_ptt_state()
+            return {"convergence": [], "final_detection_rate": 0.0, "aborted": True}
 
         evasion_agent = next((a for a in orchestrator.pipeline if isinstance(a, EvasionAgent)), None)
         attack_agent = next((a for a in orchestrator.pipeline if a.name == "attack"), None)
@@ -333,8 +363,9 @@ class LearningRunner:
         total_detected = 0
 
         for i in range(1, cycles + 1):
-            if evasion_agent:
-                evasion_agent.run(dry_run=dry_run)
+            orchestrator._write_run_state(
+                orchestrator._run_state("evasion", "running", cycle=i, cycles=cycles))
+            evasion_result = evasion_agent.run(dry_run=dry_run) if evasion_agent else {}
             if attack_agent:
                 attack_agent.run(dry_run=dry_run)
             eval_result = (
@@ -364,6 +395,19 @@ class LearningRunner:
                 "epsilon": round(epsilon, 4),
             })
 
+            orchestrator._write_state("evasion_state.json", {
+                "cycle": i,
+                "cycles": cycles,
+                "epsilon": round(epsilon, 4),
+                "last_action": evasion_result.get("action"),
+                "alerts": eval_result.get("alert_count", 0),
+                "p_detect": eval_result.get("rf_proba"),
+                "detected": detected,
+                "reward": reward,
+                "detection_rate": round(det_rate, 4),
+            })
+            orchestrator._write_ptt_state()
+
             if i <= 3 or i % 10 == 0 or i == cycles:
                 if Color.strip():
                     det_icon = "OUI" if detected else "NON"
@@ -387,4 +431,7 @@ class LearningRunner:
             "Epsilon final": f"{convergence[-1]['epsilon']:.4f}" if convergence else "?",
         })
 
+        orchestrator._write_run_state(
+            orchestrator._run_state("orchestrator", "complete", cycles=cycles))
+        orchestrator._write_ptt_state()
         return {"convergence": convergence, "final_detection_rate": final_rate}

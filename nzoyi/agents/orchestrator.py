@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -64,6 +67,75 @@ class OrchestratorAgent(BaseAgent):
         if self.on_agent_status:
             self.on_agent_status(name, status, detail)
 
+    # ── État lisible en continu (visualiseur dashboard) ──────────────────────
+    def _write_state(self, filename: str, payload: dict[str, Any]) -> None:
+        """Écrit results/<filename> de façon atomique (.tmp + os.replace).
+
+        Les erreurs sont volontairement silencieuses : aucune écriture d'état
+        ne doit ralentir ni interrompre le pipeline.
+        """
+        try:
+            results_dir = Path("results")
+            results_dir.mkdir(exist_ok=True)
+            dest = results_dir / filename
+            tmp = dest.with_suffix(dest.suffix + ".tmp")
+            with open(tmp, "w", encoding="utf-8") as handle:
+                json.dump(payload, handle, indent=2, default=str)
+            os.replace(tmp, dest)
+        except Exception:
+            pass
+
+    def _write_run_state(self, payload: dict[str, Any]) -> None:
+        """Écrit l'état courant du pipeline dans results/run_state.json."""
+        self._write_state("run_state.json", payload)
+
+    def _write_ptt_state(self) -> None:
+        """Sérialise le PTT dans results/ptt.json (arbre complet si possible)."""
+        serializer = getattr(self.ptt, "to_dict", None)
+        payload = serializer() if callable(serializer) else self.ptt.summary()
+        self._write_state("ptt.json", payload)
+
+    def _run_state(self, current_agent: str, status: str, **extra: Any) -> dict[str, Any]:
+        """Construit le dict d'état standard (agent courant, cible, profil, ts)."""
+        state: dict[str, Any] = {
+            "current_agent": current_agent,
+            "status": status,
+            "target": self.ptt.target,
+            "profile": getattr(self.profile, "name", str(self.profile)),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        state.update(extra)
+        return state
+
+    @staticmethod
+    def _summarize_result(name: str, result: dict[str, Any]) -> dict[str, Any]:
+        """Résumé compact du résultat d'un agent pour le visualiseur."""
+        if name == "recon":
+            ports = result.get("open_ports", [])
+            return {"open_ports": ports, "count": len(ports)}
+        if name == "enumerator":
+            return {"services": len(result.get("service_list", []))}
+        if name == "vulnerability":
+            return {"vulns": len(result.get("findings", []))}
+        if name == "evasion":
+            return {
+                "action": result.get("action"),
+                "p_detect": result.get("p_detect"),
+                "epsilon": result.get("epsilon"),
+            }
+        if name == "attack":
+            return {
+                "executed": result.get("executed"),
+                "attempts": len(result.get("attempts", [])),
+            }
+        if name == "evaluation":
+            return {
+                "detected": result.get("detected"),
+                "alert_count": result.get("alert_count"),
+                "detection_rate": result.get("detection_rate"),
+            }
+        return {}
+
     def _apply_profile(self, profile: AttackProfile) -> None:
         """Propagate a (possibly new) profile to the orchestrator and agents."""
         self.profile = profile
@@ -120,12 +192,21 @@ class OrchestratorAgent(BaseAgent):
     ) -> None:
         for name, agent, kwargs in steps:
             self._status(name, "running")
+            self._write_run_state(self._run_state(name, "running"))
+            started = time.monotonic()
             try:
                 results[name] = agent.run(**kwargs)
                 detail = str(results[name].get("open_ports", results[name].get("alert_count", "")))
                 self._status(name, "done", detail)
+                self._write_run_state(self._run_state(
+                    name, "done",
+                    duration=round(time.monotonic() - started, 3),
+                    result=self._summarize_result(name, results[name]),
+                ))
+                self._write_ptt_state()
             except Exception as exc:
                 self._status(name, "error", str(exc))
+                self._write_run_state(self._run_state(name, "error", error=str(exc)))
                 raise
 
     def run(self, dry_run: bool = False) -> dict[str, Any]:
@@ -153,6 +234,8 @@ class OrchestratorAgent(BaseAgent):
             ])
 
         self.ptt.add(self.name, "pipeline_complete", self.ptt.summary())
+        self._write_run_state(self._run_state("orchestrator", "complete"))
+        self._write_ptt_state()
         return {"agents": results, "ptt": self.ptt.summary()}
 
     def learning_loop(self, cycles: int | None = None, dry_run: bool = True) -> dict[str, Any]:
@@ -171,8 +254,34 @@ class OrchestratorAgent(BaseAgent):
             ("vulnerability", self.vulnerability, {"dry_run": dry_run}),
         ]:
             self._status(name, "running")
-            agent.run(**kwargs)
+            self._write_run_state(self._run_state(name, "running"))
+            started = time.monotonic()
+            step_result = agent.run(**kwargs)
             self._status(name, "done")
+            self._write_run_state(self._run_state(
+                name, "done",
+                duration=round(time.monotonic() - started, 3),
+                result=self._summarize_result(name, step_result),
+            ))
+            self._write_ptt_state()
+
+        if not self.ptt.get_recon_results():
+            logger.warning("Recon initial n'a trouvé aucun port — campagne annulée.")
+            self.ptt.add(self.name, "campaign_aborted", {"reason": "recon initial vide"})
+            self._write_run_state(self._run_state("orchestrator", "aborted", reason="recon_empty"))
+            self._write_ptt_state()
+            results_dir = Path("results")
+            results_dir.mkdir(exist_ok=True)
+            self.learner.save(results_dir / "qtable.json")
+            with open(results_dir / "convergence.json", "w", encoding="utf-8") as handle:
+                json.dump(convergence, handle, indent=2)
+            return {
+                "cycles": 0,
+                "convergence": convergence,
+                "final_detection_rate": 0,
+                "qtable_path": str(results_dir / "qtable.json"),
+                "convergence_path": str(results_dir / "convergence.json"),
+            }
 
         plan = self._strategic_replan()
         self.ptt.add(self.name, "llm_decision", plan, allow_duplicate=True)
@@ -190,6 +299,8 @@ class OrchestratorAgent(BaseAgent):
                 "final_detection_rate": 0,
                 "final_epsilon": self.learner.epsilon,
             })
+            self._write_run_state(self._run_state("orchestrator", "complete", cycles=0))
+            self._write_ptt_state()
             return {
                 "cycles": 0,
                 "convergence": convergence,
@@ -204,6 +315,7 @@ class OrchestratorAgent(BaseAgent):
 
         for cycle in range(1, cycles + 1):
             self._status("evasion", "running", f"cycle {cycle}/{cycles}")
+            self._write_run_state(self._run_state("evasion", "running", cycle=cycle, cycles=cycles))
             evasion_result = self.evasion.run(dry_run=dry_run)
             self.attack.run(dry_run=dry_run)
             eval_result = self.evaluation.run(
@@ -225,6 +337,20 @@ class OrchestratorAgent(BaseAgent):
             }
             convergence.append(entry)
 
+            self._write_state("evasion_state.json", {
+                "cycle": cycle,
+                "cycles": cycles,
+                "epsilon": learn_result["epsilon"],
+                "last_action": evasion_result.get("action"),
+                "alerts": eval_result.get("alert_count", 0),
+                "p_detect": eval_result.get("rf_proba"),
+                "detected": detected,
+                "reward": learn_result["reward"],
+                "detection_rate": round(detection_rate, 4),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            self._write_ptt_state()
+
             if cycle % 10 == 0:
                 logger.info(
                     "Cycle %d/%d — detection_rate=%.2f epsilon=%.4f",
@@ -243,6 +369,8 @@ class OrchestratorAgent(BaseAgent):
             "final_detection_rate": convergence[-1]["detection_rate"] if convergence else 0,
             "final_epsilon": convergence[-1]["epsilon"] if convergence else 0,
         })
+        self._write_run_state(self._run_state("orchestrator", "complete", cycles=cycles))
+        self._write_ptt_state()
 
         return {
             "cycles": cycles,
@@ -306,15 +434,24 @@ class OrchestratorAgent(BaseAgent):
             ("vulnerability", self.vulnerability, {"dry_run": False}),
         ]:
             self._status(name, "running")
-            agent.run(**kwargs)
+            self._write_run_state(self._run_state(name, "running"))
+            started = time.monotonic()
+            step_result = agent.run(**kwargs)
             self._status(name, "done")
+            self._write_run_state(self._run_state(
+                name, "done",
+                duration=round(time.monotonic() - started, 3),
+                result=self._summarize_result(name, step_result),
+            ))
+            self._write_ptt_state()
 
         convergence: list[dict[str, Any]] = []
         detections = 0
 
         for cycle in range(1, cycles + 1):
             self._status("evasion", "running", f"cycle {cycle}/{cycles}")
-            self.evasion.run(dry_run=False)
+            self._write_run_state(self._run_state("evasion", "running", cycle=cycle, cycles=cycles))
+            evasion_result = self.evasion.run(dry_run=False)
             self.attack.run(dry_run=False)
             eval_result = self.evaluation.run(dry_run=False, eve_log=self.eve_log)
 
@@ -337,6 +474,20 @@ class OrchestratorAgent(BaseAgent):
                 "epsilon": round(learn_result["epsilon"], 4),
                 "detection_rate": round(detection_rate, 4),
             })
+
+            self._write_state("evasion_state.json", {
+                "cycle": cycle,
+                "cycles": cycles,
+                "epsilon": round(learn_result["epsilon"], 4),
+                "last_action": evasion_result.get("action"),
+                "alerts": alert_count,
+                "p_detect": round(p_detect, 4),
+                "detected": detected,
+                "reward": round(learn_result["reward"], 4),
+                "detection_rate": round(detection_rate, 4),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            self._write_ptt_state()
 
             if cycle % 10 == 0:
                 logger.info(
@@ -364,6 +515,8 @@ class OrchestratorAgent(BaseAgent):
             "offline_final_detection_rate": offline_final,
             "sim_to_real_gap": sim_to_real_gap,
         })
+        self._write_run_state(self._run_state("orchestrator", "complete", cycles=cycles))
+        self._write_ptt_state()
 
         return {
             "cycles": cycles,

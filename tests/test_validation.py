@@ -223,6 +223,22 @@ def test_recon_agent_nmap_unavailable() -> bool:
     return result["open_ports"] == [] and ptt.get_recon_results() == []
 
 
+def test_recon_agent_timing_decoupled_from_profile() -> bool:
+    """Le recon initial doit toujours scanner en T4/timeout=600s, quel que soit le profil."""
+    checks = []
+    for profile_name in ("stealth", "aggressive"):
+        ptt = PentestTree("192.168.100.11")
+        agent = ReconAgent(ptt, load_profile(profile_name))
+        with patch("nzoyi.agents.recon.NmapWrapper") as mock_wrapper_cls:
+            mock_wrapper_cls.return_value.scan.return_value = []
+            agent.run(dry_run=False)
+
+        init_kwargs = mock_wrapper_cls.call_args.kwargs
+        _, scan_kwargs = mock_wrapper_cls.return_value.scan.call_args
+        checks.append(init_kwargs.get("timeout") == 600 and scan_kwargs.get("timing") == 4)
+    return all(checks)
+
+
 # ── Enumerator (mock banner grab) ────────────────────────────────────────
 
 def test_enumerator_agent_banner_grab() -> bool:
@@ -362,6 +378,40 @@ def test_attack_agent_no_ports_no_execution() -> bool:
     with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan") as mock_scan:
         result = agent.run(dry_run=False)
     return not mock_scan.called and result["executed"] is False and result["attempts"] == []
+
+
+def test_attack_agent_restricts_to_discovered_ports() -> bool:
+    """Le scan d'attaque ne cible QUE les ports découverts par le recon (via -p)."""
+    ptt = PentestTree("192.168.100.11")
+    ptt.set_recon_results([
+        {"host": "192.168.100.11", "port": 22, "state": "open", "service": "ssh"},
+        {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http"},
+    ])
+    agent = AttackAgent(ptt, load_profile("stealth"))
+    with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", return_value=[]) as mock_scan:
+        agent.run(dry_run=False)
+    _, kwargs = mock_scan.call_args
+    return kwargs.get("ports") == [22, 80]
+
+
+def test_attack_agent_timeout_not_fatal() -> bool:
+    """Un timeout d'attaque ne plante pas le cycle: résultat 'non abouti'."""
+    ptt = PentestTree("192.168.100.11")
+    ptt.set_recon_results([
+        {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http"},
+    ])
+    agent = AttackAgent(ptt, load_profile("stealth"))
+    with patch(
+        "nzoyi.tools.nmap_wrapper.NmapWrapper.scan",
+        side_effect=TimeoutError("Nmap scan timed out after 30s"),
+    ):
+        result = agent.run(dry_run=False)  # ne doit pas lever
+    return (
+        result["executed"] is False
+        and result["timed_out"] is True
+        and len(result["attempts"]) == 1
+        and result["attempts"][0]["timed_out"] is True
+    )
 
 
 # ── Evaluation (mock SuricataLogReader via fixture + mock RFClient) ────────
@@ -547,6 +597,22 @@ def test_learning_loop_aborted_by_llm() -> bool:
     )
 
 
+def test_learning_loop_aborted_when_recon_empty() -> bool:
+    """Le recon initial ne trouve aucun port -> la campagne est annulée avant tout cycle."""
+    ptt = PentestTree("192.168.100.11")
+    orchestrator = OrchestratorAgent(ptt, load_profile("stealth"), use_llm=False)
+
+    with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", return_value=[]) as mock_scan:
+        result = orchestrator.learning_loop(cycles=5, dry_run=True)
+
+    return (
+        result["cycles"] == 0
+        and result["convergence"] == []
+        and mock_scan.call_count == 1  # seul recon a scanné — jamais evasion/attack
+        and len(ptt.find(kind="campaign_aborted")) == 1
+    )
+
+
 def run_all_tests() -> dict[str, bool]:
     return {
         "PTT shared memory": test_ptt_shared_memory(),
@@ -559,6 +625,7 @@ def run_all_tests() -> dict[str, bool]:
         "PTT thread safety": test_ptt_thread_safety(),
         "Recon agent — scan réel (mocké)": test_recon_agent_real_scan(),
         "Recon agent — nmap indisponible": test_recon_agent_nmap_unavailable(),
+        "Recon agent — timing découplé du profil": test_recon_agent_timing_decoupled_from_profile(),
         "Enumerator — banner grab": test_enumerator_agent_banner_grab(),
         "Enumerator — service inconnu": test_enumerator_agent_unknown_service(),
         "Vulnerability — corrélation CVE": test_vulnerability_agent_correlation(),
@@ -569,6 +636,8 @@ def run_all_tests() -> dict[str, bool]:
         "Attack — mode plan (dry-run)": test_attack_agent_dry_run_plan(),
         "Attack — exécution réelle (mockée)": test_attack_agent_real_execution(),
         "Attack — aucun port, aucune exécution": test_attack_agent_no_ports_no_execution(),
+        "Attack — scan restreint aux ports découverts": test_attack_agent_restricts_to_discovered_ports(),
+        "Attack — timeout non bloquant (non abouti)": test_attack_agent_timeout_not_fatal(),
         "Evaluation — fusion Suricata + RF": test_evaluation_agent_fusion(),
         "Evaluation — signaux indisponibles": test_evaluation_agent_unavailable(),
         "Orchestrator 7-agent pipeline": test_orchestrator_pipeline(),
@@ -577,4 +646,5 @@ def run_all_tests() -> dict[str, bool]:
         "LLM stratégique — sanitize clamp/validation": test_llm_orchestrator_sanitize_clamps_and_validates(),
         "LLM stratégique — schéma du repli hors-ligne": test_llm_orchestrator_fallback_schema(),
         "Boucle d'évasion avortée par le LLM": test_learning_loop_aborted_by_llm(),
+        "Boucle d'apprentissage avortée — recon vide": test_learning_loop_aborted_when_recon_empty(),
     }
