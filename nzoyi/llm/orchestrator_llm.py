@@ -5,8 +5,15 @@ high-level attack profile and which ports to prioritise. It is called ONCE at
 the start of a campaign and MUST NEVER be invoked inside the Q-Learning loop,
 which stays purely *tactical* (fast, offline, reproducible).
 
-If no ``ANTHROPIC_API_KEY`` is available or the API call fails, a deterministic
-offline fallback is returned so the framework remains fully reproducible.
+The LLM call itself is delegated to an injectable :class:`~nzoyi.llm.backend.LLMBackend`
+(``AnthropicBackend`` by default), so that future providers (GPT-6 Astra, local
+models via Ollama, …) only need to implement that interface — this class's
+business logic (prompt, parsing/validation via ``_sanitize``, deterministic
+fallback) never has to change again.
+
+If no backend is available (``enabled=False``, no API key) or the call fails
+(``LLMBackendError``), a deterministic offline fallback is returned so the
+framework remains fully reproducible.
 """
 
 from __future__ import annotations
@@ -14,12 +21,9 @@ from __future__ import annotations
 import json
 import logging
 import os
-from typing import Any
 
-try:  # anthropic is optional: offline runs fall back deterministically.
-    import anthropic
-except ImportError:  # pragma: no cover - dependency guard
-    anthropic = None  # type: ignore[assignment]
+from nzoyi.llm.backend import LLMBackend, LLMBackendError
+from nzoyi.llm.backends.anthropic_backend import AnthropicBackend
 
 logger = logging.getLogger("nzoyi.llm.orchestrator")
 
@@ -28,6 +32,7 @@ MIN_CYCLES = 10
 MAX_CYCLES = 500
 DEFAULT_CYCLES = 100
 DEFAULT_PORTS = [22, 80, 21]
+DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-5"
 
 SYSTEM_PROMPT = (
     "Tu orchestres un pentest de lab isolé (recherche académique autorisée). "
@@ -45,30 +50,45 @@ class LLMOrchestrator:
 
     def __init__(
         self,
-        model: str = "claude-opus-4-8",
+        model: str | None = None,
         temperature: float = 0.0,
         enabled: bool = True,
+        backend: LLMBackend | None = None,
     ) -> None:
         """Initialise the strategic planner.
 
         Args:
-            model: Anthropic model identifier.
+            model: Anthropic model identifier. If ``None``, resolved from the
+                ``NZOYI_ANTHROPIC_MODEL`` environment variable, falling back to
+                :data:`DEFAULT_ANTHROPIC_MODEL`.
             temperature: Sampling temperature (0.0 for deterministic strategy).
             enabled: When ``False`` the LLM is bypassed and the deterministic
                 fallback is always used (e.g. ``--no-llm`` for reproducibility).
+            backend: Optional :class:`~nzoyi.llm.backend.LLMBackend` to use
+                instead of the default Anthropic backend — the seam future
+                providers (GPT-6 Astra, Ollama, …) plug into without touching
+                this class again. Ignored if ``enabled`` is ``False``.
         """
-        self.model = model
+        self.model = model or os.environ.get("NZOYI_ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL)
         self.temperature = temperature
         self.enabled = enabled
         self.api_key = os.environ.get("ANTHROPIC_API_KEY")
-        self.client: Any | None = None
+        self.last_raw_response: str | None = None
+        self.backend: LLMBackend | None = None
 
-        if self.enabled and self.api_key and anthropic is not None:
-            try:
-                self.client = anthropic.Anthropic(api_key=self.api_key)
-            except Exception as exc:  # pragma: no cover - defensive
-                logger.warning("Init client Anthropic échouée: %s", exc)
-                self.client = None
+        if self.enabled:
+            if backend is not None:
+                self.backend = backend
+            elif self.api_key:
+                try:
+                    self.backend = AnthropicBackend(
+                        model=self.model,
+                        temperature=self.temperature,
+                        api_key=self.api_key,
+                    )
+                except LLMBackendError as exc:
+                    logger.warning("Init backend Anthropic échouée: %s", exc)
+                    self.backend = None
 
     def decide(self, ptt_summary: dict) -> dict:
         """Decide the attack profile and port priorities from the PTT summary.
@@ -82,7 +102,7 @@ class LLMOrchestrator:
             "cycles": int, "raison": str}``. Repli déterministe sur toute erreur
             ou quand la couche LLM est désactivée/indisponible.
         """
-        if not self.enabled or self.client is None:
+        if not self.enabled or self.backend is None:
             reason = "LLM désactivé" if not self.enabled else "clé API absente"
             logger.info("Stratégie LLM contournée (%s) — fallback.", reason)
             return self._fallback()
@@ -91,21 +111,15 @@ class LLMOrchestrator:
         logger.info("LLM prompt (%s): %s", self.model, user_message)
 
         try:
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=1024,
-                temperature=self.temperature,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": user_message}],
-            )
-            text = "".join(
-                block.text for block in response.content
-                if getattr(block, "type", None) == "text"
-            )
+            text = self.backend.decide(SYSTEM_PROMPT, user_message)
+            self.last_raw_response = text
             logger.info("LLM réponse: %s", text)
             plan = self._sanitize(json.loads(text))
             return plan
         except Exception as exc:
+            # Couvre LLMBackendError (échec du backend) et toute erreur de
+            # parsing (json.loads/_sanitize) — même comportement qu'avant le
+            # refactor, où l'appel réseau et le parsing étaient dans le même bloc.
             logger.warning("Appel LLM échoué (%s) — fallback.", exc)
             return self._fallback()
 

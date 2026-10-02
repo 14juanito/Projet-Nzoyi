@@ -163,6 +163,7 @@ class OrchestratorAgent(BaseAgent):
         """
         planner = LLMOrchestrator(enabled=self.use_llm)
         plan = planner.decide(self.ptt.summary())
+        self._log_raw_response(planner)
         try:
             self._apply_profile(load_profile(plan["profil"]))
         except (KeyError, ValueError) as exc:
@@ -179,6 +180,7 @@ class OrchestratorAgent(BaseAgent):
         """
         planner = LLMOrchestrator(enabled=self.use_llm)
         plan = planner.decide(self.ptt.summary())
+        self._log_raw_response(planner)
         try:
             self._apply_profile(load_profile(plan["profil"]))
         except (KeyError, ValueError) as exc:
@@ -186,6 +188,23 @@ class OrchestratorAgent(BaseAgent):
         self.current_plan = plan
         self.ptt.add(self.name, "llm_replan", plan, allow_duplicate=True)
         return plan
+
+    def _log_raw_response(self, planner: LLMOrchestrator) -> None:
+        """Enregistre dans le PTT le texte brut renvoyé par le backend LLM.
+
+        N'enregistre rien en l'absence de réponse (LLM désactivé, ou backend
+        indisponible — ``decide`` est alors retombé directement sur le repli
+        déterministe sans jamais appeler le backend). Utile pour une future
+        mesure de variance entre fournisseurs (GPT-6 Astra, etc.) sans retoucher
+        :class:`LLMOrchestrator`.
+        """
+        if planner.last_raw_response is not None:
+            self.ptt.add(
+                self.name,
+                "llm_raw_response",
+                {"raw": planner.last_raw_response},
+                allow_duplicate=True,
+            )
 
     def _run_agents(
         self, results: dict[str, Any], steps: list[tuple[str, BaseAgent, dict[str, Any]]]

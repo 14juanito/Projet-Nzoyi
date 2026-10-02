@@ -25,6 +25,8 @@ from nzoyi.agents.recon import ReconAgent
 from nzoyi.agents.vulnerability import VulnerabilityAgent
 from nzoyi.core.config import load_profile
 from nzoyi.core.ptt import PentestTree
+from nzoyi.llm.backend import LLMBackend, LLMBackendError
+from nzoyi.llm.backends.anthropic_backend import AnthropicBackend
 from nzoyi.llm.orchestrator_llm import LLMOrchestrator
 from nzoyi.rl.qlearning import EvasionAction, EvasionQLearner, EvasionState
 from nzoyi.tools.ids_log_reader import SuricataLogReader
@@ -888,6 +890,119 @@ def test_llm_orchestrator_fallback_schema() -> bool:
     )
 
 
+class _FakeLLMBackend(LLMBackend):
+    """Backend LLM factice pour les tests — ne fait aucun appel réseau."""
+
+    def __init__(self, text: str | None = None, raises: bool = False) -> None:
+        self._text = text
+        self._raises = raises
+
+    def decide(self, system_prompt: str, user_message: str) -> str:
+        if self._raises:
+            raise LLMBackendError("échec simulé du backend")
+        return self._text or ""
+
+
+def test_llm_orchestrator_disabled_skips_backend_construction() -> bool:
+    """enabled=False doit retourner le repli exact sans jamais construire AnthropicBackend."""
+    with patch("nzoyi.llm.orchestrator_llm.AnthropicBackend") as mock_backend_cls:
+        planner = LLMOrchestrator(enabled=False)
+        plan = planner.decide({"target": "192.168.100.14"})
+    return (
+        mock_backend_cls.call_count == 0
+        and planner.backend is None
+        and plan["profil"] == "stealth"
+        and plan["ports_cibles"] == [22, 80, 21]
+        and plan["services_focus"] == []
+        and plan["lancer_boucle_evasion"] is True
+        and plan["cycles"] == 100
+        and plan["raison"] == "fallback hors-ligne"
+    )
+
+
+def test_llm_orchestrator_backend_valid_json_logs_raw_response() -> bool:
+    """Un backend simulé renvoyant un JSON valide doit produire le plan attendu
+    (via `_sanitize`) et loguer le texte brut dans le PTT (`llm_raw_response`)."""
+    raw_text = json.dumps({
+        "profil": "aggressive",
+        "ports_cibles": [443, 8080],
+        "services_focus": ["https"],
+        "lancer_boucle_evasion": False,
+        "cycles": 77,
+        "raison": "cible riche en services web",
+    })
+    fake_backend = _FakeLLMBackend(text=raw_text)
+
+    ptt = PentestTree("192.168.100.12")
+    orchestrator = OrchestratorAgent(ptt, load_profile("stealth"), use_llm=True)
+
+    with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-ant-fake"}), \
+         patch("nzoyi.llm.orchestrator_llm.AnthropicBackend", return_value=fake_backend):
+        plan = orchestrator._strategic_plan()
+
+    raw_nodes = ptt.find(kind="llm_raw_response")
+    return (
+        plan["profil"] == "aggressive"
+        and plan["ports_cibles"] == [443, 8080]
+        and plan["services_focus"] == ["https"]
+        and plan["lancer_boucle_evasion"] is False
+        and plan["cycles"] == 77
+        and len(raw_nodes) == 1
+        and raw_nodes[0].data["raw"] == raw_text
+    )
+
+
+def test_llm_orchestrator_backend_error_triggers_fallback() -> bool:
+    """Un backend simulé qui lève LLMBackendError doit retomber sur le repli déterministe."""
+    fake_backend = _FakeLLMBackend(raises=True)
+    planner = LLMOrchestrator(backend=fake_backend, enabled=True)
+    plan = planner.decide({"target": "192.168.100.13"})
+    return (
+        plan["profil"] == "stealth"
+        and plan["raison"] == "fallback hors-ligne"
+        and planner.last_raw_response is None
+    )
+
+
+def test_anthropic_backend_scrubs_api_key_from_errors() -> bool:
+    """LLMBackendError ne doit JAMAIS exposer la clé API — quel que soit le
+    format sous lequel le SDK Anthropic l'aurait incluse dans sa propre
+    exception (entière, tronquée, ré-encodée, …). Le message propagé doit être
+    un texte générique fixe, et le détail complet de l'exception d'origine doit
+    atterrir uniquement dans les logs serveur (`logger.error(..., exc_info=True)`),
+    jamais dans l'exception propagée ni, par extension, dans le PTT. Aucun appel
+    réseau réel : le client Anthropic est entièrement mocké."""
+    fake_key = "sk-ant-TEST-SECRET-KEY-0000"
+
+    class _FakeMessages:
+        def create(self, **kwargs):
+            raise RuntimeError(f"authentication failed for api_key={fake_key}")
+
+    class _FakeClient:
+        messages = _FakeMessages()
+
+    with patch("nzoyi.llm.backends.anthropic_backend.anthropic") as mock_anthropic, \
+         patch("nzoyi.llm.backends.anthropic_backend.logger") as mock_logger:
+        mock_anthropic.Anthropic.return_value = _FakeClient()
+        backend = AnthropicBackend(model="claude-sonnet-5", temperature=0.0, api_key=fake_key)
+        try:
+            backend.decide("system prompt", "user message")
+            return False  # un LLMBackendError était attendu
+        except LLMBackendError as exc:
+            message = str(exc)
+            generic_message_ok = (
+                fake_key not in message
+                and message == "Échec de l'appel au backend Anthropic"
+            )
+            # Le détail complet (avec la clé) doit être allé dans les logs
+            # serveur — jamais ailleurs — avec exc_info=True pour la stack
+            # trace complète côté diagnostic.
+            mock_logger.error.assert_called_once()
+            _, log_kwargs = mock_logger.error.call_args
+            logged_with_exc_info = log_kwargs.get("exc_info") is True
+            return generic_message_ok and logged_with_exc_info
+
+
 def test_learning_loop_aborted_by_llm() -> bool:
     """lancer_boucle_evasion=False doit sauter la boucle Q-Learning entièrement."""
     ptt = PentestTree("192.168.100.11")
@@ -981,6 +1096,10 @@ def run_all_tests() -> dict[str, bool]:
         "Pipeline complet — signaux online distincts": test_full_pipeline_online_signals(),
         "LLM stratégique — sanitize clamp/validation": test_llm_orchestrator_sanitize_clamps_and_validates(),
         "LLM stratégique — schéma du repli hors-ligne": test_llm_orchestrator_fallback_schema(),
+        "LLM backend — enabled=False ne construit pas AnthropicBackend": test_llm_orchestrator_disabled_skips_backend_construction(),
+        "LLM backend — JSON valide → sanitize + log PTT llm_raw_response": test_llm_orchestrator_backend_valid_json_logs_raw_response(),
+        "LLM backend — LLMBackendError → repli déterministe": test_llm_orchestrator_backend_error_triggers_fallback(),
+        "LLM backend Anthropic — clé API expurgée des erreurs": test_anthropic_backend_scrubs_api_key_from_errors(),
         "Boucle d'évasion avortée par le LLM": test_learning_loop_aborted_by_llm(),
         "Boucle d'apprentissage avortée — recon vide": test_learning_loop_aborted_when_recon_empty(),
     }
