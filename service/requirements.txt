@@ -1,0 +1,8 @@
+# Dépendances de l'API IDS-ML (déployée sur la VM cible, port 5000).
+# Séparé du requirements.txt racine (toolkit attaquant nzoyi) car ce service
+# tourne sur une machine différente du banc de lab — voir docs/LAB_SETUP.md.
+flask>=3.0
+pandas>=2.2
+scikit-learn>=1.3
+xgboost>=2.0
+joblib>=1.3

@@ -3,7 +3,7 @@
 NZOYI — Multi-Agent IDS Resilience Testing Framework
 
 Usage:
-    python main.py                          # Mode interactif (par défaut)
+    python main.py                          # Mode interactif (réel, eve.json requis)
     python main.py --target 192.168.100.11  # Mode direct (autonome)
     python main.py --target X --mode learn  # Boucle RL directe
     python main.py --test                   # Validation des fondations
@@ -34,10 +34,12 @@ from nzoyi.ui.banner import (
 )
 from nzoyi.ui.interactive import (
     AutonomousRunner,
+    DEFAULT_EVE_LOG,
     GuidedRunner,
     InteractiveSession,
     LearningRunner,
     print_section,
+    require_eve_log,
 )
 
 
@@ -198,10 +200,11 @@ def run_interactive(use_llm: bool = True, use_rf_online: bool = True) -> int:
 
     if mode == "guided":
         runner = GuidedRunner()
+        runner.bind_evaluation(orchestrator.evaluation)
         executed = 0
         for agent in orchestrator.pipeline:
             result = runner.run_agent_guided(
-                agent, dry_run=params["dry_run"], eve_log=params.get("eve_log")
+                agent, dry_run=False, eve_log=params.get("eve_log")
             )
             if result is None:
                 break
@@ -217,7 +220,7 @@ def run_interactive(use_llm: bool = True, use_rf_online: bool = True) -> int:
     elif mode == "autonomous":
         runner = AutonomousRunner()
         runner.run_pipeline(
-            orchestrator, dry_run=params["dry_run"], eve_log=params.get("eve_log")
+            orchestrator, dry_run=False, eve_log=params.get("eve_log")
         )
         summary = ptt.summary()
         orchestrator.ptt.add(orchestrator.name, "pipeline_complete", summary)
@@ -233,7 +236,7 @@ def run_interactive(use_llm: bool = True, use_rf_online: bool = True) -> int:
         learn_results = runner.run(
             orchestrator,
             cycles=params["cycles"],
-            dry_run=params["dry_run"],
+            dry_run=False,
             eve_log=params.get("eve_log"),
         )
         conv_path = _save_convergence(learn_results["convergence"])
@@ -245,16 +248,19 @@ def run_interactive(use_llm: bool = True, use_rf_online: bool = True) -> int:
 def run_direct(
     target: str,
     profile_name: str,
-    dry_run: bool,
     eve_log: str | None,
     mode: str,
     cycles: int,
     use_llm: bool = True,
     use_rf_online: bool = True,
 ) -> int:
-    """Direct CLI mode (non-interactive)."""
+    """Direct CLI mode (non-interactive) — réel uniquement."""
+    eve_path = eve_log or DEFAULT_EVE_LOG
+    if not require_eve_log(eve_path):
+        return 1
+
     profile, ptt, orchestrator = _build_orchestrator(
-        target, profile_name, eve_log, use_llm=use_llm, use_rf_online=use_rf_online
+        target, profile_name, eve_path, use_llm=use_llm, use_rf_online=use_rf_online
     )
 
     print_banner(__version__)
@@ -262,22 +268,22 @@ def run_direct(
     print_config_box(
         target=target,
         profile=f"{profile.name} — {profile.description}",
-        mode=mode if mode != "pipeline" else ("dry-run" if dry_run else "live"),
+        mode=mode if mode != "pipeline" else "live",
         cycles=cycles if mode == "learn" else None,
-        eve_log=eve_log,
+        eve_log=eve_path,
     )
 
     if mode == "learn":
         runner = LearningRunner()
         learn_results = runner.run(
-            orchestrator, cycles=cycles, dry_run=dry_run, eve_log=eve_log
+            orchestrator, cycles=cycles, dry_run=False, eve_log=eve_path
         )
         conv_path = _save_convergence(learn_results["convergence"])
         print(f"  📊 Données de convergence sauvées → {conv_path}\n")
         return 0
 
     runner = AutonomousRunner()
-    runner.run_pipeline(orchestrator, dry_run=dry_run, eve_log=eve_log)
+    runner.run_pipeline(orchestrator, dry_run=False, eve_log=eve_path)
     summary = ptt.summary()
     orchestrator.ptt.add(orchestrator.name, "pipeline_complete", summary)
     print_result_box("Pipeline terminé", {
@@ -307,8 +313,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Direct-mode execution: single pipeline or RL learning loop",
     )
     parser.add_argument("--cycles", type=int, default=100, help="Learning loop iterations")
-    parser.add_argument("--dry-run", action="store_true", help="Simulate without network")
-    parser.add_argument("--eve-log", default=None, help="Path to Suricata eve.json")
+    parser.add_argument(
+        "--eve-log",
+        default=DEFAULT_EVE_LOG,
+        help=f"Chemin vers eve.json (passerelle locale, défaut: {DEFAULT_EVE_LOG})",
+    )
     parser.add_argument(
         "--train-offline",
         metavar="MODEL_PATH",
@@ -351,11 +360,14 @@ def main(argv: list[str] | None = None) -> int:
             return run_train_offline(args.train_offline, cycles=args.cycles)
 
         if args.finetune:
+            eve_path = args.eve_log or DEFAULT_EVE_LOG
+            if not require_eve_log(eve_path):
+                return 1
             return run_finetune(
                 qtable_path=args.finetune,
                 target=args.target or "192.168.100.11",
                 profile_name=args.profile,
-                eve_log=args.eve_log,
+                eve_log=eve_path,
                 cycles=args.cycles,
                 use_llm=not args.no_llm,
                 use_rf_online=not args.no_rf_online,
@@ -365,7 +377,6 @@ def main(argv: list[str] | None = None) -> int:
             return run_direct(
                 target=args.target,
                 profile_name=args.profile,
-                dry_run=args.dry_run,
                 eve_log=args.eve_log,
                 mode=args.mode,
                 cycles=args.cycles,

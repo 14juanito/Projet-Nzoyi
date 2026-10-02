@@ -14,6 +14,8 @@ logger = logging.getLogger("nzoyi.tools.nmap")
 SCAN_FLAGS: dict[str, list[str]] = {
     "basic": ["-sT"],
     "version": ["-sV"],
+    # SYN lent — pas de -f ici : la fragmentation IP déclenche en masse
+    # « SURICATA Ethertype unknown » sur le lab KVM (faux positifs IDS).
     "stealth": ["-sS", "--max-rate", "10"],
 }
 
@@ -38,27 +40,59 @@ class NmapWrapper:
         scan_type: str = "version",
         timing: int = 3,
         ports: list[int] | None = None,
+        fragment: bool = False,
+        scan_delay_ms: int = 0,
     ) -> list[dict[str, Any]]:
-        flags = SCAN_FLAGS.get(scan_type, SCAN_FLAGS["version"])
+        flags = list(SCAN_FLAGS.get(scan_type, SCAN_FLAGS["version"]))
         timing = max(0, min(5, timing))
         port_spec = ",".join(str(p) for p in ports) if ports else None
+        delay_ms = max(0, int(scan_delay_ms))
+
+        # « fragment » Q-Learning → trafic plus petit / plus lent, SANS -f
+        # (évite SURICATA Ethertype unknown sur le bridge lab).
+        if fragment:
+            cleaned: list[str] = []
+            skip_next = False
+            for flag in flags:
+                if skip_next:
+                    skip_next = False
+                    continue
+                if flag == "--max-rate":
+                    skip_next = True
+                    continue
+                cleaned.append(flag)
+            flags = cleaned + ["--max-rate", "5", "--data-length", "16"]
 
         if self._use_python_nmap:
-            return self._scan_python_nmap(target, flags, timing, port_spec)
-        return self._scan_cli(target, flags, timing, port_spec)
+            return self._scan_python_nmap(
+                target, flags, timing, port_spec, delay_ms=delay_ms
+            )
+        return self._scan_cli(target, flags, timing, port_spec, delay_ms=delay_ms)
 
     def _scan_python_nmap(
-        self, target: str, flags: list[str], timing: int, port_spec: str | None
+        self,
+        target: str,
+        flags: list[str],
+        timing: int,
+        port_spec: str | None,
+        delay_ms: int = 0,
     ) -> list[dict[str, Any]]:
         import nmap
 
         scanner = nmap.PortScanner()
         args = " ".join(flags) + f" -T{timing}"
+        if delay_ms > 0:
+            args += f" --scan-delay {delay_ms}ms"
         scanner.scan(hosts=target, ports=port_spec, arguments=args)
         return self._parse_python_nmap(scanner, target)
 
     def _scan_cli(
-        self, target: str, flags: list[str], timing: int, port_spec: str | None
+        self,
+        target: str,
+        flags: list[str],
+        timing: int,
+        port_spec: str | None,
+        delay_ms: int = 0,
     ) -> list[dict[str, Any]]:
         if not shutil.which("nmap"):
             raise FileNotFoundError(
@@ -69,6 +103,8 @@ class NmapWrapper:
             xml_path = tmp.name
 
         cmd = ["nmap", *flags, f"-T{timing}"]
+        if delay_ms > 0:
+            cmd += ["--scan-delay", f"{delay_ms}ms"]
         if port_spec:
             cmd += ["-p", port_spec]
         cmd += ["-oX", xml_path, target]

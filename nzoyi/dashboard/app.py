@@ -687,7 +687,7 @@ def page_live_operations() -> None:
     convergence = _read_json("convergence.json", default=[]) or []
 
     if not run_state and not convergence:
-        st.markdown(
+    st.markdown(
             f'<div class="nz-card nz-card-amber">'
             f'<div class="nz-title">{icon("clock", 16, AMBER)} STANDBY</div>'
             f'<span style="color:{TXT}">En attente d\'un run CLI…<br><br>'
@@ -750,7 +750,7 @@ def main() -> None:
 
         st.divider()
         if st.button("PAUSE REFRESH" if not st.session_state.paused_refresh else "RESUME REFRESH",
-                     width="stretch"):
+                      width="stretch"):
             st.session_state.paused_refresh = not st.session_state.paused_refresh
             st.rerun()
         if st.button("REFRESH NOW", width="stretch"):

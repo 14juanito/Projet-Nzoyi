@@ -10,12 +10,9 @@ from nzoyi.agents.base import BaseAgent
 from nzoyi.core import config
 from nzoyi.tools.ids_log_reader import SuricataLogReader
 from nzoyi.tools.rf_client import RFClient
+from nzoyi.tools.rf_features import features_from_evasion
 
 logger = logging.getLogger("nzoyi.agents.evaluation")
-
-_TIMING_MAP: dict[str, int] = {"T2": 2, "T3": 3, "T4": 4}
-_RATE_SCALE = 20.0
-_DELAY_SCALE = 100.0
 
 
 class EvaluationAgent(BaseAgent):
@@ -39,6 +36,30 @@ class EvaluationAgent(BaseAgent):
         self.rf_client = RFClient(config.rf_endpoint) if use_rf_online else None
         self._total_scans = 0
         self._total_detections = 0
+        self._reader: SuricataLogReader | None = None
+        self._eve_path: str | None = None
+
+    def baseline_ids(self, eve_log: str | None = None) -> None:
+        """Ignore l'historique eve.json (recon, scans précédents) avant les cycles RL.
+
+        Sans ça, chaque évaluation recompte d'anciennes alertes → détection
+        artificielle à 100 % même si le cycle courant est furtif.
+        """
+        eve_log = eve_log or config.eve_log
+        if not eve_log or not Path(eve_log).exists():
+            return
+        try:
+            reader = self._get_reader(eve_log)
+            reader.seek_end()
+            logger.info("Baseline IDS : curseur eve.json placé en fin de fichier.")
+        except (FileNotFoundError, PermissionError) as exc:
+            logger.warning("Baseline IDS impossible: %s", exc)
+
+    def _get_reader(self, eve_log: str) -> SuricataLogReader:
+        if self._reader is None or self._eve_path != eve_log:
+            self._reader = SuricataLogReader(eve_log)
+            self._eve_path = eve_log
+        return self._reader
 
     def run(self, dry_run: bool = False, eve_log: str | None = None) -> dict[str, Any]:
         self._total_scans += 1
@@ -52,8 +73,14 @@ class EvaluationAgent(BaseAgent):
         if eve_log and Path(eve_log).exists():
             source = eve_log
             try:
-                reader = SuricataLogReader(eve_log)
-                alerts = reader.get_recent_alerts(seconds=30, source_ip=self.attacker_ip)
+                reader = self._get_reader(eve_log)
+                # Curseur persistant : uniquement les alertes *nouvelles* depuis
+                # le dernier run / baseline_ids().
+                alerts = reader.get_recent_alerts(
+                    seconds=30,
+                    source_ip=self.attacker_ip,
+                    since_cursor_only=True,
+                )
                 alert_count = len(alerts)
                 signatures = [a["signature"] for a in alerts if a.get("signature")]
                 suricata_detected = alert_count > 0
@@ -107,18 +134,11 @@ class EvaluationAgent(BaseAgent):
         self.ptt.add(self.name, "ids_feedback", result, allow_duplicate=True)
         return result
 
-    def _current_features(self) -> dict[str, float]:
-        """Dérive le vecteur de features RF de la stratégie d'évasion courante (PTT)."""
-        strategy = self.ptt.get_evasion_strategy()
-        state = strategy.get("state")
-        if state:
-            timing, delay_bucket, fragment = state
-        else:
-            timing = _TIMING_MAP.get(self.profile.nmap_timing, 3)
-            delay_bucket = min(5, self.profile.scan_delay_ms // 100)
-            fragment = int(self.profile.packet_fragment)
-        return {
-            "rate": timing * _RATE_SCALE,
-            "delay": delay_bucket * _DELAY_SCALE,
-            "frag": float(fragment),
-        }
+    def _current_features(self) -> dict[str, Any]:
+        """Construit le payload UNSW-NB15 attendu par l'API RF distante."""
+        return features_from_evasion(
+            self.ptt.get_evasion_strategy(),
+            nmap_timing=self.profile.nmap_timing,
+            scan_delay_ms=self.profile.scan_delay_ms,
+            packet_fragment=self.profile.packet_fragment,
+        )

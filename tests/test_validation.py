@@ -8,10 +8,13 @@ distant réellement disponible.
 from __future__ import annotations
 
 import json
+import tempfile
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+import pandas as pd
 
 from nzoyi.agents.attack import AttackAgent
 from nzoyi.agents.enumerator import EnumeratorAgent
@@ -141,6 +144,40 @@ def test_suricata_log_reader() -> bool:
         tmp.unlink(missing_ok=True)
 
     return len(alerts) == 2 and alerts[0]["signature_id"] == 2012888
+
+
+def test_suricata_cursor_baseline_ignores_history() -> bool:
+    """Après seek_end(), seules les alertes *nouvelles* comptent (évite 100% faux)."""
+    now = datetime.now(timezone.utc)
+    tmp = _write_eve_fixture("eve_baseline.json", [_alert_event(now, "OLD ALERT")])
+    try:
+        reader = SuricataLogReader(str(tmp))
+        reader.seek_end()
+        # Ajoute une alerte après la baseline.
+        with open(tmp, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(_alert_event(now, "NEW ALERT")) + "\n")
+        alerts = reader.get_recent_alerts(
+            source_ip="192.168.100.10", since_cursor_only=True
+        )
+    finally:
+        tmp.unlink(missing_ok=True)
+    return len(alerts) == 1 and alerts[0]["signature"] == "NEW ALERT"
+
+
+def test_suricata_parses_plus0000_timestamp() -> bool:
+    ts = SuricataLogReader._parse_timestamp("2026-08-12T04:15:56.480396+0000")
+    return ts is not None and ts.year == 2026 and ts.tzinfo is not None
+
+
+def test_suricata_ignores_decoder_noise() -> bool:
+    """« SURICATA Ethertype unknown » ne doit pas compter comme détection IDS."""
+    from nzoyi.tools.ids_log_reader import is_security_alert
+
+    return (
+        is_security_alert("ET SCAN Nmap Scripting Engine") is True
+        and is_security_alert("SURICATA Ethertype unknown") is False
+        and is_security_alert("GPL ATTACK_RESPONSE id check returned root") is True
+    )
 
 
 def test_qlearning_convergence() -> bool:
@@ -273,7 +310,7 @@ def test_enumerator_agent_unknown_service() -> bool:
     return len(stored) == 1 and stored[0]["name"] == "unknown" and stored[0]["banner"] == ""
 
 
-# ── Vulnerability (corrélation CVE locale, pas de mock nécessaire) ──────────
+# ── Vulnerability (corrélation CVE locale + fingerprint DVWA) ──────────
 
 def test_vulnerability_agent_correlation() -> bool:
     ptt = PentestTree("192.168.100.11")
@@ -282,9 +319,51 @@ def test_vulnerability_agent_correlation() -> bool:
          "product": "Apache", "version": "2.4.49"},
     ])
     agent = VulnerabilityAgent(ptt, load_profile("stealth"))
-    result = agent.run(dry_run=False)
+    with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=None):
+        result = agent.run(dry_run=False)
     cve_ids = {f["cve_id"] for f in result["findings"]}
     return "CVE-2021-41773" in cve_ids and len(ptt.get_vulnerabilities()) >= 1
+
+
+def test_vulnerability_agent_apache_lab_version() -> bool:
+    """Apache 2.4.25 (lab DVWA) doit matcher les CVE élargies, pas seulement 2.4.49."""
+    ptt = PentestTree("192.168.100.11")
+    ptt.set_recon_results([
+        {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http",
+         "product": "Apache httpd", "version": "2.4.25"},
+    ])
+    agent = VulnerabilityAgent(ptt, load_profile("stealth"))
+    with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=None):
+        result = agent.run(dry_run=False)
+    cve_ids = {f["cve_id"] for f in result["findings"]}
+    return "CVE-2017-9798" in cve_ids and "CVE-2017-3167" in cve_ids
+
+
+def test_vulnerability_agent_dvwa_detection() -> bool:
+    """DVWA détecté via fingerprint → findings SQLi/XSS/etc."""
+    ptt = PentestTree("192.168.100.11")
+    ptt.set_recon_results([
+        {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http",
+         "product": "Apache httpd", "version": "2.4.25"},
+    ])
+    fake_dvwa = {
+        "app": "DVWA",
+        "url": "http://192.168.100.11:80/login.php",
+        "port": 80,
+        "status": 200,
+        "evidence": ["cookie:security", "login.php", "title:DVWA"],
+    }
+    agent = VulnerabilityAgent(ptt, load_profile("stealth"))
+    with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=fake_dvwa):
+        result = agent.run(dry_run=False)
+    ids = {f["cve_id"] for f in result["findings"]}
+    return (
+        result.get("dvwa", {}).get("app") == "DVWA"
+        and "DVWA-SQLI" in ids
+        and "DVWA-XSS-REFLECTED" in ids
+        and "DVWA-CMD-INJECTION" in ids
+        and any(f.get("source") == "app_fingerprint" for f in result["findings"])
+    )
 
 
 def test_vulnerability_agent_no_match() -> bool:
@@ -294,7 +373,8 @@ def test_vulnerability_agent_no_match() -> bool:
          "product": "", "version": ""},
     ])
     agent = VulnerabilityAgent(ptt, load_profile("stealth"))
-    result = agent.run(dry_run=False)
+    with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=None):
+        result = agent.run(dry_run=False)
     return result["findings"] == [] and ptt.get_vulnerabilities() == []
 
 
@@ -308,7 +388,8 @@ def test_vulnerability_agent_fallback_to_enumeration() -> bool:
         "dry_run": False,
     })
     agent = VulnerabilityAgent(ptt, load_profile("stealth"))
-    result = agent.run(dry_run=False)
+    with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=None):
+        result = agent.run(dry_run=False)
     cve_ids = {f["cve_id"] for f in result["findings"]}
     return "CVE-2011-2523" in cve_ids
 
@@ -317,7 +398,8 @@ def test_vulnerability_agent_fallback_to_enumeration() -> bool:
 
 def test_evasion_agent_oracle_unavailable() -> bool:
     ptt = PentestTree("192.168.100.11")
-    agent = EvasionAgent(ptt, load_profile("stealth"), learner=EvasionQLearner(epsilon=0.0))
+    with patch.object(EvasionAgent, "_load_oracle", return_value=None):
+        agent = EvasionAgent(ptt, load_profile("stealth"), learner=EvasionQLearner(epsilon=0.0))
     no_oracle = agent.oracle is None
     result = agent.run(dry_run=False)
     return no_oracle and result["detected"] is False and result["p_detect"] == 0.0
@@ -414,6 +496,25 @@ def test_attack_agent_timeout_not_fatal() -> bool:
     )
 
 
+def test_attack_applies_evasion_strategy() -> bool:
+    """L'attaque doit appliquer timing/delay/fragment issus du Q-Learning (PTT)."""
+    ptt = PentestTree("192.168.100.11")
+    ptt.set_recon_results([
+        {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http"},
+    ])
+    ptt.update_evasion_strategy({"state": (1, 4, 1), "action": "slow_down"})
+    agent = AttackAgent(ptt, load_profile("aggressive"))  # profil bruyant volontairement
+    with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", return_value=[]) as mock_scan:
+        result = agent.run(dry_run=False)
+    _, kwargs = mock_scan.call_args
+    return (
+        kwargs.get("timing") == 1
+        and kwargs.get("scan_delay_ms") == 400
+        and kwargs.get("fragment") is True
+        and result["timing"] == 1
+    )
+
+
 # ── Evaluation (mock SuricataLogReader via fixture + mock RFClient) ────────
 
 def test_evaluation_agent_fusion() -> bool:
@@ -450,6 +551,218 @@ def test_evaluation_agent_unavailable() -> bool:
         and result["detected"] is False
         and result["source"] == "unavailable"
     )
+
+
+def test_rf_client_normalizes_lab_response() -> bool:
+    """L'API lab renvoie prediction/score — le client normalise en label/proba."""
+    from nzoyi.tools.rf_client import RFClient
+
+    out = RFClient._normalize({"prediction": 1, "score": 0.72, "model_version": "x"})
+    legacy = RFClient._normalize({"label": 0, "proba": 0.1})
+    return out == {"label": 1, "proba": 0.72} and legacy == {"label": 0, "proba": 0.1}
+
+
+def test_rf_features_unsw_payload_complete() -> bool:
+    """Le payload RF contient toutes les features UNSW exigées par l'API."""
+    from nzoyi.tools.rf_features import UNSW_FEATURE_NAMES, features_from_evasion
+
+    feat = features_from_evasion(
+        {"state": (2, 5, 1)},
+        nmap_timing="T2",
+        scan_delay_ms=500,
+        packet_fragment=True,
+    )
+    return set(feat.keys()) == set(UNSW_FEATURE_NAMES) and feat["rate"] == 40.0
+
+
+# ── Benchmark IDS multi-modèles (préprocesseur, modèles, métriques, API) ──
+
+
+def _tiny_unsw_frame(rows: int, seed_offset: int = 0) -> pd.DataFrame:
+    """Petit DataFrame synthétique au format UNSW-NB15 (id/attack_cat/label inclus)."""
+    return pd.DataFrame(
+        {
+            "id": range(seed_offset, seed_offset + rows),
+            "dur": [0.01 * (i + 1) for i in range(rows)],
+            "rate": [float(i % 5) for i in range(rows)],
+            "proto": ["tcp" if i % 2 == 0 else "udp" for i in range(rows)],
+            "service": ["-" for _ in range(rows)],
+            "state": ["FIN" if i % 3 else "INT" for i in range(rows)],
+            "attack_cat": ["Normal" if i % 2 == 0 else "Generic" for i in range(rows)],
+            "label": [0 if i % 2 == 0 else 1 for i in range(rows)],
+        }
+    )
+
+
+def test_benchmark_data_split_removes_leakage_and_coerces() -> bool:
+    """split_features_target retire id/attack_cat/label et coerce les numériques."""
+    from benchmark.data import split_features_target
+
+    df = _tiny_unsw_frame(6)
+    df["dur"] = df["dur"].astype(object)
+    df.loc[2, "dur"] = "N/A"  # valeur mal typée, courante dans le CSV officiel
+
+    X, y = split_features_target(df, source="synthétique")
+
+    return (
+        "id" not in X.columns
+        and "attack_cat" not in X.columns
+        and "label" not in X.columns
+        and list(y) == [0, 1, 0, 1, 0, 1]
+        and X["dur"].isna().sum() == 1
+    )
+
+
+def test_benchmark_data_missing_columns_raise() -> bool:
+    """split_features_target lève une erreur claire si 'label' est absent."""
+    from benchmark.data import split_features_target
+
+    df = _tiny_unsw_frame(3).drop(columns=["label"])
+    try:
+        split_features_target(df, source="synthétique")
+        return False
+    except ValueError:
+        return True
+
+
+def test_benchmark_data_missing_files_raise() -> bool:
+    """load_official_split lève FileNotFoundError si les CSV sont absents."""
+    from benchmark.data import load_official_split
+
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            load_official_split(tmp)
+            return False
+        except FileNotFoundError:
+            return True
+
+
+def test_benchmark_preprocessing_shared_pipeline() -> bool:
+    """Le préprocesseur, fitté sur le train, transforme le test sans le refitter."""
+    from benchmark.data import split_features_target
+    from benchmark.preprocessing import fit_preprocessor
+
+    train_df = _tiny_unsw_frame(10, seed_offset=0)
+    test_df = _tiny_unsw_frame(4, seed_offset=100)
+    test_df.loc[0, "proto"] = "icmp"  # catégorie absente du train
+
+    X_train, _ = split_features_target(train_df, source="train")
+    X_test, _ = split_features_target(test_df, source="test")
+
+    preprocessor = fit_preprocessor(X_train)
+    X_train_t = preprocessor.transform(X_train)
+    X_test_t = preprocessor.transform(X_test)  # ne doit pas lever malgré "icmp" inédit
+
+    return (
+        X_train_t.shape[1] == X_test_t.shape[1]
+        and X_test_t.shape[0] == 4
+    )
+
+
+def test_benchmark_models_factory_hyperparameters() -> bool:
+    """La factory instancie les 5 modèles avec les hyperparamètres imposés."""
+    from benchmark.models import MODEL_NAMES, get_models
+
+    models = get_models(scale_pos_weight=4.5)
+    if set(models) != set(MODEL_NAMES):
+        return False
+
+    rf = models["random_forest"].get_params()
+    xgb = models["xgboost"].get_params()
+    mlp = models["mlp"].get_params()
+    logreg = models["logistic_regression"].get_params()
+    knn = models["knn"].get_params()
+
+    return (
+        rf["n_estimators"] == 100 and rf["class_weight"] == "balanced" and rf["random_state"] == 42
+        and xgb["max_depth"] == 6 and xgb["learning_rate"] == 0.1 and xgb["scale_pos_weight"] == 4.5
+        and mlp["hidden_layer_sizes"] == (128, 64) and mlp["early_stopping"] is True
+        and logreg["C"] == 1.0 and logreg["class_weight"] == "balanced"
+        and knn["n_neighbors"] == 5 and knn["weights"] == "distance"
+    )
+
+
+def test_benchmark_resolve_model_alias() -> bool:
+    """resolve_model_name accepte les alias NZOYI_IDS_MODEL et rejette l'inconnu."""
+    from benchmark.models import resolve_model_name
+
+    try:
+        resolve_model_name("does-not-exist")
+        return False
+    except ValueError:
+        pass
+
+    return (
+        resolve_model_name("RF") == "random_forest"
+        and resolve_model_name("xgb") == "xgboost"
+        and resolve_model_name("logreg") == "logistic_regression"
+        and resolve_model_name("kneighbors") == "knn"
+    )
+
+
+def test_benchmark_metrics_confusion_and_rates() -> bool:
+    """FPR/FNR et la matrice de confusion sont cohérents (malicious=1=positif)."""
+    from benchmark.metrics import evaluate_predictions
+
+    y_true = [0, 0, 1, 1, 1]
+    y_pred = [0, 1, 1, 0, 1]
+    y_proba = [0.1, 0.6, 0.9, 0.4, 0.8]
+
+    metrics = evaluate_predictions(y_true, y_pred, y_proba)
+    cm = metrics["confusion_matrix"]
+
+    return (
+        cm == {"tn": 1, "fp": 1, "fn": 1, "tp": 2}
+        and abs(metrics["fpr"] - 0.5) < 1e-9
+        and abs(metrics["fnr"] - (1 / 3)) < 1e-6
+    )
+
+
+def test_service_api_predict_contract() -> bool:
+    """L'API Flask sert prediction/score inchangés et valide colonnes manquantes/inattendues."""
+    import joblib
+    from sklearn.ensemble import RandomForestClassifier
+
+    from benchmark.data import split_features_target
+    from benchmark.preprocessing import fit_preprocessor, save_preprocessor
+    from service.app import create_app
+
+    train_df = _tiny_unsw_frame(12)
+    X_train, y_train = split_features_target(train_df, source="train")
+    preprocessor = fit_preprocessor(X_train)
+    X_train_t = preprocessor.transform(X_train)
+
+    model = RandomForestClassifier(n_estimators=10, random_state=42)
+    model.fit(X_train_t, y_train)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        models_dir = Path(tmp)
+        save_preprocessor(preprocessor, models_dir / "preprocessor.joblib")
+        joblib.dump(model, models_dir / "random_forest.joblib")
+
+        app = create_app(models_dir=str(models_dir), model_alias="rf")
+        client = app.test_client()
+
+        sample = {col: X_train.iloc[0][col] for col in X_train.columns}
+
+        ok_resp = client.post("/predict", json=sample)
+        ok_body = ok_resp.get_json()
+
+        missing_resp = client.post("/predict", json={"dur": 0.1})
+        unexpected_resp = client.post("/predict", json={**sample, "bogus_col": 1})
+        bad_body_resp = client.post("/predict", json=[1, 2, 3])
+
+        return (
+            ok_resp.status_code == 200
+            and set(ok_body) == {"prediction", "score", "model"}
+            and ok_body["prediction"] in (0, 1)
+            and ok_body["model"] == "random_forest"
+            and missing_resp.status_code == 400
+            and "missing" in missing_resp.get_json()
+            and unexpected_resp.status_code == 400
+            and "unexpected" in unexpected_resp.get_json()
+            and bad_body_resp.status_code == 400
+        )
 
 
 # ── Pipeline complet orchestré (mocks NmapWrapper + RFClient) ──────────────
@@ -500,18 +813,25 @@ def test_full_pipeline_dry_run_plan_mode() -> bool:
 def test_full_pipeline_online_signals() -> bool:
     """Vérifie que le pipeline online produit bien deux sous-signaux distincts (H2)."""
     now = datetime.now(timezone.utc)
-    tmp = _write_eve_fixture("eve_pipeline_generated.json", [_alert_event(now)])
+    # Fichier vide au départ : baseline_ids() ignore l'historique recon ;
+    # l'alerte est écrite pendant l'attaque (comme Suricata en conditions réelles).
+    tmp = _write_eve_fixture("eve_pipeline_generated.json", [])
     fake_ports = [
         {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http",
          "product": "Apache", "version": "2.4.49", "protocol": "tcp"},
     ]
+
+    def _scan_and_alert(*_args, **_kwargs):
+        with open(tmp, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(_alert_event(now)) + "\n")
+        return fake_ports
 
     try:
         ptt = PentestTree("192.168.100.11")
         orchestrator = OrchestratorAgent(
             ptt, load_profile("stealth"), eve_log=str(tmp), attacker_ip="192.168.100.10", use_llm=False,
         )
-        with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", return_value=fake_ports), \
+        with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", side_effect=_scan_and_alert), \
              patch("nzoyi.tools.rf_client.RFClient.predict", return_value={"label": 1, "proba": 0.77}):
             report = orchestrator.run(dry_run=False)
     finally:
@@ -620,6 +940,9 @@ def run_all_tests() -> dict[str, bool]:
         "Stealth profile configuration": test_stealth_profile(),
         "Nmap XML parser": test_nmap_wrapper_cli_parse(),
         "Suricata log reader": test_suricata_log_reader(),
+        "Suricata baseline curseur": test_suricata_cursor_baseline_ignores_history(),
+        "Suricata timestamp +0000": test_suricata_parses_plus0000_timestamp(),
+        "Suricata ignore bruit décodeur": test_suricata_ignores_decoder_noise(),
         "Q-Learning epsilon decay": test_qlearning_convergence(),
         "Q-Learning save/load": test_qlearning_save_load(),
         "PTT thread safety": test_ptt_thread_safety(),
@@ -629,6 +952,8 @@ def run_all_tests() -> dict[str, bool]:
         "Enumerator — banner grab": test_enumerator_agent_banner_grab(),
         "Enumerator — service inconnu": test_enumerator_agent_unknown_service(),
         "Vulnerability — corrélation CVE": test_vulnerability_agent_correlation(),
+        "Vulnerability — Apache lab 2.4.25": test_vulnerability_agent_apache_lab_version(),
+        "Vulnerability — détection DVWA + SQLi/XSS": test_vulnerability_agent_dvwa_detection(),
         "Vulnerability — aucune correspondance": test_vulnerability_agent_no_match(),
         "Vulnerability — repli sur énumération": test_vulnerability_agent_fallback_to_enumeration(),
         "Evasion — oracle RF indisponible": test_evasion_agent_oracle_unavailable(),
@@ -638,8 +963,19 @@ def run_all_tests() -> dict[str, bool]:
         "Attack — aucun port, aucune exécution": test_attack_agent_no_ports_no_execution(),
         "Attack — scan restreint aux ports découverts": test_attack_agent_restricts_to_discovered_ports(),
         "Attack — timeout non bloquant (non abouti)": test_attack_agent_timeout_not_fatal(),
+        "Attack — applique stratégie Q-Learning": test_attack_applies_evasion_strategy(),
         "Evaluation — fusion Suricata + RF": test_evaluation_agent_fusion(),
         "Evaluation — signaux indisponibles": test_evaluation_agent_unavailable(),
+        "RF client — normalisation prediction/score": test_rf_client_normalizes_lab_response(),
+        "RF features — payload UNSW complet": test_rf_features_unsw_payload_complete(),
+        "Benchmark — split retire id/attack_cat, coerce numériques": test_benchmark_data_split_removes_leakage_and_coerces(),
+        "Benchmark — colonnes manquantes détectées": test_benchmark_data_missing_columns_raise(),
+        "Benchmark — CSV manquants détectés": test_benchmark_data_missing_files_raise(),
+        "Benchmark — préprocesseur unique fit(train)/transform(test)": test_benchmark_preprocessing_shared_pipeline(),
+        "Benchmark — hyperparamètres des 5 modèles": test_benchmark_models_factory_hyperparameters(),
+        "Benchmark — alias NZOYI_IDS_MODEL": test_benchmark_resolve_model_alias(),
+        "Benchmark — FPR/FNR et matrice de confusion": test_benchmark_metrics_confusion_and_rates(),
+        "Service Flask — contrat /predict prediction/score": test_service_api_predict_contract(),
         "Orchestrator 7-agent pipeline": test_orchestrator_pipeline(),
         "Pipeline complet — mode plan dry-run": test_full_pipeline_dry_run_plan_mode(),
         "Pipeline complet — signaux online distincts": test_full_pipeline_online_signals(),

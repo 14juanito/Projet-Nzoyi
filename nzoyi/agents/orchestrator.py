@@ -227,6 +227,8 @@ class OrchestratorAgent(BaseAgent):
             self.ptt.add(self.name, "evasion_aborted", plan)
         else:
             self._apply_plan(plan)
+            # Ignore les alertes recon avant le stimulus d'attaque.
+            self.evaluation.baseline_ids(self.eve_log)
             self._run_agents(results, [
                 ("evasion", self.evasion, {"dry_run": dry_run}),
                 ("attack", self.attack, {"dry_run": dry_run}),
@@ -317,6 +319,8 @@ class OrchestratorAgent(BaseAgent):
             self._status("evasion", "running", f"cycle {cycle}/{cycles}")
             self._write_run_state(self._run_state("evasion", "running", cycle=cycle, cycles=cycles))
             evasion_result = self.evasion.run(dry_run=dry_run)
+            # Ne compter que les alertes du stimulus de ce cycle.
+            self.evaluation.baseline_ids(self.eve_log)
             self.attack.run(dry_run=dry_run)
             eval_result = self.evaluation.run(
                 dry_run=dry_run, eve_log=self.eve_log
@@ -452,6 +456,7 @@ class OrchestratorAgent(BaseAgent):
             self._status("evasion", "running", f"cycle {cycle}/{cycles}")
             self._write_run_state(self._run_state("evasion", "running", cycle=cycle, cycles=cycles))
             evasion_result = self.evasion.run(dry_run=False)
+            self.evaluation.baseline_ids(self.eve_log)
             self.attack.run(dry_run=False)
             eval_result = self.evaluation.run(dry_run=False, eve_log=self.eve_log)
 

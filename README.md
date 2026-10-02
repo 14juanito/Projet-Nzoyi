@@ -122,6 +122,30 @@ Le guide complet de configuration est dans [`docs/LAB_SETUP.md`](docs/LAB_SETUP.
 
 ---
 
+## Benchmark IDS multi-modèles
+
+Le détecteur d'anomalie déployé sur la VM cible (`RF Oracle`, port 5000) n'est
+plus un unique Random Forest : `benchmark/` entraîne et compare **5 familles
+de classifieurs** (Random Forest, XGBoost, MLP, Régression logistique,
+k-NN) sur le **même** espace de features, avec un seul pipeline de
+prétraitement partagé et fitté uniquement sur le split officiel
+`UNSW_NB15_training-set.csv` (jamais recombiné avec le test).
+
+```bash
+python -m benchmark.run_benchmark --data-dir data/
+# → models/preprocessor.joblib, models/<modèle>.joblib
+# → results/benchmark.{json,csv,md}, results/config.json
+```
+
+`service/` expose ensuite n'importe lequel de ces modèles via la même API
+Flask `/predict` (`{prediction, score}`, port 5000) — le détecteur servi se
+choisit avec `NZOYI_IDS_MODEL` (`rf` / `xgboost` / `mlp` / `logreg` / `knn`),
+sans changer le reste du pipeline attaquant. C'est le mécanisme qui permet de
+tester **H2 — Transférabilité** de l'évasion Q-Learning contre plusieurs
+détecteurs. Détails : [`service/README.md`](service/README.md).
+
+---
+
 ## Démarrage rapide
 
 ### Prérequis
@@ -189,6 +213,15 @@ python main.py --target 192.168.100.11 --profile stealth --eve-log /var/log/suri
 Projet-Nzoyi/
 ├── assets/
 │   └── openzoyi-logo.png       # Logo du projet
+├── benchmark/                  # Benchmark IDS multi-modèles (UNSW-NB15)
+│   ├── data.py                 # Chargement split officiel, retrait fuites
+│   ├── preprocessing.py        # ColumnTransformer partagé (fit train only)
+│   ├── models.py               # Factory des 5 classifieurs
+│   ├── metrics.py               # Métriques + timing d'inférence
+│   ├── report.py                # Sérialisation JSON/CSV/Markdown
+│   └── run_benchmark.py        # CLI d'entraînement/évaluation
+├── service/                    # API Flask IDS-ML (déployée cible, port 5000)
+│   └── app.py                  # NZOYI_IDS_MODEL sélectionne le détecteur
 ├── docs/
 │   └── LAB_SETUP.md            # Configuration lab KVM/libvirt
 ├── nzoyi/
@@ -196,7 +229,7 @@ Projet-Nzoyi/
 │   ├── core/                   # PTT, profils d'attaque
 │   └── rl/                     # Q-Learning (Evasion Agent)
 ├── tests/
-│   └── test_validation.py      # 4 tests de validation
+│   └── test_validation.py      # Tests de validation
 ├── main.py                     # Point d'entrée CLI
 └── requirements.txt
 ```

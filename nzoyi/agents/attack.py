@@ -53,8 +53,11 @@ class AttackAgent(BaseAgent):
 
     def run(self, dry_run: bool = False) -> dict[str, Any]:
         open_ports = self._select_targets(self.ptt.get_recon_results())
-        timing = _TIMING_MAP.get(self.profile.nmap_timing, 3)
-        scan_type = "stealth" if self.profile.packet_fragment else "version"
+        timing, scan_delay_ms, fragment = self._resolve_scan_params()
+        # Toujours -sS pour le stimulus d'attaque : -sV active le NSE
+        # (« ET SCAN Nmap Scripting Engine User-Agent ») et fausse l'évasion.
+        # La détection de version reste au Recon / Enumerator.
+        scan_type = "stealth"
         # Restreint le scan d'attaque aux ports RÉELLEMENT découverts par le
         # recon (présents dans le PTT) pour qu'il tienne dans attack_timeout
         # même en T2, au lieu de balayer la plage par défaut (~1000 ports).
@@ -64,8 +67,8 @@ class AttackAgent(BaseAgent):
             "target": self.ptt.target,
             "scan_type": scan_type,
             "timing": timing,
-            "scan_delay_ms": self.profile.scan_delay_ms,
-            "fragment": self.profile.packet_fragment,
+            "scan_delay_ms": scan_delay_ms,
+            "fragment": fragment,
             "ports": scan_ports,
         }
 
@@ -83,6 +86,8 @@ class AttackAgent(BaseAgent):
                     scan_type=scan_type,
                     timing=timing,
                     ports=scan_ports,
+                    fragment=fragment,
+                    scan_delay_ms=scan_delay_ms,
                 )
                 executed = True
             except TimeoutError as exc:
@@ -115,6 +120,24 @@ class AttackAgent(BaseAgent):
             "executed": executed,
             "timed_out": timed_out,
             "dry_run": dry_run,
+            "timing": timing,
+            "scan_delay_ms": scan_delay_ms,
+            "fragment": fragment,
         }
         self.ptt.add(self.name, "attack_plan", result, allow_duplicate=True)
         return result
+
+    def _resolve_scan_params(self) -> tuple[int, int, bool]:
+        """Applique la stratégie Q-Learning du PTT, sinon le profil CLI."""
+        strategy = self.ptt.get_evasion_strategy() or {}
+        state = strategy.get("state")
+        if state is not None and len(state) >= 3:
+            try:
+                timing = max(0, min(5, int(state[0])))
+                delay_bucket = max(0, min(5, int(state[1])))
+                fragment = bool(int(state[2]))
+                return timing, delay_bucket * 100, fragment
+            except (TypeError, ValueError):
+                pass
+        timing = _TIMING_MAP.get(self.profile.nmap_timing, 3)
+        return timing, int(self.profile.scan_delay_ms), bool(self.profile.packet_fragment)
