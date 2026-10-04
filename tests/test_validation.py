@@ -8,6 +8,7 @@ distant réellement disponible.
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import threading
 from datetime import datetime, timezone
@@ -27,6 +28,7 @@ from nzoyi.core.config import load_profile
 from nzoyi.core.ptt import PentestTree
 from nzoyi.llm.backend import LLMBackend, LLMBackendError
 from nzoyi.llm.backends.anthropic_backend import AnthropicBackend
+from nzoyi.llm.backends.openai_compat_backend import OpenAICompatibleBackend
 from nzoyi.llm.orchestrator_llm import LLMOrchestrator
 from nzoyi.rl.qlearning import EvasionAction, EvasionQLearner, EvasionState
 from nzoyi.tools.ids_log_reader import SuricataLogReader
@@ -1003,6 +1005,218 @@ def test_anthropic_backend_scrubs_api_key_from_errors() -> bool:
             return generic_message_ok and logged_with_exc_info
 
 
+# ── Couche stratégique LLM — sélection de provider (J2 : OpenAICompatibleBackend) ──
+
+def test_llm_orchestrator_provider_selection_valid_and_invalid() -> bool:
+    """NZOYI_LLM_PROVIDER sélectionne le backend construit ; une valeur
+    invalide logue un warning et retombe sur "anthropic" sans jamais lever."""
+    with patch("nzoyi.llm.orchestrator_llm.AnthropicBackend") as mock_anthropic_cls, \
+         patch("nzoyi.llm.orchestrator_llm.OpenAICompatibleBackend") as mock_compat_cls:
+        mock_anthropic_cls.return_value = _FakeLLMBackend(text="{}")
+        mock_compat_cls.return_value = _FakeLLMBackend(text="{}")
+
+        # 1) Provider absent -> "anthropic" par défaut (non-régression J1).
+        with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-ant-fake"}, clear=False):
+            os.environ.pop("NZOYI_LLM_PROVIDER", None)
+            planner_default = LLMOrchestrator(enabled=True)
+        default_ok = (
+            planner_default.provider == "anthropic"
+            and mock_anthropic_cls.call_count == 1
+            and mock_compat_cls.call_count == 0
+        )
+
+        mock_anthropic_cls.reset_mock()
+        mock_compat_cls.reset_mock()
+
+        # 2) Provider explicite "openai_compatible" -> OpenAICompatibleBackend,
+        #    avec les défauts OpenRouter/DeepSeek-R1 résolus par l'env.
+        with patch.dict(
+            "os.environ",
+            {
+                "NZOYI_LLM_PROVIDER": "openai_compatible",
+                "NZOYI_OPENAI_COMPAT_API_KEY": "sk-or-fake",
+            },
+            clear=False,
+        ):
+            os.environ.pop("NZOYI_OPENAI_COMPAT_BASE_URL", None)
+            os.environ.pop("NZOYI_OPENAI_COMPAT_MODEL", None)
+            planner_compat = LLMOrchestrator(enabled=True)
+        compat_call_kwargs = mock_compat_cls.call_args.kwargs
+        compat_ok = (
+            planner_compat.provider == "openai_compatible"
+            and mock_compat_cls.call_count == 1
+            and mock_anthropic_cls.call_count == 0
+            and compat_call_kwargs["base_url"] == "https://openrouter.ai/api/v1"
+            and compat_call_kwargs["model"] == "deepseek/deepseek-r1"
+            and compat_call_kwargs["api_key"] == "sk-or-fake"
+        )
+
+        mock_anthropic_cls.reset_mock()
+        mock_compat_cls.reset_mock()
+
+        # 3) Provider invalide -> warning + repli sur "anthropic", jamais d'exception.
+        with patch.dict(
+            "os.environ",
+            {"NZOYI_LLM_PROVIDER": "provider-inexistant", "ANTHROPIC_API_KEY": "sk-ant-fake"},
+            clear=False,
+        ):
+            planner_invalid = LLMOrchestrator(enabled=True)
+        invalid_ok = (
+            planner_invalid.provider == "anthropic"
+            and mock_anthropic_cls.call_count == 1
+            and mock_compat_cls.call_count == 0
+        )
+
+    return default_ok and compat_ok and invalid_ok
+
+
+def test_llm_orchestrator_openai_compat_without_api_key_stays_none() -> bool:
+    """provider=openai_compatible sans NZOYI_OPENAI_COMPAT_API_KEY ne doit
+    jamais construire OpenAICompatibleBackend ; comportement identique à J1
+    avec ANTHROPIC_API_KEY absente (repli déterministe, self.backend reste None)."""
+    with patch("nzoyi.llm.orchestrator_llm.OpenAICompatibleBackend") as mock_compat_cls, \
+         patch.dict("os.environ", {"NZOYI_LLM_PROVIDER": "openai_compatible"}, clear=False):
+        os.environ.pop("NZOYI_OPENAI_COMPAT_API_KEY", None)
+        planner = LLMOrchestrator(enabled=True)
+        plan = planner.decide({"target": "192.168.100.15"})
+    return (
+        mock_compat_cls.call_count == 0
+        and planner.backend is None
+        and plan["raison"] == "fallback hors-ligne"
+    )
+
+
+def test_llm_orchestrator_openai_compat_backend_error_triggers_fallback() -> bool:
+    """provider=openai_compatible : si le backend construit lève LLMBackendError
+    lors de decide(), l'Orchestrator retombe sur le repli déterministe — même
+    comportement que pour Anthropic, désormais vérifié à travers la sélection
+    de provider elle-même (pas seulement via injection directe de `backend=`)."""
+    fake_backend = _FakeLLMBackend(raises=True)
+    with patch(
+        "nzoyi.llm.orchestrator_llm.OpenAICompatibleBackend", return_value=fake_backend
+    ), patch.dict(
+        "os.environ",
+        {
+            "NZOYI_LLM_PROVIDER": "openai_compatible",
+            "NZOYI_OPENAI_COMPAT_API_KEY": "sk-or-fake",
+        },
+        clear=False,
+    ):
+        planner = LLMOrchestrator(enabled=True)
+        plan = planner.decide({"target": "192.168.100.16"})
+    return (
+        planner.provider == "openai_compatible"
+        and plan["profil"] == "stealth"
+        and plan["raison"] == "fallback hors-ligne"
+        and planner.last_raw_response is None
+    )
+
+
+def test_openai_compat_backend_generic_error_never_leaks_api_key() -> bool:
+    """LLMBackendError (OpenAICompatibleBackend) ne doit JAMAIS exposer la clé
+    API, quel que soit le format sous lequel le SDK l'aurait incluse dans sa
+    propre exception. Message générique fixe ; le détail complet de
+    l'exception d'origine part uniquement dans les logs serveur
+    (`logger.error(..., exc_info=True)`), jamais dans l'exception propagée ni,
+    par extension, dans le PTT. Aucun appel réseau réel."""
+    fake_key = "sk-or-TEST-SECRET-KEY-0000"
+
+    class _FakeCompletions:
+        def create(self, **kwargs):
+            raise RuntimeError(f"authentication failed for api_key={fake_key}")
+
+    class _FakeChat:
+        completions = _FakeCompletions()
+
+    class _FakeClient:
+        chat = _FakeChat()
+
+    with patch("nzoyi.llm.backends.openai_compat_backend.openai") as mock_openai, \
+         patch("nzoyi.llm.backends.openai_compat_backend.logger") as mock_logger:
+        mock_openai.OpenAI.return_value = _FakeClient()
+        backend = OpenAICompatibleBackend(
+            base_url="https://openrouter.ai/api/v1",
+            model="deepseek/deepseek-r1",
+            api_key=fake_key,
+        )
+        try:
+            backend.decide("system prompt", "user message")
+            return False  # un LLMBackendError était attendu
+        except LLMBackendError as exc:
+            message = str(exc)
+            generic_message_ok = (
+                fake_key not in message
+                and message == "Échec de l'appel au backend OpenAI-compatible"
+            )
+            mock_logger.error.assert_called_once()
+            _, log_kwargs = mock_logger.error.call_args
+            logged_with_exc_info = log_kwargs.get("exc_info") is True
+            return generic_message_ok and logged_with_exc_info
+
+
+def test_openai_compat_backend_omits_none_kwargs() -> bool:
+    """decide() n'ajoute `temperature`/`reasoning_effort` aux kwargs de l'appel
+    que lorsque la valeur correspondante n'est pas None — jamais les deux
+    forcés en même temps (un fournisseur donné ne supporte en général que l'un
+    des deux)."""
+    captured_kwargs: list[dict] = []
+
+    class _FakeMessage:
+        content = '{"profil": "stealth"}'
+
+    class _FakeChoice:
+        message = _FakeMessage()
+
+    class _FakeResponse:
+        choices = [_FakeChoice()]
+
+    class _FakeCompletions:
+        def create(self, **kwargs):
+            captured_kwargs.append(kwargs)
+            return _FakeResponse()
+
+    class _FakeChat:
+        completions = _FakeCompletions()
+
+    class _FakeClient:
+        chat = _FakeChat()
+
+    with patch("nzoyi.llm.backends.openai_compat_backend.openai") as mock_openai:
+        mock_openai.OpenAI.return_value = _FakeClient()
+
+        # Cas 1 : temperature=0.0 fourni, reasoning_effort=None (OpenRouter/
+        # DeepSeek-R1) -> seul `temperature` doit apparaître dans les kwargs.
+        backend_temp = OpenAICompatibleBackend(
+            base_url="https://openrouter.ai/api/v1",
+            model="deepseek/deepseek-r1",
+            api_key="sk-or-fake",
+            temperature=0.0,
+            reasoning_effort=None,
+        )
+        backend_temp.decide("sys", "user")
+
+        # Cas 2 : reasoning_effort="low" fourni, temperature=None (GPT-6 Astra,
+        # pressenti) -> seul `reasoning_effort` doit apparaître dans les kwargs.
+        backend_effort = OpenAICompatibleBackend(
+            base_url="https://openrouter.ai/api/v1",
+            model="gpt-6-astra",
+            api_key="sk-fake",
+            temperature=None,
+            reasoning_effort="low",
+        )
+        backend_effort.decide("sys", "user")
+
+    temp_call, effort_call = captured_kwargs
+    return (
+        "temperature" in temp_call
+        and temp_call["temperature"] == 0.0
+        and "reasoning_effort" not in temp_call
+        and "reasoning_effort" in effort_call
+        and effort_call["reasoning_effort"] == "low"
+        and "temperature" not in effort_call
+    )
+
+
 def test_learning_loop_aborted_by_llm() -> bool:
     """lancer_boucle_evasion=False doit sauter la boucle Q-Learning entièrement."""
     ptt = PentestTree("192.168.100.11")
@@ -1100,6 +1314,11 @@ def run_all_tests() -> dict[str, bool]:
         "LLM backend — JSON valide → sanitize + log PTT llm_raw_response": test_llm_orchestrator_backend_valid_json_logs_raw_response(),
         "LLM backend — LLMBackendError → repli déterministe": test_llm_orchestrator_backend_error_triggers_fallback(),
         "LLM backend Anthropic — clé API expurgée des erreurs": test_anthropic_backend_scrubs_api_key_from_errors(),
+        "LLM provider — sélection valide/invalide (J2)": test_llm_orchestrator_provider_selection_valid_and_invalid(),
+        "LLM provider — openai_compatible sans clé API": test_llm_orchestrator_openai_compat_without_api_key_stays_none(),
+        "LLM provider — openai_compatible, LLMBackendError → repli": test_llm_orchestrator_openai_compat_backend_error_triggers_fallback(),
+        "LLM backend OpenAI-compatible — clé API jamais exposée": test_openai_compat_backend_generic_error_never_leaks_api_key(),
+        "LLM backend OpenAI-compatible — temperature/reasoning_effort exclusifs": test_openai_compat_backend_omits_none_kwargs(),
         "Boucle d'évasion avortée par le LLM": test_learning_loop_aborted_by_llm(),
         "Boucle d'apprentissage avortée — recon vide": test_learning_loop_aborted_when_recon_empty(),
     }

@@ -24,6 +24,7 @@ import os
 
 from nzoyi.llm.backend import LLMBackend, LLMBackendError
 from nzoyi.llm.backends.anthropic_backend import AnthropicBackend
+from nzoyi.llm.backends.openai_compat_backend import OpenAICompatibleBackend
 
 logger = logging.getLogger("nzoyi.llm.orchestrator")
 
@@ -33,6 +34,16 @@ MAX_CYCLES = 500
 DEFAULT_CYCLES = 100
 DEFAULT_PORTS = [22, 80, 21]
 DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-5"
+
+# Sélection de fournisseur (J2) : "anthropic" (défaut, inchangé depuis J1) ou
+# "openai_compatible" — un unique adaptateur générique pour toute API Chat
+# Completions compatible OpenAI (OpenRouter aujourd'hui, GPT-6 Astra et Ollama
+# plus tard, par simple changement de configuration). Voir
+# :class:`~nzoyi.llm.backends.openai_compat_backend.OpenAICompatibleBackend`.
+VALID_PROVIDERS = {"anthropic", "openai_compatible"}
+DEFAULT_PROVIDER = "anthropic"
+DEFAULT_OPENAI_COMPAT_BASE_URL = "https://openrouter.ai/api/v1"
+DEFAULT_OPENAI_COMPAT_MODEL = "deepseek/deepseek-r1"
 
 SYSTEM_PROMPT = (
     "Tu orchestres un pentest de lab isolé (recherche académique autorisée). "
@@ -65,9 +76,12 @@ class LLMOrchestrator:
             enabled: When ``False`` the LLM is bypassed and the deterministic
                 fallback is always used (e.g. ``--no-llm`` for reproducibility).
             backend: Optional :class:`~nzoyi.llm.backend.LLMBackend` to use
-                instead of the default Anthropic backend — the seam future
-                providers (GPT-6 Astra, Ollama, …) plug into without touching
-                this class again. Ignored if ``enabled`` is ``False``.
+                instead of the default backend — the seam future providers
+                (GPT-6 Astra, Ollama, …) plug into without touching this class
+                again. Ignored if ``enabled`` is ``False``. Takes priority over
+                ``NZOYI_LLM_PROVIDER`` — when set, provider selection below is
+                skipped entirely (this is what lets tests inject a fake
+                backend without touching the environment).
         """
         self.model = model or os.environ.get("NZOYI_ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL)
         self.temperature = temperature
@@ -75,20 +89,56 @@ class LLMOrchestrator:
         self.api_key = os.environ.get("ANTHROPIC_API_KEY")
         self.last_raw_response: str | None = None
         self.backend: LLMBackend | None = None
+        self.provider: str | None = None
 
         if self.enabled:
             if backend is not None:
                 self.backend = backend
-            elif self.api_key:
-                try:
-                    self.backend = AnthropicBackend(
-                        model=self.model,
-                        temperature=self.temperature,
-                        api_key=self.api_key,
+            else:
+                provider = os.environ.get("NZOYI_LLM_PROVIDER", DEFAULT_PROVIDER)
+                if provider not in VALID_PROVIDERS:
+                    logger.warning(
+                        "NZOYI_LLM_PROVIDER invalide (%r) — repli sur %r.",
+                        provider, DEFAULT_PROVIDER,
                     )
-                except LLMBackendError as exc:
-                    logger.warning("Init backend Anthropic échouée: %s", exc)
-                    self.backend = None
+                    provider = DEFAULT_PROVIDER
+                self.provider = provider
+
+                if provider == "anthropic":
+                    if self.api_key:
+                        try:
+                            self.backend = AnthropicBackend(
+                                model=self.model,
+                                temperature=self.temperature,
+                                api_key=self.api_key,
+                            )
+                        except LLMBackendError as exc:
+                            logger.warning("Init backend Anthropic échouée: %s", exc)
+                            self.backend = None
+                else:  # provider == "openai_compatible"
+                    compat_base_url = os.environ.get(
+                        "NZOYI_OPENAI_COMPAT_BASE_URL", DEFAULT_OPENAI_COMPAT_BASE_URL
+                    )
+                    compat_model = os.environ.get(
+                        "NZOYI_OPENAI_COMPAT_MODEL", DEFAULT_OPENAI_COMPAT_MODEL
+                    )
+                    compat_api_key = os.environ.get("NZOYI_OPENAI_COMPAT_API_KEY")
+                    compat_reasoning_effort = os.environ.get(
+                        "NZOYI_OPENAI_COMPAT_REASONING_EFFORT"
+                    )
+                    self.model = compat_model
+                    if compat_api_key:
+                        try:
+                            self.backend = OpenAICompatibleBackend(
+                                base_url=compat_base_url,
+                                model=compat_model,
+                                api_key=compat_api_key,
+                                temperature=self.temperature,
+                                reasoning_effort=compat_reasoning_effort,
+                            )
+                        except LLMBackendError as exc:
+                            logger.warning("Init backend OpenAI-compatible échouée: %s", exc)
+                            self.backend = None
 
     def decide(self, ptt_summary: dict) -> dict:
         """Decide the attack profile and port priorities from the PTT summary.
