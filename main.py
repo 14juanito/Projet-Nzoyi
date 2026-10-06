@@ -20,10 +20,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+import requests
+
 from nzoyi import __version__
 from nzoyi.agents.orchestrator import OrchestratorAgent
 from nzoyi.core.config import load_profile
 from nzoyi.core.ptt import PentestTree
+from nzoyi.llm.orchestrator_llm import DEFAULT_PROVIDER, VALID_PROVIDERS
 from nzoyi.ui.banner import (
     Color,
     print_banner,
@@ -62,6 +65,97 @@ def _load_dotenv(path: str = ".env") -> None:
         value = value.strip().strip('"').strip("'")
         if key and key not in os.environ:
             os.environ[key] = value
+
+
+OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
+
+
+def _active_llm_provider() -> str:
+    """Résout le provider LLM actif depuis l'environnement courant.
+
+    Même repli que :class:`~nzoyi.llm.orchestrator_llm.LLMOrchestrator`
+    (défaut/valeur invalide -> ``DEFAULT_PROVIDER``), sans dupliquer la liste
+    des providers valides ici — on importe celle de `nzoyi.llm`.
+    """
+    provider = os.environ.get("NZOYI_LLM_PROVIDER", DEFAULT_PROVIDER)
+    return provider if provider in VALID_PROVIDERS else DEFAULT_PROVIDER
+
+
+def _set_llm_model_override(model: str) -> None:
+    """Écrit `model` dans `os.environ` pour ce process, jamais dans `.env`.
+
+    Cible la variable du provider actuellement configuré
+    (`NZOYI_OPENAI_COMPAT_MODEL` si `NZOYI_LLM_PROVIDER=openai_compatible`,
+    `NZOYI_ANTHROPIC_MODEL` sinon). Si le provider actif est "anthropic", ce
+    flag ne bascule JAMAIS vers `openai_compatible` — il écrase seulement le
+    modèle Anthropic, ce qui n'a de sens que si `model` est bien un identifiant
+    Anthropic valide. On avertit explicitement plutôt que de deviner une
+    intention de changement de provider (ça reste le rôle de
+    `NZOYI_LLM_PROVIDER` dans `.env`).
+    """
+    provider = _active_llm_provider()
+    if provider == "anthropic":
+        print(
+            f"  {Color.YELLOW}⚠ --llm-model s'applique au provider actif "
+            f"('anthropic') — il ne bascule PAS vers openai_compatible. Pour "
+            f"cibler Ollama/OpenRouter, mets NZOYI_LLM_PROVIDER=openai_compatible "
+            f"dans .env.{Color.RESET}\n"
+        )
+        os.environ["NZOYI_ANTHROPIC_MODEL"] = model
+    else:
+        os.environ["NZOYI_OPENAI_COMPAT_MODEL"] = model
+
+
+def _prompt_llm_model_menu() -> None:
+    """Menu interactif listant les modèles Ollama locaux, pour choisir un run.
+
+    N'est appelé que depuis `main()`, jamais en mode `--test` (aucun test
+    automatisé ne doit attendre une saisie). Interroge l'endpoint natif Ollama
+    `GET /api/tags` (pas besoin du SDK `openai` pour une simple liste). Si
+    Ollama n'est pas lancé, ou qu'aucun modèle n'est installé, ou que la
+    saisie est invalide/vide : affiche un message clair et continue avec la
+    configuration `.env` par défaut — ne bloque et ne fait jamais échouer le
+    run. N'écrit le choix que dans `os.environ` (via `_set_llm_model_override`),
+    jamais dans `.env`.
+    """
+    try:
+        response = requests.get(OLLAMA_TAGS_URL, timeout=3)
+        response.raise_for_status()
+        models = [m["name"] for m in response.json().get("models", [])]
+    except requests.RequestException:
+        print(
+            f"  {Color.DIM}Ollama inatteignable sur {OLLAMA_TAGS_URL} — "
+            f"poursuite avec la configuration .env par défaut.{Color.RESET}\n"
+        )
+        return
+
+    if not models:
+        print(
+            f"  {Color.DIM}Aucun modèle Ollama local (voir `ollama list`) — "
+            f"poursuite avec la configuration .env par défaut.{Color.RESET}\n"
+        )
+        return
+
+    print(f"\n  {Color.GOLD}Modèles Ollama disponibles :{Color.RESET}")
+    for idx, name in enumerate(models, start=1):
+        print(f"    {idx}. {name}")
+
+    try:
+        choice = input(f"\n  Choix (Entrée pour garder la config .env) : ").strip()
+    except (EOFError, KeyboardInterrupt):
+        print(f"\n  {Color.DIM}Pas de saisie — configuration .env conservée.{Color.RESET}\n")
+        return
+    if not choice:
+        return
+
+    try:
+        selected = models[int(choice) - 1]
+    except (ValueError, IndexError):
+        print(f"  {Color.DIM}Choix invalide — configuration .env conservée.{Color.RESET}\n")
+        return
+
+    print(f"  {Color.GREEN}✓ Modèle sélectionné : {selected}{Color.RESET}\n")
+    _set_llm_model_override(selected)
 
 
 def _save_convergence(convergence: list) -> str:
@@ -336,6 +430,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Force le fallback heuristique (reproductibilité hors-ligne)",
     )
     parser.add_argument(
+        "--llm-model",
+        default=None,
+        help="Surcharge le modèle LLM pour ce run (ex: deepseek-r1:8b) sans modifier .env",
+    )
+    parser.add_argument(
         "--no-rf-online",
         action="store_true",
         help="Désactive le signal RF online (endpoint Flask) — évaluation Suricata seule",
@@ -354,6 +453,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.test:
         return run_validation_tests()
+
+    if args.llm_model:
+        _set_llm_model_override(args.llm_model)
+    elif not args.no_llm:
+        _prompt_llm_model_menu()
 
     try:
         if args.train_offline:

@@ -8,6 +8,7 @@ from typing import Any
 
 from nzoyi.agents.base import BaseAgent
 from nzoyi.core import config
+from nzoyi.llm.evaluation_rationale_llm import EvaluationRationaleLLM
 from nzoyi.tools.ids_log_reader import SuricataLogReader
 from nzoyi.tools.rf_client import RFClient
 from nzoyi.tools.rf_features import features_from_evasion
@@ -26,18 +27,38 @@ class EvaluationAgent(BaseAgent):
         profile,
         attacker_ip: str | None = None,
         use_rf_online: bool = True,
+        use_llm: bool = True,
     ) -> None:
         """Si ``use_rf_online`` est False, le client RF n'est pas instancié :
         le signal RF reste neutre (None) en permanence, sans warning, et la
-        fusion de détection repose uniquement sur Suricata."""
+        fusion de détection repose uniquement sur Suricata.
+
+        ``use_llm`` ne contrôle QUE le rationale explicatif ajouté APRÈS le
+        calcul de ``detected``/``detection_rate`` (voir :meth:`run`) — ces
+        deux champs restent calculés exactement de la même façon, que
+        ``use_llm`` soit ``True`` ou ``False``."""
         super().__init__(ptt, profile)
         self.attacker_ip = attacker_ip
         self.use_rf_online = use_rf_online
+        self.use_llm = use_llm
         self.rf_client = RFClient(config.rf_endpoint) if use_rf_online else None
         self._total_scans = 0
         self._total_detections = 0
         self._reader: SuricataLogReader | None = None
         self._eve_path: str | None = None
+
+    def _log_raw_response(self, rationale: EvaluationRationaleLLM) -> None:
+        """Enregistre dans le PTT le texte brut renvoyé par le backend LLM de
+        rationale. N'enregistre rien en l'absence de réponse (LLM désactivé,
+        ou backend indisponible). Même séparation de responsabilités qu'en
+        J1 : le PTT reste exclusivement la propriété de l'agent."""
+        if rationale.last_raw_response is not None:
+            self.ptt.add(
+                self.name,
+                "llm_raw_response_evaluation",
+                {"raw": rationale.last_raw_response},
+                allow_duplicate=True,
+            )
 
     def baseline_ids(self, eve_log: str | None = None) -> None:
         """Ignore l'historique eve.json (recon, scans précédents) avant les cycles RL.
@@ -120,6 +141,13 @@ class EvaluationAgent(BaseAgent):
             "source": source,
             "dry_run": dry_run,
         }
+
+        # Couche LLM de RATIONALE EXPLICATIF SEUL (J6) : lecture seule du
+        # résultat déjà figé ci-dessus — zéro influence sur detected/
+        # detection_rate, qui ne sont plus jamais touchés après ce point.
+        rationale_llm = EvaluationRationaleLLM(enabled=self.use_llm)
+        result["llm_rationale"] = rationale_llm.decide(result)
+        self._log_raw_response(rationale_llm)
 
         self.ptt.record_evaluation(
             detected,

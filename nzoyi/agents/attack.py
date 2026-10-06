@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from nzoyi.agents.base import BaseAgent
+from nzoyi.llm.attack_priority_llm import AttackPriorityLLM
 from nzoyi.tools.nmap_wrapper import NmapWrapper
 
 logger = logging.getLogger("nzoyi.agents.attack")
@@ -36,6 +37,42 @@ class AttackAgent(BaseAgent):
     focus_services: list[str] | None = None
     attack_timeout: int = ATTACK_TIMEOUT_S  # configurable par instance/classe
 
+    def __init__(self, ptt, profile, use_llm: bool = True) -> None:
+        super().__init__(ptt, profile)
+        self.use_llm = use_llm
+        self._last_refined_target_ports: list[int] | None = None
+
+    def _log_raw_response(self, priority: AttackPriorityLLM) -> None:
+        """Enregistre dans le PTT le texte brut renvoyé par le backend LLM de
+        raffinement. N'enregistre rien en l'absence de réponse (LLM désactivé,
+        ou backend indisponible). Même séparation de responsabilités qu'en
+        J1 : le PTT reste exclusivement la propriété de l'agent."""
+        if priority.last_raw_response is not None:
+            self.ptt.add(
+                self.name,
+                "llm_raw_response_attack",
+                {"raw": priority.last_raw_response},
+                allow_duplicate=True,
+            )
+
+    def _refine_target_priority(self) -> None:
+        """Affine ``target_ports`` via :class:`AttackPriorityLLM` — ne touche
+        jamais ``target_ports`` si vide/absent (rien à affiner), et ne
+        ré-affine pas une valeur déjà affinée (idempotent : la couche
+        tactique — ``run`` est aussi appelée à chaque cycle Q-Learning — ne
+        doit pas ré-interroger le LLM à chaque cycle pour une sélection de
+        cibles qui n'a pas changé depuis la dernière décision stratégique)."""
+        if not self.target_ports or self.target_ports == self._last_refined_target_ports:
+            return
+        vuln_nodes = self.ptt.find(kind="vuln_analysis")
+        findings = vuln_nodes[-1].data.get("findings", []) if vuln_nodes else []
+
+        priority = AttackPriorityLLM(enabled=self.use_llm)
+        plan = priority.decide(self.target_ports, findings)
+        self._log_raw_response(priority)
+        self.target_ports = plan["ports_prioritaires"]
+        self._last_refined_target_ports = list(self.target_ports)
+
     def _select_targets(self, open_ports: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Filtre par ``focus_services`` puis ordonne selon ``target_ports``."""
         targets = open_ports
@@ -52,6 +89,7 @@ class AttackAgent(BaseAgent):
         return targets
 
     def run(self, dry_run: bool = False) -> dict[str, Any]:
+        self._refine_target_priority()
         open_ports = self._select_targets(self.ptt.get_recon_results())
         timing, scan_delay_ms, fragment = self._resolve_scan_params()
         # Toujours -sS pour le stimulus d'attaque : -sV active le NSE

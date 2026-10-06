@@ -47,12 +47,12 @@ class OrchestratorAgent(BaseAgent):
         self.learner = EvasionQLearner()
         self.evasion = EvasionAgent(ptt, profile, learner=self.learner)
         self.evaluation = EvaluationAgent(
-            ptt, profile, attacker_ip=attacker_ip, use_rf_online=use_rf_online
+            ptt, profile, attacker_ip=attacker_ip, use_rf_online=use_rf_online, use_llm=use_llm
         )
         self.recon = ReconAgent(ptt, profile)
         self.enumerator = EnumeratorAgent(ptt, profile)
-        self.vulnerability = VulnerabilityAgent(ptt, profile)
-        self.attack = AttackAgent(ptt, profile)
+        self.vulnerability = VulnerabilityAgent(ptt, profile, use_llm=use_llm)
+        self.attack = AttackAgent(ptt, profile, use_llm=use_llm)
         # Ordered agent list consumed by the interactive runners (nzoyi.ui).
         self.pipeline: list[BaseAgent] = [
             self.recon,

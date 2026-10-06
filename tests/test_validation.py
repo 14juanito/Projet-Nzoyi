@@ -26,10 +26,13 @@ from nzoyi.agents.recon import ReconAgent
 from nzoyi.agents.vulnerability import VulnerabilityAgent
 from nzoyi.core.config import load_profile
 from nzoyi.core.ptt import PentestTree
+from nzoyi.llm.attack_priority_llm import AttackPriorityLLM
 from nzoyi.llm.backend import LLMBackend, LLMBackendError
 from nzoyi.llm.backends.anthropic_backend import AnthropicBackend
 from nzoyi.llm.backends.openai_compat_backend import OpenAICompatibleBackend
+from nzoyi.llm.evaluation_rationale_llm import EvaluationRationaleLLM
 from nzoyi.llm.orchestrator_llm import LLMOrchestrator
+from nzoyi.llm.vuln_triage_llm import VulnTriageLLM
 from nzoyi.rl.qlearning import EvasionAction, EvasionQLearner, EvasionState
 from nzoyi.tools.ids_log_reader import SuricataLogReader
 from nzoyi.tools.nmap_wrapper import parse_nmap_xml
@@ -322,7 +325,7 @@ def test_vulnerability_agent_correlation() -> bool:
         {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http",
          "product": "Apache", "version": "2.4.49"},
     ])
-    agent = VulnerabilityAgent(ptt, load_profile("stealth"))
+    agent = VulnerabilityAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=None):
         result = agent.run(dry_run=False)
     cve_ids = {f["cve_id"] for f in result["findings"]}
@@ -336,7 +339,7 @@ def test_vulnerability_agent_apache_lab_version() -> bool:
         {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http",
          "product": "Apache httpd", "version": "2.4.25"},
     ])
-    agent = VulnerabilityAgent(ptt, load_profile("stealth"))
+    agent = VulnerabilityAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=None):
         result = agent.run(dry_run=False)
     cve_ids = {f["cve_id"] for f in result["findings"]}
@@ -357,7 +360,7 @@ def test_vulnerability_agent_dvwa_detection() -> bool:
         "status": 200,
         "evidence": ["cookie:security", "login.php", "title:DVWA"],
     }
-    agent = VulnerabilityAgent(ptt, load_profile("stealth"))
+    agent = VulnerabilityAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=fake_dvwa):
         result = agent.run(dry_run=False)
     ids = {f["cve_id"] for f in result["findings"]}
@@ -376,7 +379,7 @@ def test_vulnerability_agent_no_match() -> bool:
         {"host": "192.168.100.11", "port": 8080, "state": "open", "service": "unknown",
          "product": "", "version": ""},
     ])
-    agent = VulnerabilityAgent(ptt, load_profile("stealth"))
+    agent = VulnerabilityAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=None):
         result = agent.run(dry_run=False)
     return result["findings"] == [] and ptt.get_vulnerabilities() == []
@@ -391,7 +394,7 @@ def test_vulnerability_agent_fallback_to_enumeration() -> bool:
         "services": {},
         "dry_run": False,
     })
-    agent = VulnerabilityAgent(ptt, load_profile("stealth"))
+    agent = VulnerabilityAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=None):
         result = agent.run(dry_run=False)
     cve_ids = {f["cve_id"] for f in result["findings"]}
@@ -425,7 +428,7 @@ def test_evasion_agent_with_mocked_oracle() -> bool:
 def test_attack_agent_dry_run_plan() -> bool:
     ptt = PentestTree("192.168.100.11")
     ptt.set_recon_results([{"host": "192.168.100.11", "port": 80, "state": "open", "service": "http"}])
-    agent = AttackAgent(ptt, load_profile("stealth"))
+    agent = AttackAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan") as mock_scan:
         result = agent.run(dry_run=True)
         not_called = not mock_scan.called
@@ -445,7 +448,7 @@ def test_attack_agent_real_execution() -> bool:
         {"host": "192.168.100.11", "port": 22, "state": "open", "service": "ssh"},
         {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http"},
     ])
-    agent = AttackAgent(ptt, load_profile("stealth"))
+    agent = AttackAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", return_value=[]) as mock_scan:
         result = agent.run(dry_run=False)
 
@@ -460,7 +463,7 @@ def test_attack_agent_real_execution() -> bool:
 
 def test_attack_agent_no_ports_no_execution() -> bool:
     ptt = PentestTree("192.168.100.11")
-    agent = AttackAgent(ptt, load_profile("stealth"))
+    agent = AttackAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan") as mock_scan:
         result = agent.run(dry_run=False)
     return not mock_scan.called and result["executed"] is False and result["attempts"] == []
@@ -473,7 +476,7 @@ def test_attack_agent_restricts_to_discovered_ports() -> bool:
         {"host": "192.168.100.11", "port": 22, "state": "open", "service": "ssh"},
         {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http"},
     ])
-    agent = AttackAgent(ptt, load_profile("stealth"))
+    agent = AttackAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", return_value=[]) as mock_scan:
         agent.run(dry_run=False)
     _, kwargs = mock_scan.call_args
@@ -486,7 +489,7 @@ def test_attack_agent_timeout_not_fatal() -> bool:
     ptt.set_recon_results([
         {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http"},
     ])
-    agent = AttackAgent(ptt, load_profile("stealth"))
+    agent = AttackAgent(ptt, load_profile("stealth"), use_llm=False)
     with patch(
         "nzoyi.tools.nmap_wrapper.NmapWrapper.scan",
         side_effect=TimeoutError("Nmap scan timed out after 30s"),
@@ -507,7 +510,7 @@ def test_attack_applies_evasion_strategy() -> bool:
         {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http"},
     ])
     ptt.update_evasion_strategy({"state": (1, 4, 1), "action": "slow_down"})
-    agent = AttackAgent(ptt, load_profile("aggressive"))  # profil bruyant volontairement
+    agent = AttackAgent(ptt, load_profile("aggressive"), use_llm=False)  # profil bruyant volontairement
     with patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", return_value=[]) as mock_scan:
         result = agent.run(dry_run=False)
     _, kwargs = mock_scan.call_args
@@ -527,7 +530,7 @@ def test_evaluation_agent_fusion() -> bool:
 
     try:
         ptt = PentestTree("192.168.100.11")
-        agent = EvaluationAgent(ptt, load_profile("stealth"), attacker_ip="192.168.100.10")
+        agent = EvaluationAgent(ptt, load_profile("stealth"), attacker_ip="192.168.100.10", use_llm=False)
         agent.rf_client.predict = lambda features: {"label": 1, "proba": 0.87}
         result = agent.run(dry_run=False, eve_log=str(tmp))
     finally:
@@ -546,7 +549,7 @@ def test_evaluation_agent_fusion() -> bool:
 
 def test_evaluation_agent_unavailable() -> bool:
     ptt = PentestTree("192.168.100.11")
-    agent = EvaluationAgent(ptt, load_profile("stealth"))
+    agent = EvaluationAgent(ptt, load_profile("stealth"), use_llm=False)
     agent.rf_client.predict = lambda features: None
     result = agent.run(dry_run=False, eve_log="/nonexistent/eve.json")
     return (
@@ -907,7 +910,7 @@ class _FakeLLMBackend(LLMBackend):
 
 def test_llm_orchestrator_disabled_skips_backend_construction() -> bool:
     """enabled=False doit retourner le repli exact sans jamais construire AnthropicBackend."""
-    with patch("nzoyi.llm.orchestrator_llm.AnthropicBackend") as mock_backend_cls:
+    with patch("nzoyi.llm.backend_resolver.AnthropicBackend") as mock_backend_cls:
         planner = LLMOrchestrator(enabled=False)
         plan = planner.decide({"target": "192.168.100.14"})
     return (
@@ -938,8 +941,15 @@ def test_llm_orchestrator_backend_valid_json_logs_raw_response() -> bool:
     ptt = PentestTree("192.168.100.12")
     orchestrator = OrchestratorAgent(ptt, load_profile("stealth"), use_llm=True)
 
-    with patch.dict("os.environ", {"ANTHROPIC_API_KEY": "sk-ant-fake"}), \
-         patch("nzoyi.llm.orchestrator_llm.AnthropicBackend", return_value=fake_backend):
+    # Force explicitement le provider "anthropic" : sans ça, un NZOYI_LLM_PROVIDER
+    # ambiant (ex. un .env réel pointant vers Ollama/OpenRouter) ferait résoudre
+    # "openai_compatible" et construirait un VRAI OpenAICompatibleBackend (non
+    # mocké ici) au lieu de l'AnthropicBackend patché — un appel réseau réel
+    # dans la suite de tests, ce qui n'est jamais acceptable.
+    with patch.dict(
+        "os.environ",
+        {"ANTHROPIC_API_KEY": "sk-ant-fake", "NZOYI_LLM_PROVIDER": "anthropic"},
+    ), patch("nzoyi.llm.backend_resolver.AnthropicBackend", return_value=fake_backend):
         plan = orchestrator._strategic_plan()
 
     raw_nodes = ptt.find(kind="llm_raw_response")
@@ -1010,8 +1020,8 @@ def test_anthropic_backend_scrubs_api_key_from_errors() -> bool:
 def test_llm_orchestrator_provider_selection_valid_and_invalid() -> bool:
     """NZOYI_LLM_PROVIDER sélectionne le backend construit ; une valeur
     invalide logue un warning et retombe sur "anthropic" sans jamais lever."""
-    with patch("nzoyi.llm.orchestrator_llm.AnthropicBackend") as mock_anthropic_cls, \
-         patch("nzoyi.llm.orchestrator_llm.OpenAICompatibleBackend") as mock_compat_cls:
+    with patch("nzoyi.llm.backend_resolver.AnthropicBackend") as mock_anthropic_cls, \
+         patch("nzoyi.llm.backend_resolver.OpenAICompatibleBackend") as mock_compat_cls:
         mock_anthropic_cls.return_value = _FakeLLMBackend(text="{}")
         mock_compat_cls.return_value = _FakeLLMBackend(text="{}")
 
@@ -1074,7 +1084,7 @@ def test_llm_orchestrator_openai_compat_without_api_key_stays_none() -> bool:
     """provider=openai_compatible sans NZOYI_OPENAI_COMPAT_API_KEY ne doit
     jamais construire OpenAICompatibleBackend ; comportement identique à J1
     avec ANTHROPIC_API_KEY absente (repli déterministe, self.backend reste None)."""
-    with patch("nzoyi.llm.orchestrator_llm.OpenAICompatibleBackend") as mock_compat_cls, \
+    with patch("nzoyi.llm.backend_resolver.OpenAICompatibleBackend") as mock_compat_cls, \
          patch.dict("os.environ", {"NZOYI_LLM_PROVIDER": "openai_compatible"}, clear=False):
         os.environ.pop("NZOYI_OPENAI_COMPAT_API_KEY", None)
         planner = LLMOrchestrator(enabled=True)
@@ -1093,7 +1103,7 @@ def test_llm_orchestrator_openai_compat_backend_error_triggers_fallback() -> boo
     de provider elle-même (pas seulement via injection directe de `backend=`)."""
     fake_backend = _FakeLLMBackend(raises=True)
     with patch(
-        "nzoyi.llm.orchestrator_llm.OpenAICompatibleBackend", return_value=fake_backend
+        "nzoyi.llm.backend_resolver.OpenAICompatibleBackend", return_value=fake_backend
     ), patch.dict(
         "os.environ",
         {
@@ -1217,6 +1227,225 @@ def test_openai_compat_backend_omits_none_kwargs() -> bool:
     )
 
 
+# ── Panel LLM J5/J6 — VulnTriage / AttackPriority / EvaluationRationale ────
+
+def test_vuln_triage_disabled_falls_back_by_severity() -> bool:
+    """enabled=False doit trier par sévérité (critical > high > medium),
+    puis par ordre d'apparition — sans jamais appeler de backend."""
+    findings = [
+        {"cve_id": "CVE-A", "severity": "high", "port": 80},
+        {"cve_id": "CVE-B", "severity": "critical", "port": 22},
+        {"cve_id": "CVE-C", "severity": "medium", "port": 8080},
+    ]
+    triage = VulnTriageLLM(enabled=False)
+    ordered = triage.decide(findings)
+    return (
+        [f["cve_id"] for f in ordered] == ["CVE-B", "CVE-A", "CVE-C"]
+        and triage.last_raw_response is None
+    )
+
+
+def test_vuln_triage_backend_valid_response_reorders() -> bool:
+    """Un backend simulé renvoyant un ordre valide (incomplet) doit réordonner
+    les findings et rajouter le CVE omis à la fin — jamais une vulnérabilité
+    perdue."""
+    findings = [
+        {"cve_id": "CVE-A", "severity": "high", "port": 80},
+        {"cve_id": "CVE-B", "severity": "critical", "port": 22},
+        {"cve_id": "CVE-C", "severity": "medium", "port": 8080},
+    ]
+    raw_text = json.dumps({"ordre_cve_ids": ["CVE-C", "CVE-A"], "raison": "web d'abord"})
+    fake_backend = _FakeLLMBackend(text=raw_text)
+    triage = VulnTriageLLM(backend=fake_backend, enabled=True)
+    ordered = triage.decide(findings)
+    return (
+        [f["cve_id"] for f in ordered] == ["CVE-C", "CVE-A", "CVE-B"]
+        and triage.last_raw_response == raw_text
+    )
+
+
+def test_vuln_triage_backend_error_triggers_fallback() -> bool:
+    """Un backend simulé qui lève LLMBackendError doit retomber sur le tri
+    déterministe par sévérité."""
+    findings = [
+        {"cve_id": "CVE-A", "severity": "medium", "port": 80},
+        {"cve_id": "CVE-B", "severity": "critical", "port": 22},
+    ]
+    triage = VulnTriageLLM(backend=_FakeLLMBackend(raises=True), enabled=True)
+    ordered = triage.decide(findings)
+    return (
+        [f["cve_id"] for f in ordered] == ["CVE-B", "CVE-A"]
+        and triage.last_raw_response is None
+    )
+
+
+def test_vuln_triage_sanitize_filters_unknown_ids() -> bool:
+    """_sanitize doit ignorer tout id hors de l'ensemble des findings réels,
+    et rajouter à la fin tout cve_id connu omis par le modèle."""
+    findings = [
+        {"cve_id": "CVE-A", "severity": "high", "port": 80},
+        {"cve_id": "CVE-B", "severity": "critical", "port": 22},
+        {"cve_id": "CVE-C", "severity": "medium", "port": 8080},
+    ]
+    ordered = VulnTriageLLM._sanitize(
+        {"ordre_cve_ids": ["CVE-INVENTE", "CVE-B"], "raison": "x"}, findings
+    )
+    return [f["cve_id"] for f in ordered] == ["CVE-B", "CVE-A", "CVE-C"]
+
+
+def test_attack_priority_disabled_keeps_target_ports() -> bool:
+    """enabled=False doit conserver target_ports sans aucune modification."""
+    priority = AttackPriorityLLM(enabled=False)
+    plan = priority.decide([22, 80], [{"port": 9999, "cve_id": "CVE-X", "severity": "critical"}])
+    return (
+        plan["ports_prioritaires"] == [22, 80]
+        and plan["raison"] == "fallback hors-ligne"
+        and priority.last_raw_response is None
+    )
+
+
+def test_attack_priority_backend_valid_response_allows_critical_port() -> bool:
+    """Un port hors target_ports mais porteur d'un CVE critical doit être
+    autorisé ; l'ordre proposé par le modèle doit être respecté."""
+    target_ports = [22, 80]
+    findings = [{"port": 9999, "cve_id": "CVE-CRIT", "severity": "critical"}]
+    raw_text = json.dumps({"ports_prioritaires": [80, 22, 9999], "raison": "web + CVE critique"})
+    priority = AttackPriorityLLM(backend=_FakeLLMBackend(text=raw_text), enabled=True)
+    plan = priority.decide(target_ports, findings)
+    return (
+        plan["ports_prioritaires"] == [80, 22, 9999]
+        and priority.last_raw_response == raw_text
+    )
+
+
+def test_attack_priority_backend_error_triggers_fallback() -> bool:
+    """Un backend simulé qui lève LLMBackendError doit conserver target_ports
+    sans aucune modification."""
+    priority = AttackPriorityLLM(backend=_FakeLLMBackend(raises=True), enabled=True)
+    plan = priority.decide([22, 80], [])
+    return plan["ports_prioritaires"] == [22, 80] and plan["raison"] == "fallback hors-ligne"
+
+
+def test_attack_priority_sanitize_filters_ports_outside_scope() -> bool:
+    """_sanitize doit filtrer tout port qui n'est ni dans target_ports ni
+    porteur d'un CVE critical — jamais une cible inventée hors de ce que le
+    pipeline a réellement découvert."""
+    target_ports = [22, 80]
+    findings = [{"port": 9999, "cve_id": "CVE-CRIT", "severity": "critical"}]
+    plan = AttackPriorityLLM._sanitize(
+        {"ports_prioritaires": [22, 31337, 9999], "raison": "x"}, target_ports, findings
+    )
+    return plan["ports_prioritaires"] == [22, 9999]
+
+
+def test_evaluation_rationale_disabled_returns_empty_string() -> bool:
+    """enabled=False doit renvoyer une chaîne vide, sans toucher au résultat."""
+    rationale = EvaluationRationaleLLM(enabled=False)
+    result = {"detected": True, "detection_rate": 0.5}
+    text = rationale.decide(result)
+    return text == "" and rationale.last_raw_response is None and result["detected"] is True
+
+
+def test_evaluation_rationale_backend_valid_response() -> bool:
+    """Un backend simulé renvoyant un JSON valide doit produire le rationale attendu."""
+    raw_text = json.dumps({"rationale": "Détection confirmée par Suricata et le RF."})
+    rationale = EvaluationRationaleLLM(backend=_FakeLLMBackend(text=raw_text), enabled=True)
+    text = rationale.decide({"detected": True, "detection_rate": 1.0})
+    return text == "Détection confirmée par Suricata et le RF." and rationale.last_raw_response == raw_text
+
+
+def test_evaluation_rationale_backend_error_returns_empty_string() -> bool:
+    """Un backend simulé qui lève LLMBackendError doit renvoyer une chaîne vide."""
+    rationale = EvaluationRationaleLLM(backend=_FakeLLMBackend(raises=True), enabled=True)
+    text = rationale.decide({"detected": False})
+    return text == ""
+
+
+def test_evaluation_rationale_sanitize_truncates_length() -> bool:
+    """_sanitize doit tronquer rationale à MAX_RATIONALE_LENGTH caractères."""
+    from nzoyi.llm.evaluation_rationale_llm import MAX_RATIONALE_LENGTH
+    long_text = "x" * (MAX_RATIONALE_LENGTH + 100)
+    truncated = EvaluationRationaleLLM._sanitize({"rationale": long_text})
+    return len(truncated) == MAX_RATIONALE_LENGTH
+
+
+def test_vulnerability_agent_triage_logs_raw_response_in_ptt() -> bool:
+    """Intégration : VulnerabilityAgent.run() doit loguer llm_raw_response_vuln
+    dans le PTT quand le triage LLM produit une réponse réelle (backend mocké
+    au niveau du resolver partagé, aucun appel réseau)."""
+    raw_text = json.dumps({"ordre_cve_ids": ["CVE-2017-3167"], "raison": "auth bypass critique"})
+    fake_backend = _FakeLLMBackend(text=raw_text)
+
+    ptt = PentestTree("192.168.100.11")
+    ptt.set_recon_results([
+        {"host": "192.168.100.11", "port": 80, "state": "open", "service": "http",
+         "product": "Apache httpd", "version": "2.4.25"},
+    ])
+    agent = VulnerabilityAgent(ptt, load_profile("stealth"), use_llm=True)
+
+    with patch.dict(
+        "os.environ", {"ANTHROPIC_API_KEY": "sk-ant-fake", "NZOYI_LLM_PROVIDER": "anthropic"}
+    ), patch("nzoyi.llm.backend_resolver.AnthropicBackend", return_value=fake_backend), \
+       patch("nzoyi.agents.vulnerability.detect_dvwa", return_value=None):
+        result = agent.run(dry_run=True)
+
+    raw_nodes = ptt.find(kind="llm_raw_response_vuln")
+    return (
+        len(result["findings"]) >= 1
+        and len(raw_nodes) == 1
+        and raw_nodes[0].data["raw"] == raw_text
+    )
+
+
+def test_attack_agent_priority_logs_raw_response_in_ptt() -> bool:
+    """Intégration : AttackAgent.run() doit loguer llm_raw_response_attack dans
+    le PTT quand le raffinement LLM produit une réponse réelle, et appliquer
+    l'ordre résultant à target_ports."""
+    raw_text = json.dumps({"ports_prioritaires": [80, 22], "raison": "web d'abord"})
+    fake_backend = _FakeLLMBackend(text=raw_text)
+
+    ptt = PentestTree("192.168.100.11")
+    agent = AttackAgent(ptt, load_profile("stealth"), use_llm=True)
+    agent.target_ports = [22, 80]
+
+    with patch.dict(
+        "os.environ", {"ANTHROPIC_API_KEY": "sk-ant-fake", "NZOYI_LLM_PROVIDER": "anthropic"}
+    ), patch("nzoyi.llm.backend_resolver.AnthropicBackend", return_value=fake_backend), \
+       patch("nzoyi.tools.nmap_wrapper.NmapWrapper.scan", return_value=[]):
+        agent.run(dry_run=True)
+
+    raw_nodes = ptt.find(kind="llm_raw_response_attack")
+    return (
+        agent.target_ports == [80, 22]
+        and len(raw_nodes) == 1
+        and raw_nodes[0].data["raw"] == raw_text
+    )
+
+
+def test_evaluation_agent_rationale_logs_raw_response_in_ptt() -> bool:
+    """Intégration : EvaluationAgent.run() doit ajouter result['llm_rationale']
+    et loguer llm_raw_response_evaluation dans le PTT, sans jamais toucher à
+    detected/detection_rate (calculés avant, inchangés après)."""
+    raw_text = json.dumps({"rationale": "Alerte Suricata confirmée, RF neutre."})
+    fake_backend = _FakeLLMBackend(text=raw_text)
+
+    ptt = PentestTree("192.168.100.11")
+    agent = EvaluationAgent(ptt, load_profile("stealth"), use_rf_online=False, use_llm=True)
+
+    with patch.dict(
+        "os.environ", {"ANTHROPIC_API_KEY": "sk-ant-fake", "NZOYI_LLM_PROVIDER": "anthropic"}
+    ), patch("nzoyi.llm.backend_resolver.AnthropicBackend", return_value=fake_backend):
+        result = agent.run(dry_run=True, eve_log="/nonexistent/eve.json")
+
+    raw_nodes = ptt.find(kind="llm_raw_response_evaluation")
+    return (
+        result["detected"] is False  # calcul déterministe inchangé (pas de signal)
+        and result["llm_rationale"] == "Alerte Suricata confirmée, RF neutre."
+        and len(raw_nodes) == 1
+        and raw_nodes[0].data["raw"] == raw_text
+    )
+
+
 def test_learning_loop_aborted_by_llm() -> bool:
     """lancer_boucle_evasion=False doit sauter la boucle Q-Learning entièrement."""
     ptt = PentestTree("192.168.100.11")
@@ -1319,6 +1548,21 @@ def run_all_tests() -> dict[str, bool]:
         "LLM provider — openai_compatible, LLMBackendError → repli": test_llm_orchestrator_openai_compat_backend_error_triggers_fallback(),
         "LLM backend OpenAI-compatible — clé API jamais exposée": test_openai_compat_backend_generic_error_never_leaks_api_key(),
         "LLM backend OpenAI-compatible — temperature/reasoning_effort exclusifs": test_openai_compat_backend_omits_none_kwargs(),
+        "Panel LLM — VulnTriage désactivé : tri par sévérité": test_vuln_triage_disabled_falls_back_by_severity(),
+        "Panel LLM — VulnTriage backend valide : réordonne sans perte": test_vuln_triage_backend_valid_response_reorders(),
+        "Panel LLM — VulnTriage LLMBackendError → repli sévérité": test_vuln_triage_backend_error_triggers_fallback(),
+        "Panel LLM — VulnTriage sanitize : ids inconnus filtrés": test_vuln_triage_sanitize_filters_unknown_ids(),
+        "Panel LLM — AttackPriority désactivé : target_ports conservé": test_attack_priority_disabled_keeps_target_ports(),
+        "Panel LLM — AttackPriority backend valide : port critical autorisé": test_attack_priority_backend_valid_response_allows_critical_port(),
+        "Panel LLM — AttackPriority LLMBackendError → target_ports conservé": test_attack_priority_backend_error_triggers_fallback(),
+        "Panel LLM — AttackPriority sanitize : ports hors périmètre filtrés": test_attack_priority_sanitize_filters_ports_outside_scope(),
+        "Panel LLM — EvaluationRationale désactivé : chaîne vide": test_evaluation_rationale_disabled_returns_empty_string(),
+        "Panel LLM — EvaluationRationale backend valide": test_evaluation_rationale_backend_valid_response(),
+        "Panel LLM — EvaluationRationale LLMBackendError → chaîne vide": test_evaluation_rationale_backend_error_returns_empty_string(),
+        "Panel LLM — EvaluationRationale sanitize : troncature": test_evaluation_rationale_sanitize_truncates_length(),
+        "Panel LLM — VulnerabilityAgent logue llm_raw_response_vuln": test_vulnerability_agent_triage_logs_raw_response_in_ptt(),
+        "Panel LLM — AttackAgent logue llm_raw_response_attack": test_attack_agent_priority_logs_raw_response_in_ptt(),
+        "Panel LLM — EvaluationAgent logue llm_raw_response_evaluation": test_evaluation_agent_rationale_logs_raw_response_in_ptt(),
         "Boucle d'évasion avortée par le LLM": test_learning_loop_aborted_by_llm(),
         "Boucle d'apprentissage avortée — recon vide": test_learning_loop_aborted_when_recon_empty(),
     }
