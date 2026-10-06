@@ -13,6 +13,11 @@ rf_threshold: float = float(os.environ.get("NZOYI_RF_THRESHOLD", "0.5"))
 rf_model_path: str = os.environ.get("NZOYI_RF_MODEL_PATH", "models/rf_unsw.pkl")
 eve_log: str = os.environ.get("NZOYI_EVE_LOG", "/var/log/suricata/eve.json")
 
+# IDS cible alternatif (J8) : Zeek + AutoZeekWatch (KitNET), bac à sable isolé
+# 192.168.100.13. Jamais utilisé par défaut — voir EvaluationAgent(ids_backend=).
+zeek_ml_log: str = os.environ.get("NZOYI_ZEEK_ML_LOG", "/var/log/nzoyi/zeek_ml_anomalies.log")
+zeek_ml_threshold: float = float(os.environ.get("NZOYI_ZEEK_ML_THRESHOLD", "1.0"))
+
 
 @dataclass(frozen=True)
 class AttackProfile:

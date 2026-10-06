@@ -187,6 +187,89 @@ def test_suricata_ignores_decoder_noise() -> bool:
     )
 
 
+# ── Zeek+ML (AutoZeekWatch) log reader — IDS backend alternatif (J8) ───────
+
+
+def _zeek_ml_line(ts: datetime, module: str, score: float, orig_p: int = 54321) -> str:
+    """Construit une ligne au format réel produit par AutoZeekWatch/infer.py
+    (logging standard, message = "<module>: <repr dict>")."""
+    payload = {
+        "uid": "Cabc123",
+        "id.resp_h": "192.168.100.13",
+        "id.orig_h": "192.168.100.10",
+        "id.orig_p": orig_p,
+        "id.resp_p": 22,
+        "anomaly_score": score,
+    }
+    stamp = ts.strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
+    return f"{stamp} - root - INFO - {module}: {payload!r}"
+
+
+def _write_zeek_ml_fixture(name: str, lines: list[str]) -> Path:
+    path = FIXTURES / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        for line in lines:
+            handle.write(line + "\n")
+    return path
+
+
+def test_zeek_ml_log_reader_threshold() -> bool:
+    """Seules les anomalies au-dessus du seuil configuré sont retenues."""
+    from nzoyi.tools.zeek_ml_log_reader import ZeekMLLogReader
+
+    now = datetime.now(timezone.utc)
+    lines = [
+        _zeek_ml_line(now, "conn", score=0.2),  # sous le seuil, ignoré
+        _zeek_ml_line(now, "conn", score=1.5),  # au-dessus, retenu
+        "ligne corrompue non parsable",
+    ]
+    tmp = _write_zeek_ml_fixture("zeek_ml_generated.log", lines)
+    try:
+        reader = ZeekMLLogReader(str(tmp), score_threshold=1.0)
+        alerts = reader.get_recent_alerts(source_ip="192.168.100.10", since_cursor_only=True)
+    finally:
+        tmp.unlink(missing_ok=True)
+    return (
+        len(alerts) == 1
+        and alerts[0]["anomaly_score"] == 1.5
+        and alerts[0]["category"] == "conn"
+        and alerts[0]["src_ip"] == "192.168.100.10"
+        and alerts[0]["dest_ip"] == "192.168.100.13"
+    )
+
+
+def test_zeek_ml_cursor_baseline_ignores_history() -> bool:
+    """Après seek_end(), seules les anomalies *nouvelles* comptent."""
+    from nzoyi.tools.zeek_ml_log_reader import ZeekMLLogReader
+
+    now = datetime.now(timezone.utc)
+    tmp = _write_zeek_ml_fixture(
+        "zeek_ml_baseline.log", [_zeek_ml_line(now, "conn", score=5.0)]
+    )
+    try:
+        reader = ZeekMLLogReader(str(tmp), score_threshold=1.0)
+        reader.seek_end()
+        with open(tmp, "a", encoding="utf-8") as handle:
+            handle.write(_zeek_ml_line(now, "ssh", score=3.3) + "\n")
+        alerts = reader.get_recent_alerts(
+            source_ip="192.168.100.10", since_cursor_only=True
+        )
+    finally:
+        tmp.unlink(missing_ok=True)
+    return len(alerts) == 1 and alerts[0]["category"] == "ssh"
+
+
+def test_zeek_ml_reader_missing_file_raises() -> bool:
+    from nzoyi.tools.zeek_ml_log_reader import ZeekMLLogReader
+
+    try:
+        ZeekMLLogReader("/nonexistent/zeek_ml_anomalies.log")
+        return False
+    except FileNotFoundError:
+        return True
+
+
 def test_qlearning_convergence() -> bool:
     learner = EvasionQLearner(epsilon=0.5, epsilon_decay=0.995, epsilon_min=0.05)
     state = EvasionState(timing=3, delay_bucket=2, fragment=1)
@@ -558,6 +641,95 @@ def test_evaluation_agent_unavailable() -> bool:
         and result["detected"] is False
         and result["source"] == "unavailable"
     )
+
+
+# ── ids_backend interchangeable (J8) — non-régression + backend zeek_ml ───
+
+
+def test_evaluation_agent_default_ids_backend_is_suricata() -> bool:
+    """Sans ``ids_backend``, le comportement reste EXACTEMENT celui d'avant J8 :
+    backend "suricata" et reader SuricataLogReader instancié en interne."""
+    now = datetime.now(timezone.utc)
+    tmp = _write_eve_fixture("eve_default_backend.json", [_alert_event(now)])
+    try:
+        ptt = PentestTree("192.168.100.11")
+        agent = EvaluationAgent(ptt, load_profile("stealth"), use_llm=False)
+        agent.rf_client.predict = lambda features: None
+        agent.run(dry_run=False, eve_log=str(tmp))
+        reader_type_ok = isinstance(agent._reader, SuricataLogReader)
+    finally:
+        tmp.unlink(missing_ok=True)
+    return agent.ids_backend == "suricata" and reader_type_ok
+
+
+def test_evaluation_agent_rejects_invalid_ids_backend() -> bool:
+    ptt = PentestTree("192.168.100.11")
+    try:
+        EvaluationAgent(ptt, load_profile("stealth"), use_llm=False, ids_backend="nope")
+        return False
+    except ValueError:
+        return True
+
+
+def test_evaluation_agent_zeek_ml_backend_fusion() -> bool:
+    """Le backend zeek_ml doit fusionner anomalie Zeek+ML et verdict RF, de la
+    même façon que le backend suricata (clés de résultat inchangées)."""
+    now = datetime.now(timezone.utc)
+    tmp = _write_zeek_ml_fixture(
+        "zeek_ml_eval_generated.log", [_zeek_ml_line(now, "conn", score=2.0)]
+    )
+    try:
+        ptt = PentestTree("192.168.100.11")
+        agent = EvaluationAgent(
+            ptt,
+            load_profile("stealth"),
+            attacker_ip="192.168.100.10",
+            use_llm=False,
+            ids_backend="zeek_ml",
+        )
+        agent.rf_client.predict = lambda features: {"label": 1, "proba": 0.9}
+        result = agent.run(dry_run=False, eve_log=str(tmp))
+    finally:
+        tmp.unlink(missing_ok=True)
+
+    return (
+        agent.ids_backend == "zeek_ml"
+        and result["suricata_detected"] is True  # nom de clé conservé (voir docstring)
+        and result["rf_detected"] is True
+        and result["detected"] is True
+        and result["alert_count"] == 1
+        and "ZEEK_ML" in result["signatures"][0]
+    )
+
+
+def test_evaluation_agent_zeek_ml_backend_unavailable() -> bool:
+    """Backend zeek_ml, log absent → signal neutre, pas de crash (même contrat
+    que le backend suricata)."""
+    ptt = PentestTree("192.168.100.11")
+    agent = EvaluationAgent(ptt, load_profile("stealth"), use_llm=False, ids_backend="zeek_ml")
+    agent.rf_client.predict = lambda features: None
+    result = agent.run(dry_run=False, eve_log="/nonexistent/zeek_ml_anomalies.log")
+    return (
+        result["suricata_detected"] is False
+        and result["detected"] is False
+        and result["source"] == "unavailable"
+    )
+
+
+def test_orchestrator_default_ids_backend_is_suricata() -> bool:
+    """Non-régression : un OrchestratorAgent construit sans ids_backend donne
+    un EvaluationAgent en mode suricata, comme avant J8."""
+    ptt = PentestTree("192.168.100.11")
+    orchestrator = OrchestratorAgent(ptt, load_profile("stealth"), use_llm=False)
+    return orchestrator.ids_backend == "suricata" and orchestrator.evaluation.ids_backend == "suricata"
+
+
+def test_orchestrator_ids_backend_propagates_to_evaluation() -> bool:
+    ptt = PentestTree("192.168.100.11")
+    orchestrator = OrchestratorAgent(
+        ptt, load_profile("stealth"), use_llm=False, ids_backend="zeek_ml"
+    )
+    return orchestrator.ids_backend == "zeek_ml" and orchestrator.evaluation.ids_backend == "zeek_ml"
 
 
 def test_rf_client_normalizes_lab_response() -> bool:
@@ -1565,4 +1737,13 @@ def run_all_tests() -> dict[str, bool]:
         "Panel LLM — EvaluationAgent logue llm_raw_response_evaluation": test_evaluation_agent_rationale_logs_raw_response_in_ptt(),
         "Boucle d'évasion avortée par le LLM": test_learning_loop_aborted_by_llm(),
         "Boucle d'apprentissage avortée — recon vide": test_learning_loop_aborted_when_recon_empty(),
+        "Zeek+ML (J8) — seuil d'anomalie filtre correctement": test_zeek_ml_log_reader_threshold(),
+        "Zeek+ML (J8) — curseur baseline ignore l'historique": test_zeek_ml_cursor_baseline_ignores_history(),
+        "Zeek+ML (J8) — fichier log absent lève FileNotFoundError": test_zeek_ml_reader_missing_file_raises(),
+        "ids_backend (J8) — défaut suricata inchangé": test_evaluation_agent_default_ids_backend_is_suricata(),
+        "ids_backend (J8) — valeur invalide rejetée": test_evaluation_agent_rejects_invalid_ids_backend(),
+        "ids_backend (J8) — backend zeek_ml fusionne detected": test_evaluation_agent_zeek_ml_backend_fusion(),
+        "ids_backend (J8) — backend zeek_ml, log absent → neutre": test_evaluation_agent_zeek_ml_backend_unavailable(),
+        "ids_backend (J8) — orchestrateur défaut = suricata": test_orchestrator_default_ids_backend_is_suricata(),
+        "ids_backend (J8) — orchestrateur propage zeek_ml": test_orchestrator_ids_backend_propagates_to_evaluation(),
     }

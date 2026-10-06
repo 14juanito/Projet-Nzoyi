@@ -25,6 +25,7 @@ import requests
 from nzoyi import __version__
 from nzoyi.agents.orchestrator import OrchestratorAgent
 from nzoyi.core.config import load_profile
+from nzoyi.core.config import zeek_ml_log as DEFAULT_ZEEK_ML_LOG
 from nzoyi.core.ptt import PentestTree
 from nzoyi.llm.orchestrator_llm import DEFAULT_PROVIDER, VALID_PROVIDERS
 from nzoyi.ui.banner import (
@@ -209,13 +210,42 @@ def _build_orchestrator(
     eve_log: str | None,
     use_llm: bool = True,
     use_rf_online: bool = True,
+    ids_backend: str = "suricata",
 ):
     profile = load_profile(profile_name)
     ptt = PentestTree(target=target)
     orchestrator = OrchestratorAgent(
-        ptt, profile, eve_log=eve_log, use_llm=use_llm, use_rf_online=use_rf_online
+        ptt,
+        profile,
+        eve_log=eve_log,
+        use_llm=use_llm,
+        use_rf_online=use_rf_online,
+        ids_backend=ids_backend,
     )
     return profile, ptt, orchestrator
+
+
+def _require_ids_log(path: str, ids_backend: str) -> bool:
+    """Vérifie que le log IDS existe et n'est pas vide — "suricata" délègue au
+    message historique (``require_eve_log``) ; "zeek_ml" affiche un message
+    neutre dédié au bac à sable AutoZeekWatch (J8)."""
+    if ids_backend == "suricata":
+        return require_eve_log(path)
+    log_path = Path(path)
+    if not log_path.is_file():
+        print(
+            f"\n  {Color.RED}✗ Log Zeek+ML (AutoZeekWatch) introuvable : {path}{Color.RESET}\n"
+            f"  {Color.DIM}Vérifie que infer.py tourne sur le bac à sable "
+            f"192.168.100.13 et écrit bien vers ce chemin.{Color.RESET}\n"
+        )
+        return False
+    if log_path.stat().st_size == 0:
+        print(
+            f"\n  {Color.RED}✗ Log Zeek+ML vide : {path}{Color.RESET}\n"
+            f"  {Color.DIM}Le fichier existe mais ne se remplit pas.{Color.RESET}\n"
+        )
+        return False
+    return True
 
 
 def run_train_offline(model_path: str, cycles: int) -> int:
@@ -247,10 +277,11 @@ def run_finetune(
     cycles: int,
     use_llm: bool,
     use_rf_online: bool = True,
+    ids_backend: str = "suricata",
 ) -> int:
-    """Online fine-tuning phase against a real Suricata IDS."""
+    """Online fine-tuning phase against a real IDS (Suricata ou Zeek+ML, J8)."""
     _, _, orchestrator = _build_orchestrator(
-        target, profile_name, eve_log, use_llm, use_rf_online=use_rf_online
+        target, profile_name, eve_log, use_llm, use_rf_online=use_rf_online, ids_backend=ids_backend
     )
 
     print_banner(__version__)
@@ -347,14 +378,18 @@ def run_direct(
     cycles: int,
     use_llm: bool = True,
     use_rf_online: bool = True,
+    ids_backend: str = "suricata",
 ) -> int:
     """Direct CLI mode (non-interactive) — réel uniquement."""
-    eve_path = eve_log or DEFAULT_EVE_LOG
-    if not require_eve_log(eve_path):
+    eve_path = eve_log or (
+        DEFAULT_EVE_LOG if ids_backend == "suricata" else DEFAULT_ZEEK_ML_LOG
+    )
+    if not _require_ids_log(eve_path, ids_backend):
         return 1
 
     profile, ptt, orchestrator = _build_orchestrator(
-        target, profile_name, eve_path, use_llm=use_llm, use_rf_online=use_rf_online
+        target, profile_name, eve_path, use_llm=use_llm, use_rf_online=use_rf_online,
+        ids_backend=ids_backend,
     )
 
     print_banner(__version__)
@@ -439,6 +474,15 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Désactive le signal RF online (endpoint Flask) — évaluation Suricata seule",
     )
+    parser.add_argument(
+        "--ids-backend",
+        default="suricata",
+        choices=["suricata", "zeek_ml"],
+        help=(
+            "Source IDS log-based (J8) : 'suricata' (défaut, inchangé) ou "
+            "'zeek_ml' (bac à sable AutoZeekWatch, 192.168.100.13)"
+        ),
+    )
     parser.add_argument("--version", action="version", version=f"NZOYI {__version__}")
     return parser
 
@@ -464,8 +508,10 @@ def main(argv: list[str] | None = None) -> int:
             return run_train_offline(args.train_offline, cycles=args.cycles)
 
         if args.finetune:
-            eve_path = args.eve_log or DEFAULT_EVE_LOG
-            if not require_eve_log(eve_path):
+            eve_path = args.eve_log or (
+                DEFAULT_EVE_LOG if args.ids_backend == "suricata" else DEFAULT_ZEEK_ML_LOG
+            )
+            if not _require_ids_log(eve_path, args.ids_backend):
                 return 1
             return run_finetune(
                 qtable_path=args.finetune,
@@ -475,6 +521,7 @@ def main(argv: list[str] | None = None) -> int:
                 cycles=args.cycles,
                 use_llm=not args.no_llm,
                 use_rf_online=not args.no_rf_online,
+                ids_backend=args.ids_backend,
             )
 
         if args.target:
@@ -486,6 +533,7 @@ def main(argv: list[str] | None = None) -> int:
                 cycles=args.cycles,
                 use_llm=not args.no_llm,
                 use_rf_online=not args.no_rf_online,
+                ids_backend=args.ids_backend,
             )
         return run_interactive(use_llm=not args.no_llm, use_rf_online=not args.no_rf_online)
     except KeyboardInterrupt:

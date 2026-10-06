@@ -12,12 +12,20 @@ from nzoyi.llm.evaluation_rationale_llm import EvaluationRationaleLLM
 from nzoyi.tools.ids_log_reader import SuricataLogReader
 from nzoyi.tools.rf_client import RFClient
 from nzoyi.tools.rf_features import features_from_evasion
+from nzoyi.tools.zeek_ml_log_reader import ZeekMLLogReader
 
 logger = logging.getLogger("nzoyi.agents.evaluation")
 
+#: Backends IDS log-based interchangeables (J8) — "suricata" reste le défaut
+#: historique, inchangé. "zeek_ml" cible le bac à sable isolé Zeek+AutoZeekWatch
+#: (192.168.100.13). La boucle Q-Learning (evasion.py/qlearning.py) ne reçoit
+#: jamais ce paramètre : elle ignore toujours contre quel IDS elle s'exécute.
+VALID_IDS_BACKENDS: tuple[str, ...] = ("suricata", "zeek_ml")
+
 
 class EvaluationAgent(BaseAgent):
-    """Lit Suricata (eve.json) et interroge le détecteur RF, puis fusionne les verdicts."""
+    """Lit un IDS log-based (Suricata ou Zeek+ML) et interroge le détecteur RF,
+    puis fusionne les verdicts."""
 
     name = "evaluation"
 
@@ -28,24 +36,44 @@ class EvaluationAgent(BaseAgent):
         attacker_ip: str | None = None,
         use_rf_online: bool = True,
         use_llm: bool = True,
+        ids_backend: str = "suricata",
     ) -> None:
         """Si ``use_rf_online`` est False, le client RF n'est pas instancié :
         le signal RF reste neutre (None) en permanence, sans warning, et la
-        fusion de détection repose uniquement sur Suricata.
+        fusion de détection repose uniquement sur l'IDS log-based.
 
         ``use_llm`` ne contrôle QUE le rationale explicatif ajouté APRÈS le
         calcul de ``detected``/``detection_rate`` (voir :meth:`run`) — ces
         deux champs restent calculés exactement de la même façon, que
-        ``use_llm`` soit ``True`` ou ``False``."""
+        ``use_llm`` soit ``True`` ou ``False``.
+
+        ``ids_backend`` sélectionne la source IDS log-based : ``"suricata"``
+        (défaut historique, comportement 100% inchangé) ou ``"zeek_ml"``
+        (bac à sable Zeek + AutoZeekWatch, J8). Les clés du résultat
+        (``suricata_detected``, etc.) restent nommées d'après Suricata même
+        quand ``ids_backend="zeek_ml"`` — c'est le nom historique de « signal
+        IDS log-based fusionné avec RF », conservé pour ne pas casser le
+        dashboard/PTT/UI existants qui en dépendent."""
         super().__init__(ptt, profile)
+        if ids_backend not in VALID_IDS_BACKENDS:
+            raise ValueError(
+                f"ids_backend invalide: {ids_backend!r}. Attendu: {VALID_IDS_BACKENDS}"
+            )
         self.attacker_ip = attacker_ip
         self.use_rf_online = use_rf_online
         self.use_llm = use_llm
+        self.ids_backend = ids_backend
         self.rf_client = RFClient(config.rf_endpoint) if use_rf_online else None
         self._total_scans = 0
         self._total_detections = 0
-        self._reader: SuricataLogReader | None = None
+        self._reader: SuricataLogReader | ZeekMLLogReader | None = None
         self._eve_path: str | None = None
+
+    def _default_log_path(self) -> str:
+        """Chemin par défaut de l'IDS log-based sélectionné par ``ids_backend``."""
+        if self.ids_backend == "zeek_ml":
+            return config.zeek_ml_log
+        return config.eve_log
 
     def _log_raw_response(self, rationale: EvaluationRationaleLLM) -> None:
         """Enregistre dans le PTT le texte brut renvoyé par le backend LLM de
@@ -66,25 +94,28 @@ class EvaluationAgent(BaseAgent):
         Sans ça, chaque évaluation recompte d'anciennes alertes → détection
         artificielle à 100 % même si le cycle courant est furtif.
         """
-        eve_log = eve_log or config.eve_log
+        eve_log = eve_log or self._default_log_path()
         if not eve_log or not Path(eve_log).exists():
             return
         try:
             reader = self._get_reader(eve_log)
             reader.seek_end()
-            logger.info("Baseline IDS : curseur eve.json placé en fin de fichier.")
+            logger.info("Baseline IDS (%s) : curseur placé en fin de fichier.", self.ids_backend)
         except (FileNotFoundError, PermissionError) as exc:
             logger.warning("Baseline IDS impossible: %s", exc)
 
-    def _get_reader(self, eve_log: str) -> SuricataLogReader:
+    def _get_reader(self, eve_log: str) -> SuricataLogReader | ZeekMLLogReader:
         if self._reader is None or self._eve_path != eve_log:
-            self._reader = SuricataLogReader(eve_log)
+            if self.ids_backend == "zeek_ml":
+                self._reader = ZeekMLLogReader(eve_log, score_threshold=config.zeek_ml_threshold)
+            else:
+                self._reader = SuricataLogReader(eve_log)
             self._eve_path = eve_log
         return self._reader
 
     def run(self, dry_run: bool = False, eve_log: str | None = None) -> dict[str, Any]:
         self._total_scans += 1
-        eve_log = eve_log or config.eve_log
+        eve_log = eve_log or self._default_log_path()
 
         alert_count = 0
         signatures: list[str] = []
@@ -109,7 +140,9 @@ class EvaluationAgent(BaseAgent):
                 logger.warning("Lecture du log Suricata impossible: %s", exc)
                 source = "unavailable"
         else:
-            logger.warning("Log Suricata introuvable (%s) — signal Suricata neutre.", eve_log)
+            logger.warning(
+                "Log IDS introuvable (backend=%s, %s) — signal neutre.", self.ids_backend, eve_log
+            )
 
         rf_proba = 0.0
         rf_detected = False

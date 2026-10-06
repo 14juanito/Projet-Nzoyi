@@ -37,17 +37,28 @@ class OrchestratorAgent(BaseAgent):
         on_agent_status: Callable[[str, str, str], None] | None = None,
         use_llm: bool = True,
         use_rf_online: bool = True,
+        ids_backend: str = "suricata",
     ) -> None:
+        """``ids_backend`` ("suricata" par défaut, ou "zeek_ml") décide quelle
+        source IDS log-based alimente :class:`EvaluationAgent` — voir sa
+        docstring. Ne touche jamais la boucle Q-Learning (``self.learner``/
+        ``self.evasion``), qui reste agnostique de l'IDS affronté."""
         super().__init__(ptt, profile)
         self.eve_log = eve_log
         self.attacker_ip = attacker_ip
         self.on_agent_status = on_agent_status
         self.use_llm = use_llm
+        self.ids_backend = ids_backend
         self.current_plan: dict[str, Any] = {}
         self.learner = EvasionQLearner()
         self.evasion = EvasionAgent(ptt, profile, learner=self.learner)
         self.evaluation = EvaluationAgent(
-            ptt, profile, attacker_ip=attacker_ip, use_rf_online=use_rf_online, use_llm=use_llm
+            ptt,
+            profile,
+            attacker_ip=attacker_ip,
+            use_rf_online=use_rf_online,
+            use_llm=use_llm,
+            ids_backend=ids_backend,
         )
         self.recon = ReconAgent(ptt, profile)
         self.enumerator = EnumeratorAgent(ptt, profile)
