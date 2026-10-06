@@ -29,7 +29,13 @@
   <img src="https://img.shields.io/github/issues/14juanito/Projet-Nzoyi?style=flat-square&color=39FF14&labelColor=0d1117" alt="Issues">
 </p>
 
----
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=python,docker,linux,bash,git,flask&theme=dark" alt="Stack technique">
+</p>
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=rect&color=0:0d1117,100:0d1117&height=3&section=header" width="100%" alt="divider">
+</p>
 
 ## Présentation
 
@@ -49,6 +55,10 @@ Contrairement aux outils de pentest classiques, NZOYI combine :
 ---
 
 ## Aperçu terminal
+
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=500&size=14&duration=1600&pause=400&color=00FF41&center=true&vCenter=true&width=600&lines=nmap+-sS+-T2+--max-rate+10+192.168.100.11;scanning...+2%25...+37%25...+81%25...+100%25;3+open+ports+%7C+0+alertes+critiques" alt="scan animation">
+</p>
 
 ```ansi
 [38;5;46m┌──(nzoyi㉿kali)-[~/Projet-Nzoyi][0m
@@ -168,7 +178,9 @@ sans changer le reste du pipeline attaquant. C'est le mécanisme qui permet de
 tester **H2 — Transférabilité** de l'évasion Q-Learning contre plusieurs
 détecteurs. Détails : [`service/README.md`](service/README.md).
 
----
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:00ff41,100:0d1117&height=60&section=header" width="100%" alt="divider">
+</p>
 
 ## Panel LLM multi-fournisseur
 
@@ -334,7 +346,9 @@ Projet-Nzoyi/
 | **H2 — Transferabilité** | Les stratégies apprises sur Suricata sont partiellement transférables à d'autres IDS |
 | **H3 — Limite défensive** | Il existe un seuil de rupture où l'évasion rend l'attaque aussi lente qu'un pentest manuel |
 
----
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:00ff41,100:0d1117&height=60&section=header" width="100%" alt="divider">
+</p>
 
 ## Journal des évolutions
 
