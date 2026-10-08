@@ -1,0 +1,1568 @@
+{
+  "target": "192.168.100.13",
+  "nodes": [
+    {
+      "node_id": "ptt-0001",
+      "agent": "orchestrator",
+      "kind": "llm_strategy",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-06T03:09:39.910193+00:00"
+    },
+    {
+      "node_id": "ptt-0002",
+      "agent": "recon",
+      "kind": "port_scan",
+      "data": {
+        "target": "192.168.100.13",
+        "open_ports": [
+          22
+        ],
+        "ports": [
+          {
+            "host": "192.168.100.13",
+            "port": 22,
+            "state": "open",
+            "service": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17"
+          }
+        ],
+        "scan_type": "version",
+        "timing": 4,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:41.036903+00:00"
+    },
+    {
+      "node_id": "ptt-0003",
+      "agent": "enumerator",
+      "kind": "service_enum",
+      "data": {
+        "service_list": [
+          {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+          }
+        ],
+        "services": {
+          "22": {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+          }
+        },
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:41.061794+00:00"
+    },
+    {
+      "node_id": "ptt-0004",
+      "agent": "vulnerability",
+      "kind": "vuln_analysis",
+      "data": {
+        "findings": [
+          {
+            "service": "ssh",
+            "product": "openssh",
+            "port": 22,
+            "cve_id": "CVE-2023-38408",
+            "severity": "high",
+            "type": "pkcs11_rce",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "source": "version_correlation"
+          }
+        ],
+        "dvwa": null,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:41.063383+00:00"
+    },
+    {
+      "node_id": "ptt-0005",
+      "agent": "orchestrator",
+      "kind": "llm_replan",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-06T03:09:41.064565+00:00"
+    },
+    {
+      "node_id": "ptt-0006",
+      "agent": "orchestrator",
+      "kind": "llm_decision",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-06T03:09:41.064606+00:00"
+    },
+    {
+      "node_id": "ptt-0007",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          5,
+          1
+        ],
+        "next_state": [
+          1,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.45,
+        "epsilon": 0.2,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:41.065019+00:00"
+    },
+    {
+      "node_id": "ptt-0008",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.13",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22
+            ],
+            "host": "192.168.100.13",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:09:42.799639+00:00"
+    },
+    {
+      "node_id": "ptt-0009",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 38,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/zeek_ml_anomalies.log",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:09:42.803901+00:00"
+    },
+    {
+      "node_id": "ptt-0010",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          5,
+          1
+        ],
+        "next_state": [
+          2,
+          4,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.35,
+        "epsilon": 0.199,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:42.805602+00:00"
+    },
+    {
+      "node_id": "ptt-0011",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.13",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              22
+            ],
+            "host": "192.168.100.13",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:09:44.342911+00:00"
+    },
+    {
+      "node_id": "ptt-0012",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 28,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/zeek_ml_anomalies.log",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:09:44.347367+00:00"
+    },
+    {
+      "node_id": "ptt-0013",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          4,
+          1
+        ],
+        "next_state": [
+          1,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.45,
+        "epsilon": 0.198,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:44.349746+00:00"
+    },
+    {
+      "node_id": "ptt-0014",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.13",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22
+            ],
+            "host": "192.168.100.13",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:09:46.124874+00:00"
+    },
+    {
+      "node_id": "ptt-0015",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 31,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/zeek_ml_anomalies.log",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:09:46.128362+00:00"
+    },
+    {
+      "node_id": "ptt-0016",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          5,
+          1
+        ],
+        "next_state": [
+          0,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.5,
+        "epsilon": 0.197,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:46.131242+00:00"
+    },
+    {
+      "node_id": "ptt-0017",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.13",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22
+            ],
+            "host": "192.168.100.13",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:09:47.889168+00:00"
+    },
+    {
+      "node_id": "ptt-0018",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 37,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/zeek_ml_anomalies.log",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:09:47.895751+00:00"
+    },
+    {
+      "node_id": "ptt-0019",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          0,
+          5,
+          1
+        ],
+        "next_state": [
+          0,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.5,
+        "epsilon": 0.196,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:47.898595+00:00"
+    },
+    {
+      "node_id": "ptt-0020",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.13",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22
+            ],
+            "host": "192.168.100.13",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:09:49.636235+00:00"
+    },
+    {
+      "node_id": "ptt-0021",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 41,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/zeek_ml_anomalies.log",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:09:49.643161+00:00"
+    },
+    {
+      "node_id": "ptt-0022",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          1
+        ],
+        "next_state": [
+          1,
+          4,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.4,
+        "epsilon": 0.195,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:49.647344+00:00"
+    },
+    {
+      "node_id": "ptt-0023",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.13",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              22
+            ],
+            "host": "192.168.100.13",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:09:51.166538+00:00"
+    },
+    {
+      "node_id": "ptt-0024",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 36,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/zeek_ml_anomalies.log",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:09:51.170285+00:00"
+    },
+    {
+      "node_id": "ptt-0025",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          4,
+          1
+        ],
+        "next_state": [
+          0,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.5,
+        "epsilon": 0.1941,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:51.173789+00:00"
+    },
+    {
+      "node_id": "ptt-0026",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.13",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22
+            ],
+            "host": "192.168.100.13",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:09:52.871184+00:00"
+    },
+    {
+      "node_id": "ptt-0027",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 41,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/zeek_ml_anomalies.log",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:09:52.879498+00:00"
+    },
+    {
+      "node_id": "ptt-0028",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "hold",
+        "state": [
+          0,
+          5,
+          1
+        ],
+        "next_state": [
+          0,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.5,
+        "epsilon": 0.1931,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:09:52.882675+00:00"
+    },
+    {
+      "node_id": "ptt-0029",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.13",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22
+            ],
+            "host": "192.168.100.13",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:09:54.585183+00:00"
+    },
+    {
+      "node_id": "ptt-0030",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 38,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/zeek_ml_anomalies.log",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:09:54.589447+00:00"
+    },
+    {
+      "node_id": "ptt-0031",
+      "agent": "orchestrator",
+      "kind": "learning_complete",
+      "data": {
+        "cycles": 8,
+        "final_detection_rate": 1.0,
+        "final_epsilon": 0.1921
+      },
+      "timestamp": "2026-10-06T03:09:54.593282+00:00"
+    }
+  ],
+  "recon_results": [
+    {
+      "host": "192.168.100.13",
+      "port": 22,
+      "state": "open",
+      "service": "ssh",
+      "product": "OpenSSH",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17"
+    }
+  ],
+  "enumeration_results": [
+    {
+      "port": 22,
+      "name": "ssh",
+      "product": "OpenSSH",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17",
+      "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "service": "ssh",
+      "product": "openssh",
+      "port": 22,
+      "cve_id": "CVE-2023-38408",
+      "severity": "high",
+      "type": "pkcs11_rce",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17",
+      "source": "version_correlation"
+    }
+  ],
+  "attack_attempts": [
+    {
+      "target": "192.168.100.13",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22
+      ],
+      "host": "192.168.100.13",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.13",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        22
+      ],
+      "host": "192.168.100.13",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.13",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22
+      ],
+      "host": "192.168.100.13",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.13",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22
+      ],
+      "host": "192.168.100.13",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.13",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22
+      ],
+      "host": "192.168.100.13",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.13",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        22
+      ],
+      "host": "192.168.100.13",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.13",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22
+      ],
+      "host": "192.168.100.13",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.13",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22
+      ],
+      "host": "192.168.100.13",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    }
+  ],
+  "evasion_strategy": {
+    "state": [
+      0,
+      5,
+      1
+    ],
+    "action": "hold",
+    "epsilon": 0.19310412936189686
+  },
+  "evaluations": [
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 38,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 28,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 31,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 37,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 41,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 36,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 41,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 38,
+        "signatures": [
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)",
+          "ZEEK_ML anomaly (conn, score=85889363847467696.0000)"
+        ]
+      }
+    }
+  ]
+}

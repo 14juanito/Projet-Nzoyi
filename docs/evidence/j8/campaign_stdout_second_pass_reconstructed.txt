@@ -1,0 +1,22 @@
+# ATTENTION — fichier reconstruit, PAS un log écrit sur disque en temps réel.
+#
+# Le second passage (corrigé, post-redémarrage de nzoyi-zeekml.service à
+# 03:08:49 UTC) a été lancé via un one-liner Python interactif dont le stdout
+# n'a pas été redirigé vers un fichier au moment de l'exécution — seuls les
+# artefacts structurés (summaries/zeek_ml_*.summary.json, ptt/zeek_ml_*.ptt.json,
+# horodatages mtime sur disque) constituent la preuve authentique et datée de
+# ce passage. Le texte ci-dessous est une copie verbatim de la sortie telle
+# qu'elle a réellement été produite et observée dans la session au moment de
+# l'exécution (03:09:25–03:09:54 UTC d'après les mtime des summary.json) —
+# recopiée ici pour complétude, PAS régénérée/inventée après coup. Aucune
+# valeur n'a été modifiée par rapport à ce qui a été produit par le script.
+#
+# Référence faisant foi en cas de doute : docs/evidence/j8/summaries/zeek_ml_*.summary.json
+# (écrits sur disque par le script lui-même, horodatages mtime authentiques).
+
+Oracle RF indisponible (RF model introuvable: 'models/rf_unsw.pkl'. Fournis le chemin vers un modèle scikit-learn sérialisé avec joblib (joblib.dump).) — p_detect neutre (0.0) utilisé.
+[OK] zeek_ml/stealth: cycles=8 final_detection_rate=0.625 duration=14.5s ports=[{'host': '192.168.100.13', 'port': 22, 'state': 'open', 'service': 'ssh', 'product': 'OpenSSH', 'version': '8.9p1 Ubuntu 3ubuntu0.17'}]
+Oracle RF indisponible (RF model introuvable: 'models/rf_unsw.pkl'. Fournis le chemin vers un modèle scikit-learn sérialisé avec joblib (joblib.dump).) — p_detect neutre (0.0) utilisé.
+[OK] zeek_ml/default: cycles=8 final_detection_rate=1.0 duration=14.6s ports=[{'host': '192.168.100.13', 'port': 22, 'state': 'open', 'service': 'ssh', 'product': 'OpenSSH', 'version': '8.9p1 Ubuntu 3ubuntu0.17'}]
+Oracle RF indisponible (RF model introuvable: 'models/rf_unsw.pkl'. Fournis le chemin vers un modèle scikit-learn sérialisé avec joblib (joblib.dump).) — p_detect neutre (0.0) utilisé.
+[OK] zeek_ml/aggressive: cycles=8 final_detection_rate=1.0 duration=14.7s ports=[{'host': '192.168.100.13', 'port': 22, 'state': 'open', 'service': 'ssh', 'product': 'OpenSSH', 'version': '8.9p1 Ubuntu 3ubuntu0.17'}]

@@ -1,0 +1,76 @@
+{
+  "backend": "zeek_ml",
+  "profile": "default",
+  "target": "192.168.100.13",
+  "cycles": 8,
+  "final_detection_rate": 1.0,
+  "convergence": [
+    {
+      "cycle": 1,
+      "detected": true,
+      "reward": -0.45,
+      "epsilon": 0.199,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 2,
+      "detected": true,
+      "reward": -0.35,
+      "epsilon": 0.198,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 3,
+      "detected": true,
+      "reward": -0.45,
+      "epsilon": 0.197,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 4,
+      "detected": true,
+      "reward": -0.5,
+      "epsilon": 0.196,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 5,
+      "detected": true,
+      "reward": -0.5,
+      "epsilon": 0.195,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 6,
+      "detected": true,
+      "reward": -0.4,
+      "epsilon": 0.1941,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 7,
+      "detected": true,
+      "reward": -0.5,
+      "epsilon": 0.1931,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 8,
+      "detected": true,
+      "reward": -0.5,
+      "epsilon": 0.1921,
+      "detection_rate": 1.0
+    }
+  ],
+  "duration_s": 14.611,
+  "recon_open_ports": [
+    {
+      "host": "192.168.100.13",
+      "port": 22,
+      "state": "open",
+      "service": "ssh",
+      "product": "OpenSSH",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17"
+    }
+  ]
+}

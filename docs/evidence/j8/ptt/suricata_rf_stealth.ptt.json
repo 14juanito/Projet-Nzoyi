@@ -1,0 +1,1947 @@
+{
+  "target": "192.168.100.11",
+  "nodes": [
+    {
+      "node_id": "ptt-0001",
+      "agent": "orchestrator",
+      "kind": "llm_strategy",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-06T03:00:28.126497+00:00"
+    },
+    {
+      "node_id": "ptt-0002",
+      "agent": "recon",
+      "kind": "port_scan",
+      "data": {
+        "target": "192.168.100.11",
+        "open_ports": [
+          22,
+          80,
+          5000
+        ],
+        "ports": [
+          {
+            "host": "192.168.100.11",
+            "port": 22,
+            "state": "open",
+            "service": "ssh",
+            "product": "OpenSSH",
+            "version": "9.6p1 Ubuntu 3ubuntu13.18"
+          },
+          {
+            "host": "192.168.100.11",
+            "port": 80,
+            "state": "open",
+            "service": "http",
+            "product": "Apache httpd",
+            "version": "2.4.25"
+          },
+          {
+            "host": "192.168.100.11",
+            "port": 5000,
+            "state": "open",
+            "service": "http",
+            "product": "Werkzeug httpd",
+            "version": "3.1.8"
+          }
+        ],
+        "scan_type": "version",
+        "timing": 4,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:35.274376+00:00"
+    },
+    {
+      "node_id": "ptt-0003",
+      "agent": "enumerator",
+      "kind": "service_enum",
+      "data": {
+        "service_list": [
+          {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "9.6p1 Ubuntu 3ubuntu13.18",
+            "banner": "SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.18"
+          },
+          {
+            "port": 80,
+            "name": "http",
+            "product": "Apache httpd",
+            "version": "2.4.25",
+            "banner": ""
+          },
+          {
+            "port": 5000,
+            "name": "http",
+            "product": "Werkzeug httpd",
+            "version": "3.1.8",
+            "banner": ""
+          }
+        ],
+        "services": {
+          "22": {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "9.6p1 Ubuntu 3ubuntu13.18",
+            "banner": "SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.18"
+          },
+          "80": {
+            "port": 80,
+            "name": "http",
+            "product": "Apache httpd",
+            "version": "2.4.25",
+            "banner": ""
+          },
+          "5000": {
+            "port": 5000,
+            "name": "http",
+            "product": "Werkzeug httpd",
+            "version": "3.1.8",
+            "banner": ""
+          }
+        },
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:39.312273+00:00"
+    },
+    {
+      "node_id": "ptt-0004",
+      "agent": "vulnerability",
+      "kind": "vuln_analysis",
+      "data": {
+        "findings": [
+          {
+            "service": "http",
+            "product": "apache httpd",
+            "port": 80,
+            "cve_id": "CVE-2017-3167",
+            "severity": "critical",
+            "type": "auth_bypass",
+            "version": "2.4.25",
+            "source": "version_correlation"
+          },
+          {
+            "service": "http",
+            "product": "DVWA",
+            "port": 80,
+            "cve_id": "DVWA-CMD-INJECTION",
+            "severity": "critical",
+            "type": "command_injection",
+            "version": "dvwa",
+            "description": "OS command injection \u2014 vulnerabilities/exec/",
+            "url": "http://192.168.100.11:80/",
+            "evidence": [
+              "body:dvwa-login",
+              "cookie:security",
+              "login.php",
+              "title:DVWA"
+            ],
+            "source": "app_fingerprint"
+          },
+          {
+            "service": "http",
+            "product": "apache httpd",
+            "port": 80,
+            "cve_id": "CVE-2017-9798",
+            "severity": "high",
+            "type": "optionsbleed",
+            "version": "2.4.25",
+            "source": "version_correlation"
+          },
+          {
+            "service": "http",
+            "product": "apache httpd",
+            "port": 80,
+            "cve_id": "CVE-2017-7679",
+            "severity": "high",
+            "type": "mod_mime_overflow",
+            "version": "2.4.25",
+            "source": "version_correlation"
+          },
+          {
+            "service": "http",
+            "product": "DVWA",
+            "port": 80,
+            "cve_id": "DVWA-SQLI",
+            "severity": "high",
+            "type": "sqli",
+            "version": "dvwa",
+            "description": "SQL Injection (GET/id) \u2014 vulnerabilities/sqli/",
+            "url": "http://192.168.100.11:80/",
+            "evidence": [
+              "body:dvwa-login",
+              "cookie:security",
+              "login.php",
+              "title:DVWA"
+            ],
+            "source": "app_fingerprint"
+          },
+          {
+            "service": "http",
+            "product": "DVWA",
+            "port": 80,
+            "cve_id": "DVWA-LFI",
+            "severity": "high",
+            "type": "lfi",
+            "version": "dvwa",
+            "description": "Local/Remote File Inclusion \u2014 vulnerabilities/fi/",
+            "url": "http://192.168.100.11:80/",
+            "evidence": [
+              "body:dvwa-login",
+              "cookie:security",
+              "login.php",
+              "title:DVWA"
+            ],
+            "source": "app_fingerprint"
+          },
+          {
+            "service": "http",
+            "product": "DVWA",
+            "port": 80,
+            "cve_id": "DVWA-FILE-UPLOAD",
+            "severity": "high",
+            "type": "unrestricted_upload",
+            "version": "dvwa",
+            "description": "Unrestricted file upload \u2014 vulnerabilities/upload/",
+            "url": "http://192.168.100.11:80/",
+            "evidence": [
+              "body:dvwa-login",
+              "cookie:security",
+              "login.php",
+              "title:DVWA"
+            ],
+            "source": "app_fingerprint"
+          },
+          {
+            "service": "http",
+            "product": "DVWA",
+            "port": 80,
+            "cve_id": "DVWA-XSS-REFLECTED",
+            "severity": "medium",
+            "type": "xss_reflected",
+            "version": "dvwa",
+            "description": "XSS reflected \u2014 vulnerabilities/xss_r/",
+            "url": "http://192.168.100.11:80/",
+            "evidence": [
+              "body:dvwa-login",
+              "cookie:security",
+              "login.php",
+              "title:DVWA"
+            ],
+            "source": "app_fingerprint"
+          },
+          {
+            "service": "http",
+            "product": "DVWA",
+            "port": 80,
+            "cve_id": "DVWA-XSS-STORED",
+            "severity": "medium",
+            "type": "xss_stored",
+            "version": "dvwa",
+            "description": "XSS stored \u2014 vulnerabilities/xss_s/",
+            "url": "http://192.168.100.11:80/",
+            "evidence": [
+              "body:dvwa-login",
+              "cookie:security",
+              "login.php",
+              "title:DVWA"
+            ],
+            "source": "app_fingerprint"
+          },
+          {
+            "service": "http",
+            "product": "DVWA",
+            "port": 80,
+            "cve_id": "DVWA-CSRF",
+            "severity": "medium",
+            "type": "csrf",
+            "version": "dvwa",
+            "description": "Cross-Site Request Forgery \u2014 vulnerabilities/csrf/",
+            "url": "http://192.168.100.11:80/",
+            "evidence": [
+              "body:dvwa-login",
+              "cookie:security",
+              "login.php",
+              "title:DVWA"
+            ],
+            "source": "app_fingerprint"
+          }
+        ],
+        "dvwa": {
+          "app": "DVWA",
+          "url": "http://192.168.100.11:80/",
+          "port": 80,
+          "status": 200,
+          "evidence": [
+            "body:dvwa-login",
+            "cookie:security",
+            "login.php",
+            "title:DVWA"
+          ]
+        },
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:39.332816+00:00"
+    },
+    {
+      "node_id": "ptt-0005",
+      "agent": "orchestrator",
+      "kind": "llm_replan",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-06T03:00:39.334183+00:00"
+    },
+    {
+      "node_id": "ptt-0006",
+      "agent": "orchestrator",
+      "kind": "llm_decision",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-06T03:00:39.334209+00:00"
+    },
+    {
+      "node_id": "ptt-0007",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          5,
+          1
+        ],
+        "next_state": [
+          1,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.45,
+        "epsilon": 0.2,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:39.334472+00:00"
+    },
+    {
+      "node_id": "ptt-0008",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 5000,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:00:42.020941+00:00"
+    },
+    {
+      "node_id": "ptt-0009",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": false,
+        "rf_detected": true,
+        "rf_proba": 0.5,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/eve.json",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:00:42.097739+00:00"
+    },
+    {
+      "node_id": "ptt-0010",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          5,
+          1
+        ],
+        "next_state": [
+          2,
+          4,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.35,
+        "epsilon": 0.199,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:42.098862+00:00"
+    },
+    {
+      "node_id": "ptt-0011",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 5000,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:00:44.408255+00:00"
+    },
+    {
+      "node_id": "ptt-0012",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": true,
+        "rf_proba": 0.5033333333333333,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/eve.json",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:00:44.476713+00:00"
+    },
+    {
+      "node_id": "ptt-0013",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          4,
+          1
+        ],
+        "next_state": [
+          1,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.45,
+        "epsilon": 0.198,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:44.478146+00:00"
+    },
+    {
+      "node_id": "ptt-0014",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 5000,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:00:47.161705+00:00"
+    },
+    {
+      "node_id": "ptt-0015",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": false,
+        "rf_detected": true,
+        "rf_proba": 0.5,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/eve.json",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:00:47.246791+00:00"
+    },
+    {
+      "node_id": "ptt-0016",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          5,
+          1
+        ],
+        "next_state": [
+          0,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.5,
+        "epsilon": 0.197,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:47.248164+00:00"
+    },
+    {
+      "node_id": "ptt-0017",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 5000,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:00:49.896498+00:00"
+    },
+    {
+      "node_id": "ptt-0018",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.4633333333333333,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/eve.json",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:00:49.971002+00:00"
+    },
+    {
+      "node_id": "ptt-0019",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          0,
+          5,
+          1
+        ],
+        "next_state": [
+          0,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.5,
+        "epsilon": 0.196,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:49.972755+00:00"
+    },
+    {
+      "node_id": "ptt-0020",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 5000,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:00:52.743867+00:00"
+    },
+    {
+      "node_id": "ptt-0021",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.4633333333333333,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/eve.json",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:00:52.815675+00:00"
+    },
+    {
+      "node_id": "ptt-0022",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          1
+        ],
+        "next_state": [
+          1,
+          4,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.4,
+        "epsilon": 0.195,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:52.817583+00:00"
+    },
+    {
+      "node_id": "ptt-0023",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 5000,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:00:55.120345+00:00"
+    },
+    {
+      "node_id": "ptt-0024",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.49666666666666665,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ],
+        "detection_rate": 1.0,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/eve.json",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:00:55.191714+00:00"
+    },
+    {
+      "node_id": "ptt-0025",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          4,
+          1
+        ],
+        "next_state": [
+          0,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.5,
+        "epsilon": 0.1941,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:55.194144+00:00"
+    },
+    {
+      "node_id": "ptt-0026",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 5000,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:00:57.911249+00:00"
+    },
+    {
+      "node_id": "ptt-0027",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.4633333333333333,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.8571428571428571,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/eve.json",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:00:57.991269+00:00"
+    },
+    {
+      "node_id": "ptt-0028",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "hold",
+        "state": [
+          0,
+          5,
+          1
+        ],
+        "next_state": [
+          0,
+          5,
+          1
+        ],
+        "detected": false,
+        "p_detect": 0.0,
+        "reward": -0.5,
+        "epsilon": 0.1931,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-06T03:00:57.994690+00:00"
+    },
+    {
+      "node_id": "ptt-0029",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.11",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              22,
+              80,
+              5000
+            ],
+            "host": "192.168.100.11",
+            "port": 5000,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-06T03:01:00.686525+00:00"
+    },
+    {
+      "node_id": "ptt-0030",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.4633333333333333,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ],
+        "detection_rate": 0.875,
+        "source": "/tmp/claude-1000/-home-roy/dc584015-a81f-4223-b302-6a45b183d965/scratchpad/mirrors/eve.json",
+        "dry_run": false,
+        "llm_rationale": ""
+      },
+      "timestamp": "2026-10-06T03:01:00.767053+00:00"
+    },
+    {
+      "node_id": "ptt-0031",
+      "agent": "orchestrator",
+      "kind": "learning_complete",
+      "data": {
+        "cycles": 8,
+        "final_detection_rate": 0.875,
+        "final_epsilon": 0.1921
+      },
+      "timestamp": "2026-10-06T03:01:00.772412+00:00"
+    }
+  ],
+  "recon_results": [
+    {
+      "host": "192.168.100.11",
+      "port": 22,
+      "state": "open",
+      "service": "ssh",
+      "product": "OpenSSH",
+      "version": "9.6p1 Ubuntu 3ubuntu13.18"
+    },
+    {
+      "host": "192.168.100.11",
+      "port": 80,
+      "state": "open",
+      "service": "http",
+      "product": "Apache httpd",
+      "version": "2.4.25"
+    },
+    {
+      "host": "192.168.100.11",
+      "port": 5000,
+      "state": "open",
+      "service": "http",
+      "product": "Werkzeug httpd",
+      "version": "3.1.8"
+    }
+  ],
+  "enumeration_results": [
+    {
+      "port": 22,
+      "name": "ssh",
+      "product": "OpenSSH",
+      "version": "9.6p1 Ubuntu 3ubuntu13.18",
+      "banner": "SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.18"
+    },
+    {
+      "port": 80,
+      "name": "http",
+      "product": "Apache httpd",
+      "version": "2.4.25",
+      "banner": ""
+    },
+    {
+      "port": 5000,
+      "name": "http",
+      "product": "Werkzeug httpd",
+      "version": "3.1.8",
+      "banner": ""
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "service": "http",
+      "product": "apache httpd",
+      "port": 80,
+      "cve_id": "CVE-2017-9798",
+      "severity": "high",
+      "type": "optionsbleed",
+      "version": "2.4.25",
+      "source": "version_correlation"
+    },
+    {
+      "service": "http",
+      "product": "apache httpd",
+      "port": 80,
+      "cve_id": "CVE-2017-3167",
+      "severity": "critical",
+      "type": "auth_bypass",
+      "version": "2.4.25",
+      "source": "version_correlation"
+    },
+    {
+      "service": "http",
+      "product": "apache httpd",
+      "port": 80,
+      "cve_id": "CVE-2017-7679",
+      "severity": "high",
+      "type": "mod_mime_overflow",
+      "version": "2.4.25",
+      "source": "version_correlation"
+    },
+    {
+      "service": "http",
+      "product": "DVWA",
+      "port": 80,
+      "cve_id": "DVWA-SQLI",
+      "severity": "high",
+      "type": "sqli",
+      "version": "dvwa",
+      "description": "SQL Injection (GET/id) \u2014 vulnerabilities/sqli/",
+      "url": "http://192.168.100.11:80/",
+      "evidence": [
+        "body:dvwa-login",
+        "cookie:security",
+        "login.php",
+        "title:DVWA"
+      ],
+      "source": "app_fingerprint"
+    },
+    {
+      "service": "http",
+      "product": "DVWA",
+      "port": 80,
+      "cve_id": "DVWA-XSS-REFLECTED",
+      "severity": "medium",
+      "type": "xss_reflected",
+      "version": "dvwa",
+      "description": "XSS reflected \u2014 vulnerabilities/xss_r/",
+      "url": "http://192.168.100.11:80/",
+      "evidence": [
+        "body:dvwa-login",
+        "cookie:security",
+        "login.php",
+        "title:DVWA"
+      ],
+      "source": "app_fingerprint"
+    },
+    {
+      "service": "http",
+      "product": "DVWA",
+      "port": 80,
+      "cve_id": "DVWA-XSS-STORED",
+      "severity": "medium",
+      "type": "xss_stored",
+      "version": "dvwa",
+      "description": "XSS stored \u2014 vulnerabilities/xss_s/",
+      "url": "http://192.168.100.11:80/",
+      "evidence": [
+        "body:dvwa-login",
+        "cookie:security",
+        "login.php",
+        "title:DVWA"
+      ],
+      "source": "app_fingerprint"
+    },
+    {
+      "service": "http",
+      "product": "DVWA",
+      "port": 80,
+      "cve_id": "DVWA-CMD-INJECTION",
+      "severity": "critical",
+      "type": "command_injection",
+      "version": "dvwa",
+      "description": "OS command injection \u2014 vulnerabilities/exec/",
+      "url": "http://192.168.100.11:80/",
+      "evidence": [
+        "body:dvwa-login",
+        "cookie:security",
+        "login.php",
+        "title:DVWA"
+      ],
+      "source": "app_fingerprint"
+    },
+    {
+      "service": "http",
+      "product": "DVWA",
+      "port": 80,
+      "cve_id": "DVWA-LFI",
+      "severity": "high",
+      "type": "lfi",
+      "version": "dvwa",
+      "description": "Local/Remote File Inclusion \u2014 vulnerabilities/fi/",
+      "url": "http://192.168.100.11:80/",
+      "evidence": [
+        "body:dvwa-login",
+        "cookie:security",
+        "login.php",
+        "title:DVWA"
+      ],
+      "source": "app_fingerprint"
+    },
+    {
+      "service": "http",
+      "product": "DVWA",
+      "port": 80,
+      "cve_id": "DVWA-FILE-UPLOAD",
+      "severity": "high",
+      "type": "unrestricted_upload",
+      "version": "dvwa",
+      "description": "Unrestricted file upload \u2014 vulnerabilities/upload/",
+      "url": "http://192.168.100.11:80/",
+      "evidence": [
+        "body:dvwa-login",
+        "cookie:security",
+        "login.php",
+        "title:DVWA"
+      ],
+      "source": "app_fingerprint"
+    },
+    {
+      "service": "http",
+      "product": "DVWA",
+      "port": 80,
+      "cve_id": "DVWA-CSRF",
+      "severity": "medium",
+      "type": "csrf",
+      "version": "dvwa",
+      "description": "Cross-Site Request Forgery \u2014 vulnerabilities/csrf/",
+      "url": "http://192.168.100.11:80/",
+      "evidence": [
+        "body:dvwa-login",
+        "cookie:security",
+        "login.php",
+        "title:DVWA"
+      ],
+      "source": "app_fingerprint"
+    }
+  ],
+  "attack_attempts": [
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 5000,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 5000,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 5000,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 5000,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 5000,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 5000,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 5000,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.11",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        22,
+        80,
+        5000
+      ],
+      "host": "192.168.100.11",
+      "port": 5000,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    }
+  ],
+  "evasion_strategy": {
+    "state": [
+      0,
+      5,
+      1
+    ],
+    "action": "hold",
+    "epsilon": 0.19310412936189686
+  },
+  "evaluations": [
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": true,
+        "rf_proba": 0.5,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": true,
+        "rf_proba": 0.5033333333333333,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": true,
+        "rf_proba": 0.5,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.4633333333333333,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.4633333333333333,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ]
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.49666666666666665,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ]
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.4633333333333333,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.4633333333333333,
+        "alert_count": 1,
+        "signatures": [
+          "ET INFO User-Agent (python-requests) Inbound to Webserver"
+        ]
+      }
+    }
+  ]
+}

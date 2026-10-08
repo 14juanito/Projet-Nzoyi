@@ -1,0 +1,92 @@
+{
+  "backend": "suricata_rf",
+  "profile": "aggressive",
+  "target": "192.168.100.11",
+  "cycles": 8,
+  "final_detection_rate": 0.875,
+  "convergence": [
+    {
+      "cycle": 1,
+      "detected": true,
+      "reward": -1.2,
+      "epsilon": 0.199,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 2,
+      "detected": true,
+      "reward": -1.105,
+      "epsilon": 0.198,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 3,
+      "detected": true,
+      "reward": -1.2,
+      "epsilon": 0.197,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 4,
+      "detected": true,
+      "reward": -1.1949999999999998,
+      "epsilon": 0.196,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 5,
+      "detected": true,
+      "reward": -1.1949999999999998,
+      "epsilon": 0.195,
+      "detection_rate": 1.0
+    },
+    {
+      "cycle": 6,
+      "detected": false,
+      "reward": -1.145,
+      "epsilon": 0.1941,
+      "detection_rate": 0.8333
+    },
+    {
+      "cycle": 7,
+      "detected": true,
+      "reward": -1.1949999999999998,
+      "epsilon": 0.1931,
+      "detection_rate": 0.8571
+    },
+    {
+      "cycle": 8,
+      "detected": true,
+      "reward": -1.1949999999999998,
+      "epsilon": 0.1921,
+      "detection_rate": 0.875
+    }
+  ],
+  "duration_s": 32.555,
+  "recon_open_ports": [
+    {
+      "host": "192.168.100.11",
+      "port": 22,
+      "state": "open",
+      "service": "ssh",
+      "product": "OpenSSH",
+      "version": "9.6p1 Ubuntu 3ubuntu13.18"
+    },
+    {
+      "host": "192.168.100.11",
+      "port": 80,
+      "state": "open",
+      "service": "http",
+      "product": "Apache httpd",
+      "version": "2.4.25"
+    },
+    {
+      "host": "192.168.100.11",
+      "port": 5000,
+      "state": "open",
+      "service": "http",
+      "product": "Werkzeug httpd",
+      "version": "3.1.8"
+    }
+  ]
+}
