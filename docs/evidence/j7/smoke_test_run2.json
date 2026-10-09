@@ -1,0 +1,42 @@
+[
+  {
+    "label": "ollama:hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M",
+    "provider": "openai_compatible",
+    "model": "hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M",
+    "ok": true,
+    "latency_s": 45.387,
+    "fallback_reason": null
+  },
+  {
+    "label": "ollama:hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest",
+    "provider": "openai_compatible",
+    "model": "hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest",
+    "ok": true,
+    "latency_s": 158.619,
+    "fallback_reason": null
+  },
+  {
+    "label": "ollama:hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest",
+    "provider": "openai_compatible",
+    "model": "hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest",
+    "ok": true,
+    "latency_s": 98.979,
+    "fallback_reason": null
+  },
+  {
+    "label": "ollama:hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M",
+    "provider": "openai_compatible",
+    "model": "hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M",
+    "ok": false,
+    "latency_s": 106.575,
+    "fallback_reason": "call_or_parse_failed"
+  },
+  {
+    "label": "ollama:hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest",
+    "provider": "openai_compatible",
+    "model": "hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest",
+    "ok": false,
+    "latency_s": 30.82,
+    "fallback_reason": "call_or_parse_failed"
+  }
+]
