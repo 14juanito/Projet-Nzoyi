@@ -36,6 +36,7 @@ import logging
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -63,6 +64,82 @@ _SMOKE_FINDINGS = [
         "service": "smoke",
     }
 ]
+
+
+#: Seuil par défaut (secondes) au-delà duquel le décalage d'horloge
+#: local/cible est signalé. Choisi bas (NTP maintient typiquement < 1s) —
+#: le but est d'attraper un décalage significatif (ex. le cas J7-ter :
+#: ~38 min, VM cible jamais synchronisée NTP) avant qu'il ne fausse un
+#: diagnostic post-hoc basé sur l'horodatage embarqué des alertes IDS
+#: (voir docs/evidence/j7-ter/README.md § « Correction majeure »).
+DEFAULT_CLOCK_SKEW_THRESHOLD_S = 5.0
+
+
+def check_clock_skew(
+    target: str,
+    ssh_user: str,
+    ssh_key: str,
+    threshold_s: float = DEFAULT_CLOCK_SKEW_THRESHOLD_S,
+    timeout_s: int = 5,
+) -> dict[str, Any]:
+    """Compare l'horloge locale à celle de la cible via SSH (``date -u``).
+
+    Ne bloque jamais la campagne : un décalage significatif est rapporté
+    (``skew_s`` + ``warning``) pour que l'opérateur le voie et pour que le
+    diagnostic post-hoc puisse en tenir compte, mais la décision de
+    continuer reste manuelle — voir le cas J7-ter où ce décalage (~38 min)
+    a fait croire, à tort, à des "détections fantômes" dans un outil de
+    réconciliation qui comparait horodatage embarqué (horloge cible) et
+    fenêtres de cycle construites sur l'horloge locale.
+
+    Returns:
+        Un dict toujours sérialisable (jamais d'exception propagée) :
+        ``{"ok": bool, "skew_s": float | None, "warning": str | None,
+        "error": str | None, "local_time_utc": str, "target": str}``.
+    """
+    local_before = time.time()
+    try:
+        proc = subprocess.run(
+            [
+                "ssh", "-i", ssh_key,
+                "-o", "ConnectTimeout=5", "-o", "BatchMode=yes",
+                f"{ssh_user}@{target}", "date -u +%s.%N",
+            ],
+            capture_output=True, text=True, timeout=timeout_s,
+        )
+        local_after = time.time()
+        if proc.returncode != 0:
+            return {
+                "ok": False, "skew_s": None,
+                "warning": None,
+                "error": f"SSH échoué (code {proc.returncode}): {proc.stderr.strip()}",
+                "local_time_utc": local_before,
+                "target": target,
+            }
+        remote_epoch = float(proc.stdout.strip())
+        # Horloge locale au milieu de l'aller-retour SSH — réduit (sans
+        # l'éliminer) le biais de latence réseau sur la mesure de skew.
+        local_mid = (local_before + local_after) / 2
+        skew_s = remote_epoch - local_mid
+        warning = None
+        if abs(skew_s) > threshold_s:
+            warning = (
+                f"Décalage d'horloge significatif détecté : cible en avance de "
+                f"{skew_s:+.1f}s sur le poste local (seuil: {threshold_s}s). "
+                "Tout diagnostic post-hoc basé sur l'horodatage EMBARQUÉ des "
+                "alertes IDS (ex. ids_reconciliation.py) sera invalide tant que "
+                "ce décalage n'est pas corrigé (NTP/chrony sur la cible)."
+            )
+        return {
+            "ok": True, "skew_s": round(skew_s, 3), "warning": warning, "error": None,
+            "local_time_utc": local_mid, "target": target,
+        }
+    except Exception as exc:  # noqa: BLE001 - jamais bloquant, juste rapporté.
+        return {
+            "ok": False, "skew_s": None, "warning": None,
+            "error": f"{type(exc).__name__}: {exc}",
+            "local_time_utc": local_before, "target": target,
+        }
 
 
 def _safe_filename(label: str) -> str:
@@ -360,6 +437,26 @@ def build_parser() -> argparse.ArgumentParser:
             "(placeholder), jamais pour masquer un échec réel. Répétable."
         ),
     )
+    parser.add_argument(
+        "--clock-check-ssh-user", default="nzoyi",
+        help="Utilisateur SSH pour la vérification de décalage d'horloge avec la cible.",
+    )
+    parser.add_argument(
+        "--clock-check-ssh-key", default=None,
+        help=(
+            "Clé privée SSH pour la vérification de décalage d'horloge. "
+            "Si omis, la vérification est sautée (avertissement affiché) — "
+            "jamais bloquant."
+        ),
+    )
+    parser.add_argument(
+        "--clock-skew-threshold-s", type=float, default=DEFAULT_CLOCK_SKEW_THRESHOLD_S,
+        help="Seuil (secondes) au-delà duquel le décalage d'horloge local/cible est signalé.",
+    )
+    parser.add_argument(
+        "--skip-clock-check", action="store_true",
+        help="Ne pas vérifier le décalage d'horloge avec la cible avant la campagne.",
+    )
     return parser
 
 
@@ -374,6 +471,30 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
+
+    if args.skip_clock_check:
+        print("⏭  Vérification de décalage d'horloge sautée (--skip-clock-check).")
+    elif not args.clock_check_ssh_key:
+        print(
+            "⚠  --clock-check-ssh-key non fourni — décalage d'horloge avec la "
+            "cible NON vérifié. Tout diagnostic post-hoc basé sur l'horodatage "
+            "embarqué des alertes IDS sera sujet au même risque qu'en J7-ter "
+            "(voir docs/evidence/j7-ter/README.md)."
+        )
+    else:
+        skew = check_clock_skew(
+            args.target, args.clock_check_ssh_user, args.clock_check_ssh_key,
+            threshold_s=args.clock_skew_threshold_s,
+        )
+        (EVIDENCE_DIR / "clock_skew_check.json").write_text(
+            json.dumps(skew, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        if skew["error"]:
+            print(f"⚠  Vérification de décalage d'horloge impossible : {skew['error']}")
+        elif skew["warning"]:
+            print(f"🚨 {skew['warning']}")
+        else:
+            print(f"✓ Horloge cible synchronisée (décalage mesuré: {skew['skew_s']:+.3f}s).")
 
     panel = discover_panel()
     if not panel:

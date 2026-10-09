@@ -38,6 +38,7 @@ from nzoyi.rl.qlearning import EvasionAction, EvasionQLearner, EvasionState
 from nzoyi.tools.ids_log_reader import SuricataLogReader
 from nzoyi.tools.ids_reconciliation import reconcile
 from nzoyi.tools.nmap_wrapper import parse_nmap_xml
+from run_j7_campaign import check_clock_skew
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -772,6 +773,41 @@ def test_evaluation_agent_fusion() -> bool:
         and sub_signals["suricata_detected"] is True
         and sub_signals["rf_detected"] is True
     )
+
+
+def test_check_clock_skew_detects_significant_drift() -> bool:
+    """Garde-fou J7-ter : un décalage simulé de ~38 min (cas réel rencontré,
+    VM cible jamais synchronisée NTP) doit être détecté et signalé."""
+    import time as time_module
+
+    local_now = time_module.time()
+    remote_epoch = local_now + 38 * 60  # cible 38 min en avance, comme en J7-ter
+
+    fake_proc = MagicMock(returncode=0, stdout=f"{remote_epoch:.6f}\n", stderr="")
+    with patch("subprocess.run", return_value=fake_proc):
+        result = check_clock_skew("192.168.100.14", "nzoyi", "/fake/key", threshold_s=5.0)
+
+    return (
+        result["ok"] is True
+        and result["error"] is None
+        and result["warning"] is not None
+        and "Décalage d'horloge" in result["warning"]
+        and 2270 < result["skew_s"] < 2290  # ~38min = 2280s, marge pour le temps de test
+    )
+
+
+def test_check_clock_skew_within_threshold_no_warning() -> bool:
+    """Décalage négligeable (< seuil) — pas d'avertissement, résultat ok."""
+    import time as time_module
+
+    local_now = time_module.time()
+    remote_epoch = local_now + 0.2  # 200ms, bien sous le seuil par défaut (5s)
+
+    fake_proc = MagicMock(returncode=0, stdout=f"{remote_epoch:.6f}\n", stderr="")
+    with patch("subprocess.run", return_value=fake_proc):
+        result = check_clock_skew("192.168.100.14", "nzoyi", "/fake/key", threshold_s=5.0)
+
+    return result["ok"] is True and result["warning"] is None and result["error"] is None
 
 
 def test_evaluation_agent_unavailable() -> bool:
@@ -1846,6 +1882,8 @@ def run_all_tests() -> dict[str, bool]:
         "Attack — timeout non bloquant (non abouti)": test_attack_agent_timeout_not_fatal(),
         "Attack — applique stratégie Q-Learning": test_attack_applies_evasion_strategy(),
         "Evaluation — fusion Suricata + RF": test_evaluation_agent_fusion(),
+        "Campagne J7 — garde-fou décalage d'horloge détecté (J7-ter)": test_check_clock_skew_detects_significant_drift(),
+        "Campagne J7 — décalage d'horloge sous le seuil, pas d'alerte": test_check_clock_skew_within_threshold_no_warning(),
         "Evaluation — signaux indisponibles": test_evaluation_agent_unavailable(),
         "RF client — normalisation prediction/score": test_rf_client_normalizes_lab_response(),
         "RF features — payload UNSW complet": test_rf_features_unsw_payload_complete(),
