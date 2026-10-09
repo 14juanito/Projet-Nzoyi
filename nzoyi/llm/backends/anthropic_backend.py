@@ -104,10 +104,13 @@ class AnthropicBackend(LLMBackend):
                 diagnosticable sans jamais pouvoir fuiter un secret.
         """
         try:
+            # `temperature` n'est plus accepté par `messages.create` dans les
+            # versions récentes du SDK `anthropic` (>= 1.0) installées ici —
+            # paramètre conservé sur l'instance (self.temperature) pour les
+            # appelants/tests existants, mais plus transmis au SDK.
             response = self._client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
-                temperature=self.temperature,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_message}],
             )

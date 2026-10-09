@@ -111,8 +111,8 @@ fonctionnelle et présenté comme un résultat réel. Voir
 | Lily-Cybersecurity-7B | 12.5% (1/8) | 295s | 0/1 | 0/8 | 81s / 23s |
 | **WhiteRabbitNeo-2-8B (Llama-3.1)** | **0.0% (0/8)** | 807s | **1/1** | **8/8** | 56s / 90s |
 | Foundation-Sec-8B-Instruct | 0.0% (0/8) | 809s | 0/1 | 0/8 | 95s / 85s |
+| **claude (claude-sonnet-5)** | 12.5% (1/8) | 57.7s | 0/1 | 0/8 | 3.9s / 2.8s |
 | openrouter | ⬜ absent | — | — | — | — |
-| claude | ⬜ absent | — | — | — | — |
 
 **Lecture du taux de détection** : sur seulement 8 épisodes par backend, un
 écart de 0% vs 12.5% représente **1 seule détection Suricata** sur 8 — à ne
@@ -130,6 +130,39 @@ demandé : tous les modèles sauf WhiteRabbitNeo-2-8B ont **0% de fallback
 sur les deux rôles** — WhiteRabbitNeo-2-8B a 100% sur les deux. Aucun
 modèle n'a un taux différent entre triage et rationale (le problème est
 général au formatage de sortie du modèle, pas spécifique à un prompt).
+
+### Run #2bis (2026-10-09, 18:48 UTC+1) — Claude ajouté (`ANTHROPIC_API_KEY` créditée)
+
+Clé Anthropic réelle fournie par l'utilisateur après achat de crédits,
+renseignée dans `.env` (gitignored, jamais committée). Premier smoke test
+en **échec instantané** (`call_or_parse_failed`, latence `0.001s` — avant
+même toute requête réseau) : pas un problème de clé, bug pré-existant
+repéré dans `nzoyi/llm/backends/anthropic_backend.py::AnthropicBackend.decide` —
+le SDK `anthropic` installé (v1.0.0) ne supporte plus `temperature` en
+paramètre de `messages.create()` (`TypeError: Messages.create() got an
+unexpected keyword argument 'temperature'`). **Corrigé** par un fix minimal
+(paramètre retiré de l'appel SDK, conservé sur l'instance pour les
+appelants/tests existants qui le passent au constructeur) — fichier hors
+du périmètre interdit, `evasion.py`/`qlearning.py` non touchés. Smoke test
+re-vérifié **OK** (2.03s) après le fix, puis campagne réelle rejouée pour
+Claude seul (réutilise `smoke_test`/`run_one_backend`/`write_reports` de
+`run_j7_campaign.py` sans duplication ; les 5 backends locaux et l'entrée
+`openrouter` restent strictement inchangés, fusionnés depuis le Run #2).
+
+Claude (`claude-sonnet-5`) termine en **57.7s pour 8 cycles** — très
+largement le backend le plus rapide du panel (295–809s pour les backends
+Ollama locaux), latences triage/rationale en **secondes** plutôt qu'en
+dizaines de secondes, et **0% de fallback JSON** sur les deux rôles. Son
+taux de détection (1/8, 12.5%) est dans le même ordre de grandeur que 4 des
+5 backends locaux et reste, comme pour eux, dans la marge du bruit
+d'exploration ε-greedy sur seulement 8 épisodes — **pas un signal de
+furtivité supérieure** : `EvasionAgent`/`AttackAgent` sont strictement
+identiques quel que soit le backend stratégique, seules les couches
+triage/rationale (et, en théorie, stratégique/priorisation) changent.
+`attack_priority` reste à **0 appel** pour Claude également, pour la même
+cause structurelle que les 5 autres backends (voir section suivante) —
+confirmant une fois de plus que la limitation est indépendante du
+modèle/provider.
 
 ### Limitation connue — `attack_priority` non exercé
 
@@ -155,10 +188,10 @@ sur la priorisation d'attaque, qui n'a jamais été sollicitée.
 
 **Pas un biais entre backends** : la cause est structurelle — un bug du
 runner CLI, invariant par rapport au modèle chargé — et non un artefact de
-cible ou de modèle. Les 5 backends locaux ont été affectés de façon
-strictement identique (`0/0/0/0/0` appels), donc ce manque n'introduit
-aucune distorsion dans la comparaison inter-modèles faite sur triage et
-rationale.
+cible ou de modèle. Les 5 backends locaux **et Claude** (ajouté en Run
+#2bis, voir ci-dessous) ont été affectés de façon strictement identique
+(`0` appel chacun, 6/6), donc ce manque n'introduit aucune distorsion dans
+la comparaison inter-modèles faite sur triage et rationale.
 
 **Statut** : fix identifié et diffé en diagnostic (non appliqué — voir
 historique de session), reporté à une itération **J7-bis** séparée. Deux
@@ -252,6 +285,8 @@ vers un chemin dédié dès le lancement de chaque run).
 | `ptt/<label>.ptt.json` | PTT complet d'un run réel. 6 fichiers : 5 écrasés par le Run #2 (données les plus récentes), `openrouter.ptt.json` reste celui du Run #1 (seule trace de la tentative mal configurée, Run #2 l'ayant exclue). |
 | `campaign_stdout_run1.txt` / `campaign_stdout_run2.txt` | stdout/stderr complet de chaque exécution de `run_j7_campaign.py` (smoke tests + campagnes réelles, logs applicatifs inclus). |
 | `eve_alerts_excerpt_run1.json` / `eve_alerts_excerpt_run2.json` | Événements `alert` réels de la cible par run (hors bruit `SURICATA Ethertype unknown`) — Run #1 : 43 alertes (1 seul service exposé) ; Run #2 : 108 alertes (3 services exposés — FTP/SSH/HTTP), signatures élargies aux scans MSSQL/mySQL/Oracle/PostgreSQL/VNC + SSH. |
+| `smoke_test_claude.json` | Smoke test Run #2bis (claude seul) — 1 entrée, après fix du bug SDK `temperature`. |
+| `ptt/claude.ptt.json` | PTT complet de la campagne réelle Claude (Run #2bis), fusionnée dans `results/j7_llm_panel_comparison.*` sans toucher aux 5 PTT locaux ni à `openrouter.ptt.json`. |
 
 ## Résultats clés (voir `results/j7_llm_panel_comparison.{json,csv,md}`)
 
@@ -281,37 +316,42 @@ explicatif (rationale), cohérent avec le choix de ce modèle justement pour
 
 ## Synthèse finale
 
-**Scope réel du comparatif** : 5 backends Ollama locaux testés en conditions
-réelles (8 cycles chacun, cible enrichie à 4 CVE au Run #2), sur les rôles
-**triage** (`VulnTriageLLM`) et **rationale d'évaluation**
-(`EvaluationRationaleLLM`) uniquement — `attack_priority` n'a jamais été
-exercé (limitation structurelle documentée ci-dessus, identique pour les 5
-backends). OpenRouter est explicitement exclu (clé API connue non
-fonctionnelle, réutilisation de credentials inter-projets bloquée à raison
-par le garde-fou de sécurité) et Claude explicitement en attente de crédits
-— aucun des deux n'a été lancé avec une configuration cassée ni présenté
-comme un résultat réel.
+**Scope réel du comparatif** : 5 backends Ollama locaux **+ Claude**
+(`claude-sonnet-5`, ajouté en Run #2bis une fois une clé Anthropic
+créditée fournie) testés en conditions réelles (8 cycles chacun, cible
+enrichie à 4 CVE au Run #2), sur les rôles **triage** (`VulnTriageLLM`) et
+**rationale d'évaluation** (`EvaluationRationaleLLM`) uniquement —
+`attack_priority` n'a jamais été exercé, pour aucun des 6 backends
+(limitation structurelle documentée ci-dessus). OpenRouter reste
+explicitement exclu (clé API connue non fonctionnelle, réutilisation de
+credentials inter-projets bloquée à raison par le garde-fou de sécurité) —
+jamais lancé avec une configuration cassée ni présenté comme un résultat
+réel.
 
 **Résultat principal** : sur **n=8 cycles/backend**, les taux de détection
 Suricata obtenus (12.5% soit 1/8, ou 0.0% soit 0/8) ne sont **pas
-statistiquement distinguables** entre modèles — l'écart représente une
-seule détection sur huit épisodes et reste dans la marge du bruit
-d'exploration ε-greedy du Q-Learning. Il n'y a **pas de corrélation claire
-entre taux de fallback JSON et taux de détection** : WhiteRabbitNeo-2-8B
-cumule 100% de fallback sur triage et rationale sans que cela se traduise
-par une détection plus faible ou plus forte que les modèles à 0% de
-fallback (0.0% vs 12.5%, soit toujours 0 ou 1 détection sur 8 — même ordre
-de grandeur). Le seul signal réellement reproductible entre les deux runs
-est le fallback JSON systématique de WhiteRabbitNeo-2-8B lui-même, pas un
-effet sur la détection.
+statistiquement distinguables** entre modèles, Claude inclus — l'écart
+représente une seule détection sur huit épisodes et reste dans la marge du
+bruit d'exploration ε-greedy du Q-Learning. Il n'y a **pas de corrélation
+claire entre taux de fallback JSON et taux de détection** : WhiteRabbitNeo-
+2-8B cumule 100% de fallback sur triage et rationale sans que cela se
+traduise par une détection plus faible ou plus forte que les modèles à 0%
+de fallback (0.0% vs 12.5%, soit toujours 0 ou 1 détection sur 8 — même
+ordre de grandeur, Claude compris). Le seul signal réellement reproductible
+entre les runs est le fallback JSON systématique de WhiteRabbitNeo-2-8B
+lui-même, pas un effet sur la détection. Sur la **latence**, en revanche,
+Claude se distingue nettement (57.7s/8 cycles vs 295–809s en local) — sans
+que cela se traduise par une différence de furtivité, puisque la couche
+d'évasion/attaque réseau reste identique quel que soit le backend
+stratégique.
 
 **Perspectives** :
 - **J7-bis** : corriger `LearningRunner` pour exercer réellement
   `AttackPriorityLLM` (diagnostic et diff disponibles ci-dessus), après
   validation explicite des deux décisions de conception en attente
   (gel du profil, autorité de `cycles` sur `lancer_boucle_evasion`).
-- **Extension Claude/OpenRouter** : rejouer les 2 entrées actuellement
-  `absent` dès qu'une clé Anthropic créditée et une clé OpenRouter valide
-  seront disponibles, avec la même méthodologie (découverte dynamique,
-  smoke test, interleaving par backend) — aucune autre modification du
-  harness n'est nécessaire, `run_j7_campaign.py` les découvre déjà.
+- **Extension OpenRouter** : rejouer l'entrée actuellement `absent` dès
+  qu'une clé OpenRouter valide sera disponible, avec la même méthodologie
+  (découverte dynamique, smoke test, interleaving par backend) — aucune
+  autre modification du harness n'est nécessaire, `run_j7_campaign.py` la
+  découvre déjà. Claude est désormais inclus (Run #2bis, ci-dessus).
