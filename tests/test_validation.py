@@ -810,6 +810,49 @@ def test_check_clock_skew_within_threshold_no_warning() -> bool:
     return result["ok"] is True and result["warning"] is None and result["error"] is None
 
 
+def test_evaluation_agent_eval_debug_logged_every_cycle() -> bool:
+    """Instrumentation J7-ter (détections "fantômes") : eval_debug doit être
+    présent à CHAQUE cycle (baseline_ids() + run()), avec les champs
+    attendus (chemin résolu, positions de curseur, taille fichier,
+    horodatage) — et ne doit JAMAIS changer detected/alert_count, qui
+    restent calculés exactement comme avant son ajout."""
+    now = datetime.now(timezone.utc)
+    tmp = _write_eve_fixture("eve_eval_debug.json", [_alert_event(now)])
+
+    try:
+        ptt = PentestTree("192.168.100.11")
+        agent = EvaluationAgent(
+            ptt, load_profile("stealth"), attacker_ip="192.168.100.10", use_llm=False
+        )
+        agent.rf_client = None  # signal RF neutre, isole le signal Suricata
+
+        agent.baseline_ids(str(tmp))
+        result_1 = agent.run(dry_run=False, eve_log=str(tmp))  # cycle 1 : pas d'alerte nouvelle
+        agent.baseline_ids(str(tmp))
+        result_2 = agent.run(dry_run=False, eve_log=str(tmp))  # cycle 2 : idem
+    finally:
+        tmp.unlink(missing_ok=True)
+
+    debug_1, debug_2 = result_1.get("eval_debug"), result_2.get("eval_debug")
+    expected_resolved = str(tmp.resolve())
+    return (
+        debug_1 is not None
+        and debug_2 is not None
+        and debug_1["baseline"]["resolved_path"] == expected_resolved
+        and debug_1["read"]["resolved_path"] == expected_resolved
+        and debug_1["read"]["cursor_before"] == debug_1["baseline"]["cursor_after"]
+        and debug_2["read"]["cursor_before"] == debug_2["baseline"]["cursor_after"]
+        and isinstance(debug_1["read"]["file_size_before_read"], int)
+        and debug_1["run_call_timestamp"] != debug_2["run_call_timestamp"]
+        # Comportement inchangé par l'ajout du logging : pas d'alerte
+        # nouvelle après le baseline (seek_end ignore l'historique).
+        and result_1["alert_count"] == 0
+        and result_1["detected"] is False
+        and result_2["alert_count"] == 0
+        and result_2["detected"] is False
+    )
+
+
 def test_evaluation_agent_unavailable() -> bool:
     ptt = PentestTree("192.168.100.11")
     agent = EvaluationAgent(ptt, load_profile("stealth"), use_llm=False)
@@ -1882,6 +1925,7 @@ def run_all_tests() -> dict[str, bool]:
         "Attack — timeout non bloquant (non abouti)": test_attack_agent_timeout_not_fatal(),
         "Attack — applique stratégie Q-Learning": test_attack_applies_evasion_strategy(),
         "Evaluation — fusion Suricata + RF": test_evaluation_agent_fusion(),
+        "Evaluation — eval_debug loggé à chaque cycle (J7-ter)": test_evaluation_agent_eval_debug_logged_every_cycle(),
         "Campagne J7 — garde-fou décalage d'horloge détecté (J7-ter)": test_check_clock_skew_detects_significant_drift(),
         "Campagne J7 — décalage d'horloge sous le seuil, pas d'alerte": test_check_clock_skew_within_threshold_no_warning(),
         "Evaluation — signaux indisponibles": test_evaluation_agent_unavailable(),

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -68,6 +69,11 @@ class EvaluationAgent(BaseAgent):
         self._total_detections = 0
         self._reader: SuricataLogReader | ZeekMLLogReader | None = None
         self._eve_path: str | None = None
+        #: Diagnostic du dernier baseline_ids() — instrumentation J7-ter
+        #: (détections "fantômes", voir docs/evidence/j7-ter/README.md).
+        #: Jamais lu par detected/alert_count — uniquement journalisé dans
+        #: le PTT via le champ ``eval_debug`` de ``run()``.
+        self._last_baseline_debug: dict[str, Any] | None = None
 
     def _default_log_path(self) -> str:
         """Chemin par défaut de l'IDS log-based sélectionné par ``ids_backend``."""
@@ -106,6 +112,7 @@ class EvaluationAgent(BaseAgent):
         try:
             reader = self._get_reader(eve_log)
             reader.seek_end()
+            self._last_baseline_debug = getattr(reader, "last_debug", None)
             logger.info("Baseline IDS (%s) : curseur placé en fin de fichier.", self.ids_backend)
         except (FileNotFoundError, PermissionError) as exc:
             logger.warning("Baseline IDS impossible: %s", exc)
@@ -122,11 +129,13 @@ class EvaluationAgent(BaseAgent):
     def run(self, dry_run: bool = False, eve_log: str | None = None) -> dict[str, Any]:
         self._total_scans += 1
         eve_log = eve_log or self._default_log_path()
+        run_call_timestamp = datetime.now(timezone.utc).isoformat()
 
         alert_count = 0
         signatures: list[str] = []
         suricata_detected = False
         source = "unavailable"
+        read_debug: dict[str, Any] | None = None
 
         if eve_log and Path(eve_log).exists():
             source = eve_log
@@ -142,6 +151,7 @@ class EvaluationAgent(BaseAgent):
                 alert_count = len(alerts)
                 signatures = [a["signature"] for a in alerts if a.get("signature")]
                 suricata_detected = alert_count > 0
+                read_debug = getattr(reader, "last_debug", None)
             except (FileNotFoundError, PermissionError) as exc:
                 logger.warning("Lecture du log Suricata impossible: %s", exc)
                 source = "unavailable"
@@ -187,6 +197,18 @@ class EvaluationAgent(BaseAgent):
         rationale_llm = EvaluationRationaleLLM(enabled=self.use_llm)
         result["llm_rationale"] = rationale_llm.decide(result)
         self._log_raw_response(rationale_llm)
+
+        # Instrumentation diagnostique (J7-ter, détections "fantômes" — voir
+        # docs/evidence/j7-ter/README.md) : ajoutée APRÈS l'appel rationale
+        # ci-dessus pour ne jamais faire partie du prompt LLM (donc zéro
+        # effet sur son texte/latence), et APRÈS detected/alert_count qui
+        # restent calculés exactement comme avant. Purement informatif.
+        result["eval_debug"] = {
+            "run_call_timestamp": run_call_timestamp,
+            "eve_log_param": eve_log,
+            "baseline": self._last_baseline_debug,
+            "read": read_debug,
+        }
 
         self.ptt.record_evaluation(
             detected,

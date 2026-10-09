@@ -38,6 +38,13 @@ class SuricataLogReader:
     def __init__(self, eve_path: str) -> None:
         self.eve_path = Path(eve_path)
         self._last_position = 0
+        #: Diagnostic du dernier appel (``seek_end``/``get_recent_alerts``) —
+        #: instrumentation J7-ter pour l'investigation des détections
+        #: "fantômes" (voir docs/evidence/j7-ter/README.md). Jamais lu par la
+        #: logique ``detected``/``alert_count`` elle-même : purement
+        #: informatif, consommé seulement par `EvaluationAgent` pour le
+        #: journaliser dans le PTT.
+        self.last_debug: dict[str, Any] | None = None
 
         if not self.eve_path.exists():
             raise FileNotFoundError(f"Suricata EVE log not found: {eve_path}")
@@ -47,9 +54,18 @@ class SuricataLogReader:
     def seek_end(self) -> None:
         """Place le curseur en fin de fichier — ignore l'historique (recon, cycles passés)."""
         try:
-            self._last_position = self.eve_path.stat().st_size
+            resolved_path = str(self.eve_path.resolve())
+            file_size = self.eve_path.stat().st_size
         except OSError as exc:
             raise PermissionError(f"Cannot stat EVE log: {self.eve_path}") from exc
+        self._last_position = file_size
+        self.last_debug = {
+            "op": "seek_end",
+            "resolved_path": resolved_path,
+            "file_size": file_size,
+            "cursor_after": self._last_position,
+            "system_timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
     def get_recent_alerts(
         self,
@@ -67,6 +83,13 @@ class SuricataLogReader:
         """
         cutoff = datetime.now(timezone.utc) - timedelta(seconds=seconds)
         alerts: list[dict[str, Any]] = []
+
+        cursor_before = self._last_position
+        resolved_path = str(self.eve_path.resolve())
+        try:
+            file_size_before = self.eve_path.stat().st_size
+        except OSError:
+            file_size_before = None
 
         try:
             with open(self.eve_path, encoding="utf-8") as handle:
@@ -115,6 +138,17 @@ class SuricataLogReader:
         except PermissionError as exc:
             raise PermissionError(f"Cannot read EVE log: {self.eve_path}") from exc
 
+        self.last_debug = {
+            "op": "get_recent_alerts",
+            "resolved_path": resolved_path,
+            "cursor_before": cursor_before,
+            "cursor_after": self._last_position,
+            "file_size_before_read": file_size_before,
+            "since_cursor_only": since_cursor_only,
+            "source_ip_filter": source_ip,
+            "alerts_returned": len(alerts),
+            "system_timestamp": datetime.now(timezone.utc).isoformat(),
+        }
         return alerts
 
     def check_detected(self, seconds: int = 10, source_ip: str | None = None) -> bool:
