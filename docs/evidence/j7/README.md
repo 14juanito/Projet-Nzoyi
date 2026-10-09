@@ -131,6 +131,51 @@ sur les deux rôles** — WhiteRabbitNeo-2-8B a 100% sur les deux. Aucun
 modèle n'a un taux différent entre triage et rationale (le problème est
 général au formatage de sortie du modèle, pas spécifique à un prompt).
 
+### Limitation connue — `attack_priority` non exercé
+
+**Cause racine** (diagnostiquée, non corrigée dans ce run) :
+`nzoyi.ui.interactive.LearningRunner.run()` (`nzoyi/ui/interactive.py:515-725`)
+— la classe que `main.py --mode learn` utilise réellement, et donc que
+`run_j7_campaign.py:169` utilise pour toute la campagne — n'appelle jamais
+`OrchestratorAgent._strategic_plan()` / `._strategic_replan()` /
+`._apply_plan()`, contrairement à `OrchestratorAgent.learning_loop()`
+(`nzoyi/agents/orchestrator.py:273-415`) qui, elle, le fait. Conséquence
+mécanique : `AttackAgent.target_ports` reste à sa valeur par défaut `None`
+(`nzoyi/agents/attack.py:36`) pour toute la durée de la campagne, donc
+`AttackAgent._refine_target_priority()` (`nzoyi/agents/attack.py:64-72`)
+retourne avant même d'instancier `AttackPriorityLLM` — à chaque cycle, pour
+chaque backend.
+
+**Impact concret** : `attack_priority.calls = 0` pour les 5 backends locaux
+(Run #1 ET Run #2, voir `results/j7_llm_panel_comparison.json`). Le
+comparatif J7 porte donc réellement sur le module de **triage**
+(`VulnTriageLLM`, exercé avec 4 CVE réelles au Run #2) et sur le module de
+**rationale** (`EvaluationRationaleLLM`, exercé à chaque cycle) — **pas**
+sur la priorisation d'attaque, qui n'a jamais été sollicitée.
+
+**Pas un biais entre backends** : la cause est structurelle — un bug du
+runner CLI, invariant par rapport au modèle chargé — et non un artefact de
+cible ou de modèle. Les 5 backends locaux ont été affectés de façon
+strictement identique (`0/0/0/0/0` appels), donc ce manque n'introduit
+aucune distorsion dans la comparaison inter-modèles faite sur triage et
+rationale.
+
+**Statut** : fix identifié et diffé en diagnostic (non appliqué — voir
+historique de session), reporté à une itération **J7-bis** séparée. Deux
+décisions de conception non triviales restent à valider explicitement par
+l'opérateur avant implémentation :
+1. Geler `self.profile` pendant `LearningRunner` pour empêcher
+   `_apply_plan`/`_apply_profile` de remplacer silencieusement le profil
+   `--profile` choisi en CLI par celui que le LLM stratégique déciderait
+   (second facteur de variance non contrôlé sinon).
+2. Ignorer `plan["lancer_boucle_evasion"]` et garder `cycles` comme seule
+   autorité du runner (déjà tranché côté décision produit, à documenter
+   dans le code au moment du patch plutôt que seulement ici).
+
+Ce fichier n'a pas été modifié : `nzoyi/agents/evasion.py` et
+`nzoyi/rl/qlearning.py` restent hors de portée, et aucune campagne n'a été
+relancée pour cette tâche.
+
 ---
 
 ## Run #1 (2026-10-09, 13:45–14:33 UTC+1) — superseded, conservé pour traçabilité
@@ -233,3 +278,40 @@ Dolphin3.0 (non censuré) a le taux de fallback global le plus bas du panel
 local (0%) — aucune réticence/refus observée sur ce rôle purement
 explicatif (rationale), cohérent avec le choix de ce modèle justement pour
 éviter un refus d'alignement générique sur du contenu offensif de pentest.
+
+## Synthèse finale
+
+**Scope réel du comparatif** : 5 backends Ollama locaux testés en conditions
+réelles (8 cycles chacun, cible enrichie à 4 CVE au Run #2), sur les rôles
+**triage** (`VulnTriageLLM`) et **rationale d'évaluation**
+(`EvaluationRationaleLLM`) uniquement — `attack_priority` n'a jamais été
+exercé (limitation structurelle documentée ci-dessus, identique pour les 5
+backends). OpenRouter est explicitement exclu (clé API connue non
+fonctionnelle, réutilisation de credentials inter-projets bloquée à raison
+par le garde-fou de sécurité) et Claude explicitement en attente de crédits
+— aucun des deux n'a été lancé avec une configuration cassée ni présenté
+comme un résultat réel.
+
+**Résultat principal** : sur **n=8 cycles/backend**, les taux de détection
+Suricata obtenus (12.5% soit 1/8, ou 0.0% soit 0/8) ne sont **pas
+statistiquement distinguables** entre modèles — l'écart représente une
+seule détection sur huit épisodes et reste dans la marge du bruit
+d'exploration ε-greedy du Q-Learning. Il n'y a **pas de corrélation claire
+entre taux de fallback JSON et taux de détection** : WhiteRabbitNeo-2-8B
+cumule 100% de fallback sur triage et rationale sans que cela se traduise
+par une détection plus faible ou plus forte que les modèles à 0% de
+fallback (0.0% vs 12.5%, soit toujours 0 ou 1 détection sur 8 — même ordre
+de grandeur). Le seul signal réellement reproductible entre les deux runs
+est le fallback JSON systématique de WhiteRabbitNeo-2-8B lui-même, pas un
+effet sur la détection.
+
+**Perspectives** :
+- **J7-bis** : corriger `LearningRunner` pour exercer réellement
+  `AttackPriorityLLM` (diagnostic et diff disponibles ci-dessus), après
+  validation explicite des deux décisions de conception en attente
+  (gel du profil, autorité de `cycles` sur `lancer_boucle_evasion`).
+- **Extension Claude/OpenRouter** : rejouer les 2 entrées actuellement
+  `absent` dès qu'une clé Anthropic créditée et une clé OpenRouter valide
+  seront disponibles, avec la même méthodologie (découverte dynamique,
+  smoke test, interleaving par backend) — aucune autre modification du
+  harness n'est nécessaire, `run_j7_campaign.py` les découvre déjà.
