@@ -36,6 +36,7 @@ from nzoyi.llm.orchestrator_llm import LLMOrchestrator
 from nzoyi.llm.vuln_triage_llm import VulnTriageLLM
 from nzoyi.rl.qlearning import EvasionAction, EvasionQLearner, EvasionState
 from nzoyi.tools.ids_log_reader import SuricataLogReader
+from nzoyi.tools.ids_reconciliation import reconcile
 from nzoyi.tools.nmap_wrapper import parse_nmap_xml
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -143,6 +144,109 @@ def test_strip_markdown_fences_surrounding_whitespace() -> bool:
     """Espaces/retours à la ligne superflus avant/après les fences."""
     raw = '\n\n  ```json\n{"a": 1}\n```  \n\n'
     return strip_markdown_fences(raw) == '{"a": 1}'
+
+
+def test_ids_reconciliation_reattributes_late_arriving_alert() -> bool:
+    """Cas identifié en J7-ter : une alerte réelle, timestampée DANS la
+    fenêtre du cycle 1 (avant la lecture du cycle 1), doit être réattribuée
+    au cycle 1 par reconcile() — jamais perdue, et jamais comptée sur le
+    cycle 2 — même si elle n'a jamais été vue par la lecture live de ce
+    cycle (c'est exactement le bug corrigé : son arrivée tardive sur le
+    mirror SSH local l'avait fait passer entre deux lectures)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+
+        ptt_path = tmp_path / "ptt.json"
+        ptt_path.write_text(json.dumps({
+            "nodes": [
+                {
+                    "kind": "ids_feedback",
+                    "timestamp": "2026-01-01T00:00:10+00:00",
+                    "data": {"alert_count": 0, "detected": False, "rf_detected": False},
+                },
+                {
+                    "kind": "ids_feedback",
+                    "timestamp": "2026-01-01T00:00:20+00:00",
+                    "data": {"alert_count": 0, "detected": False, "rf_detected": False},
+                },
+            ]
+        }), encoding="utf-8")
+
+        mirror_path = tmp_path / "eve.json"
+        mirror_path.write_text("\n".join([
+            json.dumps({
+                "event_type": "alert", "timestamp": "2026-01-01T00:00:01+00:00",
+                "src_ip": "192.168.100.10", "dest_ip": "192.168.100.14",
+                "alert": {"signature": "SURICATA Ethertype unknown"},
+            }),
+            # Alerte réelle du cycle 1 (timestamp Suricata 00:00:09, DANS la
+            # fenêtre (None, 00:00:10]) — jamais comptée en direct (c'est le
+            # bug), mais doit être réattribuée ici au cycle 1.
+            json.dumps({
+                "event_type": "alert", "timestamp": "2026-01-01T00:00:09+00:00",
+                "src_ip": "192.168.100.10", "dest_ip": "192.168.100.14",
+                "alert": {"signature": "ET SCAN Potential SSH Scan"},
+            }),
+        ]) + "\n", encoding="utf-8")
+
+        result = reconcile(ptt_path, mirror_path)
+        cycles = result["cycles"]
+        return (
+            result["n"] == 2
+            and cycles[0].corrected_alert_count == 1
+            and cycles[0].corrected_detected is True
+            and cycles[0].original_alert_count == 0
+            and cycles[1].corrected_alert_count == 0
+            and cycles[1].corrected_detected is False
+            and result["alerts_reattributed"] == 1
+            and result["original_detection_rate"] == 0.0
+            and result["corrected_detection_rate"] == 0.5
+        )
+
+
+def test_ids_reconciliation_cycle1_not_contaminated_by_earlier_backend() -> bool:
+    """Le mirror eve.json est continu sur toute une campagne (plusieurs
+    backends qui s'enchaînent, jamais recréé entre deux) : la fenêtre du
+    cycle 1 doit être bornée par le premier evasion_step de CE backend, pas
+    laissée ouverte vers le passé — sinon elle capterait, à tort, les
+    alertes d'un backend précédent exécuté plus tôt dans le même mirror."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+
+        ptt_path = tmp_path / "ptt.json"
+        ptt_path.write_text(json.dumps({
+            "nodes": [
+                # Backend précédent (non modélisé ici, juste son empreinte
+                # temporelle dans le mirror partagé) : voir l'alerte à
+                # 00:00:00 dans le mirror ci-dessous, largement AVANT ce
+                # backend. evasion_step marque le début réel du cycle 1 de
+                # CE backend.
+                {"kind": "evasion_step", "timestamp": "2026-01-01T00:01:00+00:00", "data": {}},
+                {
+                    "kind": "ids_feedback",
+                    "timestamp": "2026-01-01T00:01:10+00:00",
+                    "data": {"alert_count": 0, "detected": False, "rf_detected": False},
+                },
+            ]
+        }), encoding="utf-8")
+
+        mirror_path = tmp_path / "eve.json"
+        mirror_path.write_text("\n".join([
+            # Alerte d'un backend ANTÉRIEUR — ne doit jamais compter pour
+            # le cycle 1 de CE backend (hors de sa fenêtre réelle).
+            json.dumps({
+                "event_type": "alert", "timestamp": "2026-01-01T00:00:00+00:00",
+                "src_ip": "192.168.100.10", "dest_ip": "192.168.100.14",
+                "alert": {"signature": "ET SCAN Potential SSH Scan"},
+            }),
+        ]) + "\n", encoding="utf-8")
+
+        result = reconcile(ptt_path, mirror_path)
+        return (
+            result["n"] == 1
+            and result["cycles"][0].corrected_alert_count == 0
+            and result["cycles"][0].corrected_detected is False
+        )
 
 
 def test_stealth_profile() -> bool:
@@ -1719,6 +1823,8 @@ def run_all_tests() -> dict[str, bool]:
         "JSON LLM — strip fences nues ```...```": test_strip_markdown_fences_bare(),
         "JSON LLM — sans fences, inchangé": test_strip_markdown_fences_absent_unchanged(),
         "JSON LLM — espaces/retours à la ligne superflus": test_strip_markdown_fences_surrounding_whitespace(),
+        "IDS reconciliation — réattribution par horodatage (J7-ter)": test_ids_reconciliation_reattributes_late_arriving_alert(),
+        "IDS reconciliation — cycle 1 non contaminé par un backend antérieur": test_ids_reconciliation_cycle1_not_contaminated_by_earlier_backend(),
         "Q-Learning save/load": test_qlearning_save_load(),
         "PTT thread safety": test_ptt_thread_safety(),
         "Recon agent — scan réel (mocké)": test_recon_agent_real_scan(),
