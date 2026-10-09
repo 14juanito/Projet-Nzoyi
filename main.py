@@ -20,14 +20,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-import requests
-
 from nzoyi import __version__
 from nzoyi.agents.orchestrator import OrchestratorAgent
 from nzoyi.core.config import load_profile
 from nzoyi.core.config import zeek_ml_log as DEFAULT_ZEEK_ML_LOG
 from nzoyi.core.ptt import PentestTree
 from nzoyi.llm.orchestrator_llm import DEFAULT_PROVIDER, VALID_PROVIDERS
+from nzoyi.llm.panel_discovery import discover_ollama_models
 from nzoyi.ui.banner import (
     Color,
     print_banner,
@@ -66,9 +65,6 @@ def _load_dotenv(path: str = ".env") -> None:
         value = value.strip().strip('"').strip("'")
         if key and key not in os.environ:
             os.environ[key] = value
-
-
-OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
 
 
 def _active_llm_provider() -> str:
@@ -111,25 +107,16 @@ def _prompt_llm_model_menu() -> None:
     """Menu interactif listant les modèles Ollama locaux, pour choisir un run.
 
     N'est appelé que depuis `main()`, jamais en mode `--test` (aucun test
-    automatisé ne doit attendre une saisie). Interroge l'endpoint natif Ollama
-    `GET /api/tags` (pas besoin du SDK `openai` pour une simple liste). Si
-    Ollama n'est pas lancé, ou qu'aucun modèle n'est installé, ou que la
-    saisie est invalide/vide : affiche un message clair et continue avec la
-    configuration `.env` par défaut — ne bloque et ne fait jamais échouer le
-    run. N'écrit le choix que dans `os.environ` (via `_set_llm_model_override`),
-    jamais dans `.env`.
+    automatisé ne doit attendre une saisie). Découverte via
+    `nzoyi.llm.panel_discovery.discover_ollama_models` (même requête native
+    Ollama `GET /api/tags` qu'avant J7, désormais factorisée pour être
+    réutilisée par le comparatif non interactif). Si Ollama n'est pas lancé,
+    ou qu'aucun modèle n'est installé, ou que la saisie est invalide/vide :
+    affiche un message clair et continue avec la configuration `.env` par
+    défaut — ne bloque et ne fait jamais échouer le run. N'écrit le choix que
+    dans `os.environ` (via `_set_llm_model_override`), jamais dans `.env`.
     """
-    try:
-        response = requests.get(OLLAMA_TAGS_URL, timeout=3)
-        response.raise_for_status()
-        models = [m["name"] for m in response.json().get("models", [])]
-    except requests.RequestException:
-        print(
-            f"  {Color.DIM}Ollama inatteignable sur {OLLAMA_TAGS_URL} — "
-            f"poursuite avec la configuration .env par défaut.{Color.RESET}\n"
-        )
-        return
-
+    models = discover_ollama_models()
     if not models:
         print(
             f"  {Color.DIM}Aucun modèle Ollama local (voir `ollama list`) — "

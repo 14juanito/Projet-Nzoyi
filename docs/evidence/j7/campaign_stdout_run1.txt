@@ -1,0 +1,960 @@
+Panel découvert (6 backend(s)) : ['ollama:hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M', 'ollama:hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest', 'ollama:hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest', 'ollama:hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M', 'ollama:hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest', 'openrouter']
+2026-10-09 13:45:16,958 nzoyi.llm.vuln_triage INFO Triage vuln prompt (claude-sonnet-5): [{"cve_id": "CVE-TEST-0001", "severity": "high", "type": "smoke_test", "port": 9999, "service": "smoke"}]
+2026-10-09 13:46:05,640 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:46:05,670 nzoyi.llm.vuln_triage INFO Triage vuln réponse: {"ordre_cve_ids": ["CVE-TEST-0001"], "raison": "La vulnérabilité est détectée sur le port 9999 et est de type 'smoke_test', ce qui la rend facile à exploiter."}
+  smoke [ollama:hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M]: OK — 48.713s
+
+=== Campagne réelle — ollama:hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M ===
+
+  [38;5;214m🧠 Boucle d'apprentissage — 8 cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+2026-10-09 13:46:08,611 nzoyi.agents.recon INFO Nmap a trouvé 1 ports ouverts sur 192.168.100.14
+2026-10-09 13:46:08,626 nzoyi.llm.vuln_triage INFO Triage vuln prompt (hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M): [{"cve_id": "CVE-2023-38408", "severity": "high", "type": "pkcs11_rce", "port": 22, "service": "ssh"}]
+2026-10-09 13:46:27,979 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:46:27,980 nzoyi.llm.vuln_triage INFO Triage vuln réponse: {"ordre_cve_ids": ["CVE-2023-38408"], "raison": "La vulnérabilité PKCS#11 RCE est une priorité élevée en raison de sa sévérité et de sa facilité d'exploitation."}
+2026-10-09 13:46:27,980 nzoyi.agents.vulnerability INFO Found 1 findings
+2026-10-09 13:46:27,981 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:46:28,002 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:46:29,734 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:47:48,823 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:47:48,825 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le résultat d'évaluation est indiqué comme non détecté (detected: false). Suricata n'a pas détecté d'alerte (suricata_detected: false). Le modèle RF n'a pas détecté d'alerte non plus (rf_detected: false). La probabilité de détection du modèle RF est de 0.0 (rf_proba: 0.0). Il n'y a pas eu de détection par Suricata (alert_count: 0). Aucune signature n'a été détectée (signatures: []). La taux de détection est de 0.0 (detection_rate: 0.0). Le fichier d'évaluation provient de /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. Le test a été effectué en mode dry_run (dry_run: false)."}
+  1        NON                 -0.5                0.1990     0.0%        
+2026-10-09 13:47:48,838 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:47:50,355 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M): {"detected": true, "suricata_detected": true, "rf_detected": false, "rf_proba": 0.0, "alert_count": 1, "signatures": ["ET SCAN Potential SSH Scan"], "detection_rate": 0.5, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:48:38,412 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:48:38,414 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le résultat indique que Suricata a détecté une attaque potentiellement dangereuse, mais le modèle RF n'a pas détecté de menace. Cela peut être dû à une faible probabilité de détection du modèle RF (0.0) et à un taux de détection de 0.5. Suricata a détecté une attaque potentiellement dangereuse avec la signature 'ET SCAN Potential SSH Scan'. Le résultat provient d'un fichier 'eve_mirror.json' et le test n'a pas été exécuté en mode 'dry_run'."}
+  2        OUI                 -0.3                0.1980     50.0%       
+2026-10-09 13:48:38,467 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:48:40,212 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.3333333333333333, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:49:33,467 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:49:33,468 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le résultat indique que le pentest a été effectué sur un lab isolé, et que le résultat de l'évaluation est déjà calculé. Suricata n'a pas détecté d'alerte, et le modèle RF a également détecté 0 alerte. La probabilité de détection du modèle RF est de 0.0. Le taux de détection est de 0.3333333333333333. Le résultat provient du fichier /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. Le pentest a été effectué en mode dry_run."}
+  3        NON                 -0.5                0.1970     33.3%       
+2026-10-09 13:49:33,480 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:49:35,191 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.25, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:50:22,821 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:50:22,822 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le résultat indique que l'analyse n'a pas détecté d'activité malveillante. Suricata n'a pas déclenché d'alerte, et le modèle RF a également indiqué une probabilité de 0.0 pour une activité malveillante. Aucune signature n'a été déclenchée, et la taux de détection est de 0.25. Le fichier d'entrée utilisé est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a été effectuée en mode dry_run."}
+2026-10-09 13:50:22,834 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:50:24,575 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.2, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:51:29,242 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:51:29,243 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le résultat d'évaluation est indiqué comme non détecté (detected: false). Cela signifie que ni Suricata ni le modèle RF n'ont détecté d'activité malveillante. Suricata n'a pas déclenché d'alerte (suricata_detected: false), et le modèle RF n'a pas attribué une probabilité de détection supérieure à 0.5 (rf_detected: false, rf_proba: 0.0). Aucune signature n'a été déclenchée (signatures: []). Le taux de détection est de 0.2, ce qui est inférieur à 0.5, donc aucune alerte n'a été déclenchée. Le fichier d'évaluation provient de /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. Le mode dry_run est désactivé (dry_run: false)."}
+2026-10-09 13:51:29,255 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:51:30,811 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.16666666666666666, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:52:20,639 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:52:20,640 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le résultat indique que le pentest a été effectué sur un lab isolé, et que le résultat de l'évaluation est déjà calculé. Suricata n'a pas détecté d'alerte, et le modèle RF a également détecté 0 alerte. La probabilité de détection du modèle RF est de 0.0. Le taux de détection est de 16.67%. Le résultat provient du fichier /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. Le pentest a été effectué en mode dry_run."}
+2026-10-09 13:52:20,650 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:52:22,388 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.14285714285714285, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:53:15,795 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:53:15,795 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le résultat indique que le pentest a été effectué sur un lab isolé, et que le résultat de l'évaluation est déjà calculé. Suricata n'a pas détecté d'alerte, et le modèle RF a également détecté 0 alerte. La probabilité de détection du modèle RF est de 0.0. Le taux de détection est de 0.14285714285714285. Le résultat provient du fichier /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. Le pentest a été effectué en mode dry_run."}
+2026-10-09 13:53:15,806 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:53:17,549 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.125, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:54:26,897 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:54:26,898 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le résultat d'évaluation est indiqué comme non détecté (detected: false) et les détails de la détection par Suricata (suricata_detected: false) et par le modèle RF (rf_detected: false) sont également indiqués comme non détectés. La probabilité de détection par le modèle RF (rf_proba: 0.0) est également indiquée comme nulle. Le nombre d'alertes (alert_count: 0) est également indiqué comme nul. Les signatures (signatures: []) sont également indiquées comme vides. La taux de détection (detection_rate: 0.125) est également indiqué comme 0.125. Le fichier source (source: /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json) est également indiqué. Le mode dry_run (dry_run: false) est également indiqué comme non activé."}
+  8        NON                 -0.5                0.1921     12.5%       
+
+  [38;5;214m📊 Historique des cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+  1        NON                 -0.5                0.1990     0.0%        
+  2        OUI                 -0.3                0.1980     50.0%       
+  3        NON                 -0.5                0.1970     33.3%       
+  4        NON                 -0.5                0.1960     25.0%       
+  5        NON                 -0.5                0.1950     20.0%       
+  6        NON                 -0.4                0.1941     16.7%       
+  7        NON                 -0.5                0.1931     14.3%       
+  8        NON                 -0.5                0.1921     12.5%       
+  [2m───────────────────────────────────────────────────────[0m
+
+  ══════════════════════════════════════════════════
+    Résultats de l'apprentissage
+  ══════════════════════════════════════════════════
+  │  Cycles complétés          8
+  │  Taux de détection final   12.5%
+  │  Total détections          1/8
+  │  Cycles furtifs (NON)      7/8
+  │  Epsilon final             0.1921
+  ══════════════════════════════════════════════════
+
+  [38;5;81mDébrief signaux[0m
+  • Suricata a alerté sur 1/8 cycles
+  • RF ≥ seuil sur 0/8 cycles
+  [38;5;114m✓ 7 cycle(s) sans détection (Suricata silencieux ET RF sous seuil).[0m
+  [38;5;214m↑ Détection 0% → 12% — l'agent explore encore (ε=0.192).[0m
+
+  ✅ détection finale 0.125, 501.23s
+2026-10-09 13:54:26,914 nzoyi.llm.vuln_triage INFO Triage vuln prompt (claude-sonnet-5): [{"cve_id": "CVE-TEST-0001", "severity": "high", "type": "smoke_test", "port": 9999, "service": "smoke"}]
+2026-10-09 13:55:26,034 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:55:26,045 nzoyi.llm.vuln_triage INFO Triage vuln réponse: {"ordre_cve_ids": ["CVE-TEST-0001"], "raison": "high"}
+  smoke [ollama:hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest]: OK — 59.13s
+
+=== Campagne réelle — ollama:hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest ===
+
+  [38;5;214m🧠 Boucle d'apprentissage — 8 cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+2026-10-09 13:55:27,215 nzoyi.agents.recon INFO Nmap a trouvé 1 ports ouverts sur 192.168.100.14
+2026-10-09 13:55:27,230 nzoyi.llm.vuln_triage INFO Triage vuln prompt (hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest): [{"cve_id": "CVE-2023-38408", "severity": "high", "type": "pkcs11_rce", "port": 22, "service": "ssh"}]
+2026-10-09 13:55:41,895 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:55:41,896 nzoyi.llm.vuln_triage INFO Triage vuln réponse: {"ordre_cve_ids": ["CVE-2023-38408"], "raison": "high"}
+2026-10-09 13:55:41,896 nzoyi.agents.vulnerability INFO Found 1 findings
+2026-10-09 13:55:41,898 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:55:41,923 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:55:43,675 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:56:40,388 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:56:40,389 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système n'a détecté aucune menace, et les signatures RF et Suricata n'ont pas été activées. Aucune alerte n'a été générée et le taux de détection est de 0%."}
+  1        NON                 -0.5                0.1990     0.0%        
+2026-10-09 13:56:40,400 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:56:41,947 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest): {"detected": true, "suricata_detected": true, "rf_detected": false, "rf_proba": 0.0, "alert_count": 1, "signatures": ["ET SCAN Potential SSH Scan"], "detection_rate": 0.5, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:57:34,662 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:57:34,663 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système a détecté une activité suspecte correspondant à un scan potentiel de SSH, avec une détection confirmée par Suricata. RF n'a pas détecté d'activité similaire et n'a pas attribué de probabilité. Il y a eu une alerte avec une détection de taux de 50% et une signature correspondante à 'ET SCAN Potential SSH Scan'. La source du résultat est indiquée et le test n'est pas en mode secoussage."}
+  2        OUI                 -0.3                0.1980     50.0%       
+2026-10-09 13:57:34,679 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:57:36,442 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.3333333333333333, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:58:23,643 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:58:23,644 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système n'a détecté aucune menace, et les signatures RF et Suricata n'ont pas été activées. Le taux de détection est de 33.33%, et il n'y a aucune alerte ou signature associée. Le fichier source est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json, et le test n'est pas en mode secouage secouage."}
+  3        NON                 -0.5                0.1970     33.3%       
+2026-10-09 13:58:23,657 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:58:25,380 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.25, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:58:52,960 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:58:52,960 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système n'a détecté aucune menace, et les signatures RF et Suricata n'ont pas été activées. Le taux de détection est de 0,25 et il n'y a aucune alerte."}
+2026-10-09 13:58:52,971 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:58:54,709 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.2, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:59:23,135 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:59:23,136 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système n'a détecté aucune menace, et les signatures RF et Suricata n'ont pas été activées. Le taux de détection est de 20%, et il n'y a aucune alerte ou signature associée."}
+2026-10-09 13:59:23,149 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:59:24,686 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.16666666666666666, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 13:59:50,010 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 13:59:50,011 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système n'a détecté aucune menace, et les signatures RF et Suricata n'ont pas été activées. Le taux de détection est de 16.67%."}
+2026-10-09 13:59:50,023 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 13:59:51,741 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.14285714285714285, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:00:17,358 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:00:17,359 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système n'a détecté aucune menace, et les signatures RF et Suricata n'ont pas été activées. Le taux de détection est de 14,29%."}
+2026-10-09 14:00:17,369 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:00:19,115 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.125, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:00:46,253 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:00:46,254 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système n'a détecté aucune menace, et les signatures RF et Suricata n'ont pas été activées. Le taux de détection est de 0,125 et il n'y a aucune alerte."}
+  8        NON                 -0.5                0.1921     12.5%       
+
+  [38;5;214m📊 Historique des cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+  1        NON                 -0.5                0.1990     0.0%        
+  2        OUI                 -0.3                0.1980     50.0%       
+  3        NON                 -0.5                0.1970     33.3%       
+  4        NON                 -0.5                0.1960     25.0%       
+  5        NON                 -0.5                0.1950     20.0%       
+  6        NON                 -0.4                0.1941     16.7%       
+  7        NON                 -0.5                0.1931     14.3%       
+  8        NON                 -0.5                0.1921     12.5%       
+  [2m───────────────────────────────────────────────────────[0m
+
+  ══════════════════════════════════════════════════
+    Résultats de l'apprentissage
+  ══════════════════════════════════════════════════
+  │  Cycles complétés          8
+  │  Taux de détection final   12.5%
+  │  Total détections          1/8
+  │  Cycles furtifs (NON)      7/8
+  │  Epsilon final             0.1921
+  ══════════════════════════════════════════════════
+
+  [38;5;81mDébrief signaux[0m
+  • Suricata a alerté sur 1/8 cycles
+  • RF ≥ seuil sur 0/8 cycles
+  [38;5;114m✓ 7 cycle(s) sans détection (Suricata silencieux ET RF sous seuil).[0m
+  [38;5;214m↑ Détection 0% → 12% — l'agent explore encore (ε=0.192).[0m
+
+  ✅ détection finale 0.125, 320.22s
+2026-10-09 14:00:46,266 nzoyi.llm.vuln_triage INFO Triage vuln prompt (claude-sonnet-5): [{"cve_id": "CVE-TEST-0001", "severity": "high", "type": "smoke_test", "port": 9999, "service": "smoke"}]
+2026-10-09 14:02:19,178 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:02:19,185 nzoyi.llm.vuln_triage INFO Triage vuln réponse:  {"ordre_cve_ids": ["CVS-2019-12345", "CVE-2020-1337", "CVE-2021-20001"], "raisons": ["CVE-2019-12345: High severity SQL injection vulnerability in MySQL database.\nCVE-2020-1337: High severity command injection vulnerability in Apache web server.\nCVE-2021-20001: Critical remote code execution vulnerability in Microsoft Windows operating system."]}
+  smoke [ollama:hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest]: OK — 92.918s
+
+=== Campagne réelle — ollama:hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest ===
+
+  [38;5;214m🧠 Boucle d'apprentissage — 8 cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+2026-10-09 14:02:20,255 nzoyi.agents.recon INFO Nmap a trouvé 1 ports ouverts sur 192.168.100.14
+2026-10-09 14:02:20,268 nzoyi.llm.vuln_triage INFO Triage vuln prompt (hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest): [{"cve_id": "CVE-2023-38408", "severity": "high", "type": "pkcs11_rce", "port": 22, "service": "ssh"}]
+2026-10-09 14:02:44,235 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:02:44,236 nzoyi.llm.vuln_triage INFO Triage vuln réponse:  {"ordre_cve_ids": ["CVS-2023-38408"], "raisons": "Exploitation prioritée en raison de sa gravité élevée et de sa facilité d'exploitation."}
+2026-10-09 14:02:44,237 nzoyi.agents.vulnerability INFO Found 1 findings
+2026-10-09 14:02:44,239 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:02:44,264 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:02:45,986 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:03:39,732 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:03:39,733 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse:  {"ratioal": "The detected signatures were not found in the lab isolate."}
+  1        NON                 -0.5                0.1990     0.0%        
+2026-10-09 14:03:39,746 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:03:41,230 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest): {"detected": true, "suricata_detected": true, "rf_detected": false, "rf_proba": 0.0, "alert_count": 1, "signatures": ["ET SCAN Potential SSH Scan"], "detection_rate": 0.5, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:04:41,175 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:04:41,176 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse:  {"ratioal": "Pentesting lab isolated environment, detected potential SSH scan using Suricata and the signature 'ET SCAN Potential SSH Scan'. The detection rate is 0.5 and the alert count is 1. The source of the detection is '/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve\_mirror.json' and the dry run option is set to false."}
+2026-10-09 14:04:41,177 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Invalid \escape: line 1 column 308 (char 307)) — chaîne vide.
+  2        OUI                 -0.3                0.1980     50.0%       
+2026-10-09 14:04:41,203 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:04:42,962 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.3333333333333333, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:05:06,296 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:05:06,296 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse:  {"ratioal": "The detected signatures were not found in the lab isolate."}
+  3        NON                 -0.5                0.1970     33.3%       
+2026-10-09 14:05:06,308 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:05:08,070 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.25, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:06:00,310 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:06:00,311 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse:  {"ratioal": "The detected value of DÉJÀ CALCULÉ (fuision deterministe Suricaata + RF) is not detected and the RF probability is 0.0. No alerts were triggered and there are no signatures associated with this detection. The detection rate is 0.25 and the source is '/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve\_mirror.json'. The dry run option is set to false."}
+2026-10-09 14:06:00,311 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Invalid \escape: line 1 column 347 (char 346)) — chaîne vide.
+2026-10-09 14:06:00,322 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:06:02,096 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.2, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:06:55,215 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:06:55,216 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse:  {"ratioal": "The detected value of DÉJÀ CALCULÉ (fuision deterministe Suricaata + RF) is not detected and the RF probability is 0.0. No alerts were triggered and there are no signatures associated with this detection. The detection rate is 0.2 and the source is '/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve\_mirror.json'. The dry run option is set to false."}
+2026-10-09 14:06:55,216 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Invalid \escape: line 1 column 346 (char 345)) — chaîne vide.
+2026-10-09 14:06:55,229 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:06:56,739 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.16666666666666666, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:07:19,448 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:07:19,449 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse:  {"ratioal": "The detected signatures were not found in the provided signatures list."}
+2026-10-09 14:07:19,459 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:07:21,162 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.14285714285714285, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:07:43,543 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:07:43,551 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse:  {"ratioal": "The detected signatures were not found in the lab isolate."}
+2026-10-09 14:07:43,562 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:07:45,273 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.125, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:08:11,316 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:08:11,316 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse:  {"ratioal": "The detected value of DÉJÀ CALCULÉ (fuision deterministe Suricaata + RF) is not detected and the RF probability is 0.0."}
+  8        NON                 -0.5                0.1921     12.5%       
+
+  [38;5;214m📊 Historique des cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+  1        NON                 -0.5                0.1990     0.0%        
+  2        OUI                 -0.3                0.1980     50.0%       
+  3        NON                 -0.5                0.1970     33.3%       
+  4        NON                 -0.5                0.1960     25.0%       
+  5        NON                 -0.5                0.1950     20.0%       
+  6        NON                 -0.4                0.1941     16.7%       
+  7        NON                 -0.5                0.1931     14.3%       
+  8        NON                 -0.5                0.1921     12.5%       
+  [2m───────────────────────────────────────────────────────[0m
+
+  ══════════════════════════════════════════════════
+    Résultats de l'apprentissage
+  ══════════════════════════════════════════════════
+  │  Cycles complétés          8
+  │  Taux de détection final   12.5%
+  │  Total détections          1/8
+  │  Cycles furtifs (NON)      7/8
+  │  Epsilon final             0.1921
+  ══════════════════════════════════════════════════
+
+  [38;5;81mDébrief signaux[0m
+  • Suricata a alerté sur 1/8 cycles
+  • RF ≥ seuil sur 0/8 cycles
+  [38;5;114m✓ 7 cycle(s) sans détection (Suricata silencieux ET RF sous seuil).[0m
+  [38;5;214m↑ Détection 0% → 12% — l'agent explore encore (ε=0.192).[0m
+
+  ✅ détection finale 0.125, 352.14s
+2026-10-09 14:08:11,325 nzoyi.llm.vuln_triage INFO Triage vuln prompt (claude-sonnet-5): [{"cve_id": "CVE-TEST-0001", "severity": "high", "type": "smoke_test", "port": 9999, "service": "smoke"}]
+2026-10-09 14:09:49,082 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:09:49,091 nzoyi.llm.vuln_triage INFO Triage vuln réponse: ```json
+{
+    "ordre_cve_ids": [
+        "CVE-TEST-0002",
+        "CVE-TEST-0001"
+    ],
+    "raison": "CVE-TEST-0002 est plus grave et plus facile à exploiter que CVE-TEST-0001."
+}
+```
+
+```json
+{
+    "ordre_cve_ids": [
+        "CVE-TEST-0003",
+        "CVE-TEST-0004",
+        "CVE-TEST-0005"
+    ],
+    "raison": "CVE-TEST-0003 est plus grave et plus facile à exploiter que CVE-TEST-0004, qui est elle-même plus grave et plus facile à exploiter que CVE-TEST-0005."
+}
+```
+2026-10-09 14:09:49,092 nzoyi.llm.vuln_triage WARNING Triage vuln échoué (Expecting value: line 1 column 1 (char 0)) — repli déterministe.
+2026-10-09 14:09:49,092 nzoyi.llm.vuln_triage INFO Triage vuln fallback: tri déterministe (1 findings).
+  smoke [ollama:hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M]: ÉCHEC (call_or_parse_failed) — 97.766s
+  ⚠ smoke test échoué pour ollama:hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M — campagne réelle tentée quand même.
+
+=== Campagne réelle — ollama:hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M ===
+
+  [38;5;214m🧠 Boucle d'apprentissage — 8 cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+2026-10-09 14:09:50,424 nzoyi.agents.recon INFO Nmap a trouvé 1 ports ouverts sur 192.168.100.14
+2026-10-09 14:09:50,489 nzoyi.llm.vuln_triage INFO Triage vuln prompt (hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M): [{"cve_id": "CVE-2023-38408", "severity": "high", "type": "pkcs11_rce", "port": 22, "service": "ssh"}]
+2026-10-09 14:10:28,777 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:10:28,779 nzoyi.llm.vuln_triage INFO Triage vuln réponse: ```json
+{
+    "ordre_cve_ids": [
+        "CVE-2023-38408",
+        "DVWA-SQLI"
+    ],
+    "raison": "CVE-2023-38408 est une vulnérabilité de type RCE via PKCS11, ce qui signifie qu'elle permet d'exécuter du code arbitraire sur le serveur. C'est donc une vulnérabilité très grave et elle doit être exploitée en premier."
+}
+```
+2026-10-09 14:10:28,779 nzoyi.llm.vuln_triage WARNING Triage vuln échoué (Expecting value: line 1 column 1 (char 0)) — repli déterministe.
+2026-10-09 14:10:28,779 nzoyi.llm.vuln_triage INFO Triage vuln fallback: tri déterministe (1 findings).
+2026-10-09 14:10:28,780 nzoyi.agents.vulnerability INFO Found 1 findings
+2026-10-09 14:10:28,781 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:10:28,807 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:10:30,574 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:12:41,396 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:12:41,398 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: ```json
+{
+  "rationale": "The traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious."
+}
+```
+
+This traffic is not malicious because it does not match any known signatures in Suricata, and the Random Forest (RF) model also did not detect it as malicious. The RF model has a probability of 0.0 for being malicious, which means that it is highly unlikely to be malicious.
+
+The alert count is 0, indicating that no alerts were generated by Suricata during the analysis of this traffic. This suggests that the traffic does not contain any suspicious or potentially harmful activities.
+
+The signatures array is empty because there are no known signatures in Suricata that match the observed traffic patterns.
+
+The detection rate is also 0.0, which means that the RF model did not detect any malicious behavior in the traffic.
+
+The source of this information is "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", which is where the Eve JSON file containing the traffic analysis results was stored.
+
+Finally, the dry_run flag is set to false, indicating that this is not a dry run and the actual traffic analysis has been performed. The assistant will provide an explanation based on the actual analysis results rather than a hypothetical scenario.
+2026-10-09 14:12:41,399 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Expecting value: line 1 column 1 (char 0)) — chaîne vide.
+  1        NON                 -0.5                0.1990     0.0%        
+2026-10-09 14:12:41,415 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:12:42,994 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:14:01,316 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:14:01,329 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: ```json
+{
+  "rationale": "The traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious."
+}
+```
+
+This traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious. The RF model has a probability of 0% that this traffic is malicious, which means it is very unlikely to be malicious. Additionally, there are no alerts from Suricata, which indicates that the traffic does not contain any suspicious patterns or behaviors that would trigger an alert.
+
+The absence of both signatures and RF detection suggests that the traffic is likely benign and does not pose a threat to the network. However, it's important to note that this analysis is based on the current state of knowledge and may change as new threats emerge or existing ones evolve. It's always recommended to have up-to-date security measures in place and regularly review and update them to ensure ongoing protection against potential threats.
+
+In conclusion, the traffic does not appear to be malicious based on the provided information, but it is important to continuously monitor and assess network traffic for any signs of compromise or unusual activity.```
+2026-10-09 14:14:01,330 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Expecting value: line 1 column 1 (char 0)) — chaîne vide.
+  2        NON                 -0.3                0.1980     0.0%        
+2026-10-09 14:14:01,363 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:14:03,143 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:15:18,507 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:15:18,507 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: ```json
+{
+  "rationale": "The traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious."
+}
+```
+
+This traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious. The RF model has a probability of 0% that this traffic is malicious, which means it is very unlikely to be malicious. Additionally, there are no alerts from Suricata, which indicates that the traffic does not contain any suspicious patterns or behaviors that would trigger an alert.
+
+The absence of both signatures and RF detection suggests that the traffic is likely benign and does not pose a threat to the network. However, it's important to note that this analysis is based on the current state of knowledge and may change as new threats emerge or existing ones evolve. It's always recommended to have up-to-date security measures in place and regularly review and update them to ensure ongoing protection against potential threats.
+
+In conclusion, the traffic does not appear to be malicious based on the provided information, but it is important to continuously monitor and assess network traffic for any signs of compromise or unusual activity.```
+2026-10-09 14:15:18,507 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Expecting value: line 1 column 1 (char 0)) — chaîne vide.
+  3        NON                 -0.5                0.1970     0.0%        
+2026-10-09 14:15:18,522 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:15:20,235 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:16:36,195 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:16:36,196 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: ```json
+{
+  "rationale": "The traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious."
+}
+```
+
+This traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious. The RF model has a probability of 0% that this traffic is malicious, which means it is very unlikely to be malicious. Additionally, there are no alerts from Suricata, which indicates that the traffic does not contain any suspicious patterns or behaviors that would trigger an alert.
+
+The absence of both signatures and RF detection suggests that the traffic is likely benign and does not pose a threat to the network. However, it's important to note that this analysis is based on the current state of knowledge and may change as new threats emerge or existing ones evolve. It's always recommended to have up-to-date security measures in place and regularly review and update them to ensure ongoing protection against potential threats.
+
+In conclusion, the traffic does not appear to be malicious based on the provided information, but it is important to continuously monitor and assess network traffic for any signs of compromise or unusual activity.```
+2026-10-09 14:16:36,196 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Expecting value: line 1 column 1 (char 0)) — chaîne vide.
+2026-10-09 14:16:36,207 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:16:37,951 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:17:50,946 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:17:50,947 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: ```json
+{
+  "rationale": "The traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious."
+}
+```
+
+This traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious. The RF model has a probability of 0% that this traffic is malicious, which means it is very unlikely to be malicious. Additionally, there are no alerts from Suricata, which indicates that the traffic does not contain any suspicious patterns or behaviors that would trigger an alert.
+
+The absence of both signatures and RF detection suggests that the traffic is likely benign and does not pose a threat to the network. However, it's important to note that this analysis is based on the current state of knowledge and may change as new threats emerge or existing ones evolve. It's always recommended to have up-to-date security measures in place and regularly review and update them to ensure ongoing protection against potential threats.
+
+In conclusion, the traffic does not appear to be malicious based on the provided information, but it is important to continuously monitor and assess network traffic for any signs of compromise or unusual activity.```
+2026-10-09 14:17:50,947 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Expecting value: line 1 column 1 (char 0)) — chaîne vide.
+2026-10-09 14:17:50,960 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:17:52,502 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:19:07,173 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:19:07,174 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: ```json
+{
+  "rationale": "The traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious."
+}
+```
+
+This traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious. The RF model has a probability of 0% that this traffic is malicious, which means it is very unlikely to be malicious. Additionally, there are no alerts from Suricata, which indicates that the traffic does not contain any suspicious patterns or behaviors that would trigger an alert.
+
+The absence of both signatures and RF detection suggests that the traffic is likely benign and does not pose a threat to the network. However, it's important to note that this analysis is based on the current state of knowledge and may change as new threats emerge or existing ones evolve. It's always recommended to have up-to-date security measures in place and regularly review and update them to ensure ongoing protection against potential threats.
+
+In conclusion, the traffic does not appear to be malicious based on the provided information, but it is important to continuously monitor and assess network traffic for any signs of compromise or unusual activity.```
+2026-10-09 14:19:07,174 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Expecting value: line 1 column 1 (char 0)) — chaîne vide.
+2026-10-09 14:19:07,193 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:19:08,968 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:20:20,198 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:20:20,199 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: ```json
+{
+  "rationale": "The traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious."
+}
+```
+
+This traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious. The RF model has a probability of 0% that this traffic is malicious, which means it is very unlikely to be malicious. Additionally, there are no alerts from Suricata, which indicates that the traffic does not contain any suspicious patterns or behaviors that would trigger an alert.
+
+The absence of both signatures and RF detection suggests that the traffic is likely benign and does not pose a threat to the network. However, it's important to note that this analysis is based on the current state of knowledge and may change as new threats emerge or existing ones evolve. It's always recommended to have up-to-date security measures in place and regularly review and update them to ensure ongoing protection against potential threats.
+
+In conclusion, the traffic does not appear to be malicious based on the provided information, but it is important to continuously monitor and assess network traffic for any signs of compromise or unusual activity.```
+2026-10-09 14:20:20,199 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Expecting value: line 1 column 1 (char 0)) — chaîne vide.
+2026-10-09 14:20:20,212 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:20:21,946 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:21:34,139 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:21:34,140 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: ```json
+{
+  "rationale": "The traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious."
+}
+```
+
+This traffic is not malicious because it does not match any known signatures and the RF model did not detect it as malicious. The RF model has a probability of 0% that this traffic is malicious, which means it is very unlikely to be malicious. Additionally, there are no alerts from Suricata, which indicates that the traffic does not contain any suspicious patterns or behaviors that would trigger an alert.
+
+The absence of both signatures and RF detection suggests that the traffic is likely benign and does not pose a threat to the network. However, it's important to note that this analysis is based on the current state of knowledge and may change as new threats emerge or existing ones evolve. It's always recommended to have up-to-date security measures in place and regularly review and update them to ensure ongoing protection against potential threats.
+
+In conclusion, the traffic does not appear to be malicious based on the provided information, but it is important to continuously monitor and assess network traffic for any signs of compromise or unusual activity.```
+2026-10-09 14:21:34,140 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Expecting value: line 1 column 1 (char 0)) — chaîne vide.
+  8        NON                 -0.5                0.1921     0.0%        
+
+  [38;5;214m📊 Historique des cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+  1        NON                 -0.5                0.1990     0.0%        
+  2        NON                 -0.3                0.1980     0.0%        
+  3        NON                 -0.5                0.1970     0.0%        
+  4        NON                 -0.5                0.1960     0.0%        
+  5        NON                 -0.5                0.1950     0.0%        
+  6        NON                 -0.4                0.1941     0.0%        
+  7        NON                 -0.5                0.1931     0.0%        
+  8        NON                 -0.5                0.1921     0.0%        
+  [2m───────────────────────────────────────────────────────[0m
+
+  ══════════════════════════════════════════════════
+    Résultats de l'apprentissage
+  ══════════════════════════════════════════════════
+  │  Cycles complétés          8
+  │  Taux de détection final   0.0%
+  │  Total détections          0/8
+  │  Cycles furtifs (NON)      8/8
+  │  Epsilon final             0.1921
+  ══════════════════════════════════════════════════
+
+  [38;5;81mDébrief signaux[0m
+  • Suricata a alerté sur 0/8 cycles
+  • RF ≥ seuil sur 0/8 cycles
+  [38;5;114m✓ 8 cycle(s) sans détection (Suricata silencieux ET RF sous seuil).[0m
+  [2mTaux de détection stable à 0% sur 8 cycles.[0m
+
+  ✅ détection finale 0.0, 705.05s
+2026-10-09 14:21:34,155 nzoyi.llm.vuln_triage INFO Triage vuln prompt (claude-sonnet-5): [{"cve_id": "CVE-TEST-0001", "severity": "high", "type": "smoke_test", "port": 9999, "service": "smoke"}]
+2026-10-09 14:22:19,233 openai._base_client INFO Retrying request in 0.495285 seconds (retry 1 of 2)
+2026-10-09 14:22:19,748 openai._base_client INFO Retrying request in 0.905068 seconds (retry 2 of 2)
+2026-10-09 14:22:20,662 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpx2/_transports/default.py", line 98, in map_httpcore_exceptions
+    yield
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpx2/_transports/default.py", line 245, in handle_request
+    resp = self._pool.handle_request(req)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpcore2/_sync/connection_pool.py", line 242, in handle_request
+    raise exc from None
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpcore2/_sync/connection_pool.py", line 224, in handle_request
+    response = connection.handle_request(pool_request.request)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpcore2/_sync/connection.py", line 94, in handle_request
+    raise exc
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpcore2/_sync/connection.py", line 74, in handle_request
+    stream = self._connect(request)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpcore2/_sync/connection.py", line 117, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpcore2/_backends/sync.py", line 203, in connect_tcp
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpcore2/_exceptions.py", line 17, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore2.ConnectError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1148, in request
+    response = self._send_request(
+        request,
+        stream=stream or self._should_stream_response_body(request=request),
+        **kwargs,
+    )
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_client.py", line 601, in _send_request
+    response = self._send_with_auth_retry(request, stream=stream, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_client.py", line 580, in _send_with_auth_retry
+    response = super()._send_request(request, stream=stream, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1069, in _send_request
+    return self._client.send(request, stream=stream, **kwargs)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpx2/_client.py", line 980, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpx2/_client.py", line 1008, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpx2/_client.py", line 1043, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpx2/_client.py", line 1076, in _send_single_request
+    response = transport.handle_request(request)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpx2/_transports/default.py", line 244, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/httpx2/_transports/default.py", line 115, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx2.ConnectError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1183, in request
+    raise APIConnectionError(request=request) from err
+openai.APIConnectionError: Connection error.
+2026-10-09 14:22:20,745 nzoyi.llm.vuln_triage WARNING Triage vuln échoué (Échec de l'appel au backend OpenAI-compatible) — repli déterministe.
+2026-10-09 14:22:20,756 nzoyi.llm.vuln_triage INFO Triage vuln fallback: tri déterministe (1 findings).
+  smoke [ollama:hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest]: ÉCHEC (call_or_parse_failed) — 46.589s
+  ⚠ smoke test échoué pour ollama:hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest — campagne réelle tentée quand même.
+
+=== Campagne réelle — ollama:hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest ===
+
+  [38;5;214m🧠 Boucle d'apprentissage — 8 cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+2026-10-09 14:22:22,152 nzoyi.agents.recon INFO Nmap a trouvé 1 ports ouverts sur 192.168.100.14
+2026-10-09 14:22:22,190 nzoyi.llm.vuln_triage INFO Triage vuln prompt (hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest): [{"cve_id": "CVE-2023-38408", "severity": "high", "type": "pkcs11_rce", "port": 22, "service": "ssh"}]
+2026-10-09 14:22:22,193 openai._base_client INFO Retrying request in 0.475000 seconds (retry 1 of 2)
+2026-10-09 14:22:22,670 openai._base_client INFO Retrying request in 0.790518 seconds (retry 2 of 2)
+2026-10-09 14:23:21,731 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:23:21,737 nzoyi.llm.vuln_triage INFO Triage vuln réponse: {"ordre_cve_ids": ["CVE-2023-38408"], "raison": "Vulnérabilité critique avec RCE via PKCS#11 sur le service SSH, facilement exploitée."}
+2026-10-09 14:23:21,737 nzoyi.agents.vulnerability INFO Found 1 findings
+2026-10-09 14:23:21,739 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:23:21,759 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:23:23,521 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:24:55,022 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:24:55,023 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système de détection a analysé les données collectées par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier spécifié. Suricata n'a détecté aucune alerte, ce qui signifie qu'aucun comportement suspect n'a été identifié par les signatures préexistantes. De plus, l'algorithme RF n'a pas classé l'activité comme suspecte, avec une probabilité de 0.0, ce qui indique une confiance absolue dans le fait que l'activité est normale. Ainsi, aucune alerte n'a été générée et la détection globale est considérée comme négative."}
+  1        NON                 -0.5                0.1990     0.0%        
+2026-10-09 14:24:55,033 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:24:56,593 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:26:08,492 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:26:08,494 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système de détection a analysé les données collectées par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier spécifié. Suricata n'a détecté aucune alerte, ce qui signifie qu'aucun comportement suspect n'a été identifié par les signatures préexistantes. De plus, l'algorithme RF n'a pas classé l'activité comme suspecte, avec une probabilité de 0.0, ce qui indique une confiance absolue dans le fait que l'activité est normale. Ainsi, aucun résultat de détection n'a été généré, et la détection_rate est de 0.0, ce qui reflète le fait qu'aucune activité n'a été identifiée comme potentiellement malveillante."}
+  2        NON                 -0.3                0.1980     0.0%        
+2026-10-09 14:26:08,506 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:26:10,254 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:27:21,945 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:27:21,946 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système de détection a analysé les données collectées par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier spécifié. Suricata n'a détecté aucune alerte, ce qui signifie qu'aucun comportement suspect n'a été identifié par les signatures préexistantes. De plus, l'algorithme RF n'a pas classé l'activité comme suspecte, avec une probabilité de 0.0, ce qui indique une confiance absolue dans le fait que l'activité est normale. Ainsi, aucun résultat de détection n'a été généré, et la détection_rate est de 0.0, ce qui reflète le fait qu'aucune activité n'a été identifiée comme potentiellement malveillante."}
+  3        NON                 -0.5                0.1970     0.0%        
+2026-10-09 14:27:21,955 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:27:23,707 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:28:35,826 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:28:35,827 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système de détection a analysé les données collectées par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier spécifié. Suricata n'a détecté aucune alerte, ce qui signifie qu'aucun comportement suspect n'a été identifié par les signatures préexistantes. De plus, l'algorithme RF n'a pas classé l'activité comme suspecte, avec une probabilité de 0.0, ce qui indique une confiance absolue dans le fait que l'activité est normale. Ainsi, aucun résultat de détection n'a été généré, et la détection_rate est de 0.0, ce qui reflète le fait qu'aucune activité n'a été identifiée comme potentiellement malveillante."}
+2026-10-09 14:28:35,838 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:28:37,555 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:29:49,575 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:29:49,575 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système de détection a analysé les données collectées par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier spécifié. Suricata n'a détecté aucune alerte, ce qui signifie qu'aucun comportement suspect n'a été identifié par les signatures préexistantes. De plus, l'algorithme RF n'a pas classé l'activité comme suspecte, avec une probabilité de 0.0, ce qui indique une confiance absolue dans le fait que l'activité est normale. Ainsi, aucun résultat de détection n'a été généré, et la détection_rate est de 0.0, ce qui reflète le fait qu'aucune activité n'a été identifiée comme potentiellement malveillante."}
+2026-10-09 14:29:49,586 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:29:51,131 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:31:02,914 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:31:02,915 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système de détection a analysé les données collectées par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier spécifié. Suricata n'a détecté aucune alerte, ce qui signifie qu'aucun comportement suspect n'a été identifié par les signatures préexistantes. De plus, l'algorithme RF n'a pas classé l'activité comme suspecte, avec une probabilité de 0.0, ce qui indique une confiance absolue dans le fait que l'activité est normale. Ainsi, aucun résultat de détection n'a été généré, et la détection_rate est de 0.0, ce qui reflète le fait qu'aucune activité n'a été identifiée comme potentiellement malveillante."}
+2026-10-09 14:31:02,925 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:31:04,654 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:32:16,893 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:32:16,894 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système de détection a analysé les données collectées par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier spécifié. Suricata n'a détecté aucune alerte, ce qui signifie qu'aucun comportement suspect n'a été identifié par les signatures préexistantes. De plus, l'algorithme RF n'a pas classé l'activité comme suspecte, avec une probabilité de 0.0, ce qui indique une confiance absolue dans le fait que l'activité est normale. Ainsi, aucun résultat de détection n'a été généré, et la détection_rate est de 0.0, ce qui reflète le fait qu'aucune activité n'a été identifiée comme potentiellement malveillante."}
+2026-10-09 14:32:16,907 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:32:18,704 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:33:30,602 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-09 14:33:30,603 nzoyi.llm.evaluation_rationale INFO Rationale évaluation réponse: {"rationale": "Le système de détection a analysé les données collectées par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier spécifié. Suricata n'a détecté aucune alerte, ce qui signifie qu'aucun comportement suspect n'a été identifié par les signatures préexistantes. De plus, l'algorithme RF n'a pas classé l'activité comme suspecte, avec une probabilité de 0.0, ce qui indique une confiance absolue dans le fait que l'activité est normale. Ainsi, aucun résultat de détection n'a été généré, et la détection_rate est de 0.0, ce qui reflète le fait qu'aucune activité n'a été identifiée comme potentiellement malveillante."}
+  8        NON                 -0.5                0.1921     0.0%        
+
+  [38;5;214m📊 Historique des cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+  1        NON                 -0.5                0.1990     0.0%        
+  2        NON                 -0.3                0.1980     0.0%        
+  3        NON                 -0.5                0.1970     0.0%        
+  4        NON                 -0.5                0.1960     0.0%        
+  5        NON                 -0.5                0.1950     0.0%        
+  6        NON                 -0.4                0.1941     0.0%        
+  7        NON                 -0.5                0.1931     0.0%        
+  8        NON                 -0.5                0.1921     0.0%        
+  [2m───────────────────────────────────────────────────────[0m
+
+  ══════════════════════════════════════════════════
+    Résultats de l'apprentissage
+  ══════════════════════════════════════════════════
+  │  Cycles complétés          8
+  │  Taux de détection final   0.0%
+  │  Total détections          0/8
+  │  Cycles furtifs (NON)      8/8
+  │  Epsilon final             0.1921
+  ══════════════════════════════════════════════════
+
+  [38;5;81mDébrief signaux[0m
+  • Suricata a alerté sur 0/8 cycles
+  • RF ≥ seuil sur 0/8 cycles
+  [38;5;114m✓ 8 cycle(s) sans détection (Suricata silencieux ET RF sous seuil).[0m
+  [2mTaux de détection stable à 0% sur 8 cycles.[0m
+
+  ✅ détection finale 0.0, 669.85s
+2026-10-09 14:33:30,612 nzoyi.llm.vuln_triage INFO Triage vuln prompt (claude-sonnet-5): [{"cve_id": "CVE-TEST-0001", "severity": "high", "type": "smoke_test", "port": 9999, "service": "smoke"}]
+2026-10-09 14:33:30,616 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:30,627 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:30,630 nzoyi.llm.vuln_triage WARNING Triage vuln échoué (Échec de l'appel au backend OpenAI-compatible) — repli déterministe.
+2026-10-09 14:33:30,630 nzoyi.llm.vuln_triage INFO Triage vuln fallback: tri déterministe (1 findings).
+  smoke [openrouter]: ÉCHEC (call_or_parse_failed) — 0.018s
+  ⚠ smoke test échoué pour openrouter — campagne réelle tentée quand même.
+
+=== Campagne réelle — openrouter ===
+
+  [38;5;214m🧠 Boucle d'apprentissage — 8 cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+2026-10-09 14:33:31,626 nzoyi.agents.recon INFO Nmap a trouvé 1 ports ouverts sur 192.168.100.14
+2026-10-09 14:33:31,651 nzoyi.llm.vuln_triage INFO Triage vuln prompt (deepseek-r1:8b): [{"cve_id": "CVE-2023-38408", "severity": "high", "type": "pkcs11_rce", "port": 22, "service": "ssh"}]
+2026-10-09 14:33:31,654 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:31,654 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:31,656 nzoyi.llm.vuln_triage WARNING Triage vuln échoué (Échec de l'appel au backend OpenAI-compatible) — repli déterministe.
+2026-10-09 14:33:31,656 nzoyi.llm.vuln_triage INFO Triage vuln fallback: tri déterministe (1 findings).
+2026-10-09 14:33:31,656 nzoyi.agents.vulnerability INFO Found 1 findings
+2026-10-09 14:33:31,657 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:33:31,664 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:33:33,361 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (deepseek-r1:8b): {"detected": true, "suricata_detected": true, "rf_detected": false, "rf_proba": 0.0, "alert_count": 1, "signatures": ["ET SCAN Potential SSH Scan"], "detection_rate": 1.0, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:33:33,364 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:33,365 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:33,367 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Échec de l'appel au backend OpenAI-compatible) — chaîne vide.
+  1        OUI                 -0.5                0.1990     100.0%      
+2026-10-09 14:33:33,378 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:33:34,931 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (deepseek-r1:8b): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.5, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:33:34,933 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:34,934 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:34,936 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Échec de l'appel au backend OpenAI-compatible) — chaîne vide.
+  2        NON                 -0.3                0.1980     50.0%       
+2026-10-09 14:33:34,943 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:33:36,654 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (deepseek-r1:8b): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.3333333333333333, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:33:36,659 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:36,660 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:36,664 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Échec de l'appel au backend OpenAI-compatible) — chaîne vide.
+  3        NON                 -0.5                0.1970     33.3%       
+2026-10-09 14:33:36,683 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:33:38,377 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (deepseek-r1:8b): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.25, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:33:38,379 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:38,379 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:38,381 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Échec de l'appel au backend OpenAI-compatible) — chaîne vide.
+2026-10-09 14:33:38,389 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:33:40,098 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (deepseek-r1:8b): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.2, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:33:40,103 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:40,104 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:40,107 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Échec de l'appel au backend OpenAI-compatible) — chaîne vide.
+2026-10-09 14:33:40,125 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:33:41,607 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (deepseek-r1:8b): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.16666666666666666, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:33:41,610 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:41,611 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:41,613 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Échec de l'appel au backend OpenAI-compatible) — chaîne vide.
+2026-10-09 14:33:41,625 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:33:43,347 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (deepseek-r1:8b): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.14285714285714285, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:33:43,355 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:43,357 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:43,366 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Échec de l'appel au backend OpenAI-compatible) — chaîne vide.
+2026-10-09 14:33:43,379 nzoyi.agents.evaluation INFO Baseline IDS (suricata) : curseur placé en fin de fichier.
+2026-10-09 14:33:45,086 nzoyi.llm.evaluation_rationale INFO Rationale évaluation prompt (deepseek-r1:8b): {"detected": false, "suricata_detected": false, "rf_detected": false, "rf_proba": 0.0, "alert_count": 0, "signatures": [], "detection_rate": 0.125, "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json", "dry_run": false}
+2026-10-09 14:33:45,089 httpx2 INFO HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 404 Not Found"
+2026-10-09 14:33:45,090 nzoyi.llm.backends.openai_compat ERROR Appel OpenAI-compatible échoué
+Traceback (most recent call last):
+  File "/home/roy/Téléchargements/Nzoyi-Projet/nzoyi/llm/backends/openai_compat_backend.py", line 138, in decide
+    response = self._client.chat.completions.create(**kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/roy/Téléchargements/Nzoyi-Projet/venv/lib/python3.14/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.NotFoundError: Error code: 404 - {'error': {'message': "model 'deepseek-r1:8b' not found", 'type': 'not_found_error', 'param': None, 'code': None}}
+2026-10-09 14:33:45,091 nzoyi.llm.evaluation_rationale WARNING Rationale évaluation échoué (Échec de l'appel au backend OpenAI-compatible) — chaîne vide.
+  8        NON                 -0.5                0.1921     12.5%       
+
+  [38;5;214m📊 Historique des cycles[0m
+  [2m───────────────────────────────────────────────────────[0m
+  Cycle    Détecté    Reward     ε          Détection % 
+  [2m───────────────────────────────────────────────────────[0m
+  1        OUI                 -0.5                0.1990     100.0%      
+  2        NON                 -0.3                0.1980     50.0%       
+  3        NON                 -0.5                0.1970     33.3%       
+  4        NON                 -0.5                0.1960     25.0%       
+  5        NON                 -0.5                0.1950     20.0%       
+  6        NON                 -0.4                0.1941     16.7%       
+  7        NON                 -0.5                0.1931     14.3%       
+  8        NON                 -0.5                0.1921     12.5%       
+  [2m───────────────────────────────────────────────────────[0m
+
+  ══════════════════════════════════════════════════
+    Résultats de l'apprentissage
+  ══════════════════════════════════════════════════
+  │  Cycles complétés          8
+  │  Taux de détection final   12.5%
+  │  Total détections          1/8
+  │  Cycles furtifs (NON)      7/8
+  │  Epsilon final             0.1921
+  ══════════════════════════════════════════════════
+
+  [38;5;81mDébrief signaux[0m
+  • Suricata a alerté sur 1/8 cycles
+  • RF ≥ seuil sur 0/8 cycles
+  [38;5;114m✓ 7 cycle(s) sans détection (Suricata silencieux ET RF sous seuil).[0m
+  [38;5;114m↓ Détection réduite de 100% → 12% (−88 pts) grâce à l'évasion apprise.[0m
+
+  ✅ détection finale 0.125, 14.47s
+2026-10-09 14:33:45,107 nzoyi.run_j7_campaign INFO Rapports écrits: results/j7_llm_panel_comparison.json, results/j7_llm_panel_comparison.csv, results/j7_llm_panel_comparison.md

@@ -44,14 +44,20 @@ class AttackAgent(BaseAgent):
 
     def _log_raw_response(self, priority: AttackPriorityLLM) -> None:
         """Enregistre dans le PTT le texte brut renvoyé par le backend LLM de
-        raffinement. N'enregistre rien en l'absence de réponse (LLM désactivé,
-        ou backend indisponible). Même séparation de responsabilités qu'en
-        J1 : le PTT reste exclusivement la propriété de l'agent."""
-        if priority.last_raw_response is not None:
+        raffinement, avec latence et motif de fallback (J7 : aucun échec/
+        absence de backend n'est jamais exclu silencieusement du comparatif —
+        voir ``priority.last_fallback_reason``). Même séparation de
+        responsabilités qu'en J1 : le PTT reste exclusivement la propriété de
+        l'agent."""
+        if priority.last_raw_response is not None or priority.last_fallback_reason is not None:
             self.ptt.add(
                 self.name,
                 "llm_raw_response_attack",
-                {"raw": priority.last_raw_response},
+                {
+                    "raw": priority.last_raw_response,
+                    "latency_s": priority.last_latency_s,
+                    "fallback_reason": priority.last_fallback_reason,
+                },
                 allow_duplicate=True,
             )
 

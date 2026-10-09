@@ -1,0 +1,40 @@
+[
+  {
+    "label": "ollama:hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M",
+    "ok": true,
+    "latency_s": 48.713,
+    "fallback_reason": null,
+    "note": "reconstruit depuis campaign_stdout_run1.log (le smoke_test.json brut de Run #1 a été écrasé par Run #2, même chemin fichier)"
+  },
+  {
+    "label": "ollama:hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest",
+    "ok": true,
+    "latency_s": 59.13,
+    "fallback_reason": null
+  },
+  {
+    "label": "ollama:hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest",
+    "ok": true,
+    "latency_s": 92.918,
+    "fallback_reason": null
+  },
+  {
+    "label": "ollama:hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M",
+    "ok": false,
+    "latency_s": 97.766,
+    "fallback_reason": "call_or_parse_failed"
+  },
+  {
+    "label": "ollama:hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest",
+    "ok": false,
+    "latency_s": 46.589,
+    "fallback_reason": "call_or_parse_failed"
+  },
+  {
+    "label": "openrouter",
+    "ok": false,
+    "latency_s": 0.018,
+    "fallback_reason": "call_or_parse_failed",
+    "note": "pointait en réalité sur Ollama local mal configuré (.env) — voir anomalie Run #1"
+  }
+]

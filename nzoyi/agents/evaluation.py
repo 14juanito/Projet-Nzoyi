@@ -77,14 +77,20 @@ class EvaluationAgent(BaseAgent):
 
     def _log_raw_response(self, rationale: EvaluationRationaleLLM) -> None:
         """Enregistre dans le PTT le texte brut renvoyé par le backend LLM de
-        rationale. N'enregistre rien en l'absence de réponse (LLM désactivé,
-        ou backend indisponible). Même séparation de responsabilités qu'en
-        J1 : le PTT reste exclusivement la propriété de l'agent."""
-        if rationale.last_raw_response is not None:
+        rationale, avec latence et motif de fallback (J7 : aucun échec/
+        absence de backend n'est jamais exclu silencieusement du comparatif —
+        voir ``rationale.last_fallback_reason``). Même séparation de
+        responsabilités qu'en J1 : le PTT reste exclusivement la propriété de
+        l'agent."""
+        if rationale.last_raw_response is not None or rationale.last_fallback_reason is not None:
             self.ptt.add(
                 self.name,
                 "llm_raw_response_evaluation",
-                {"raw": rationale.last_raw_response},
+                {
+                    "raw": rationale.last_raw_response,
+                    "latency_s": rationale.last_latency_s,
+                    "fallback_reason": rationale.last_fallback_reason,
+                },
                 allow_duplicate=True,
             )
 

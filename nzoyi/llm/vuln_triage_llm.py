@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 
 from nzoyi.llm.backend import LLMBackend
 from nzoyi.llm.backend_resolver import resolve_backend
@@ -70,6 +71,15 @@ class VulnTriageLLM:
         self.temperature = temperature
         self.enabled = enabled
         self.last_raw_response: str | None = None
+        #: Durée de l'appel réel au backend (``decide()`` seul), ou ``None``
+        #: si aucun appel n'a été tenté (désactivé / backend indisponible).
+        #: Alimente le comparatif J7 (latence par modèle du panel).
+        self.last_latency_s: float | None = None
+        #: ``None`` si le dernier appel a abouti au JSON attendu ; sinon un
+        #: motif court et fixe (jamais le détail de l'exception — même
+        #: discipline que les backends eux-mêmes) : alimente le taux de
+        #: fallback par modèle du comparatif J7.
+        self.last_fallback_reason: str | None = None
         self.backend: LLMBackend | None = None
         self.provider: str | None = None
 
@@ -104,6 +114,7 @@ class VulnTriageLLM:
         if not self.enabled or self.backend is None:
             reason = "LLM désactivé" if not self.enabled else "backend indisponible"
             logger.info("Triage vuln contourné (%s) — repli déterministe.", reason)
+            self.last_fallback_reason = "disabled" if not self.enabled else "backend_unavailable"
             return self._fallback(findings)
 
         user_message = json.dumps(
@@ -122,13 +133,20 @@ class VulnTriageLLM:
         )
         logger.info("Triage vuln prompt (%s): %s", self.model, user_message)
 
+        t0 = time.perf_counter()
         try:
             text = self.backend.decide(SYSTEM_PROMPT, user_message)
+            self.last_latency_s = time.perf_counter() - t0
             self.last_raw_response = text
             logger.info("Triage vuln réponse: %s", text)
-            return self._sanitize(json.loads(text), findings)
+            sanitized = self._sanitize(json.loads(text), findings)
+            self.last_fallback_reason = None
+            return sanitized
         except Exception as exc:
+            if self.last_latency_s is None:
+                self.last_latency_s = time.perf_counter() - t0
             logger.warning("Triage vuln échoué (%s) — repli déterministe.", exc)
+            self.last_fallback_reason = "call_or_parse_failed"
             return self._fallback(findings)
 
     @staticmethod
