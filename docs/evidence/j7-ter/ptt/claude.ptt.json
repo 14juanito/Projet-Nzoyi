@@ -1,0 +1,4018 @@
+{
+  "target": "192.168.100.14",
+  "nodes": [
+    {
+      "node_id": "ptt-0001",
+      "agent": "orchestrator",
+      "kind": "llm_raw_response",
+      "data": {
+        "raw": "```json\n{\"profil\": \"stealth\", \"ports_cibles\": [22, 80, 443, 445, 3389], \"services_focus\": [\"ssh\", \"http\", \"https\", \"smb\", \"rdp\"], \"lancer_boucle_evasion\": true, \"cycles\": 10, \"raison\": \"Reconnaissance initiale sans information pr\u00e9alable sur la cible (node_count=0, aucun agent/kind identifi\u00e9) : adoption d'un profil furtif pour cartographier les services courants tout en minimisant le risque de d\u00e9tection, avant d'ajuster la strat\u00e9gie selon les r\u00e9sultats.\"}\n```"
+      },
+      "timestamp": "2026-10-09T20:34:51.372582+00:00"
+    },
+    {
+      "node_id": "ptt-0002",
+      "agent": "orchestrator",
+      "kind": "llm_strategy",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-09T20:34:51.372682+00:00"
+    },
+    {
+      "node_id": "ptt-0003",
+      "agent": "recon",
+      "kind": "port_scan",
+      "data": {
+        "target": "192.168.100.14",
+        "open_ports": [
+          21,
+          22,
+          80
+        ],
+        "ports": [
+          {
+            "host": "192.168.100.14",
+            "port": 21,
+            "state": "open",
+            "service": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4"
+          },
+          {
+            "host": "192.168.100.14",
+            "port": 22,
+            "state": "open",
+            "service": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17"
+          },
+          {
+            "host": "192.168.100.14",
+            "port": 80,
+            "state": "open",
+            "service": "http",
+            "product": "Apache httpd",
+            "version": "2.4.49"
+          }
+        ],
+        "scan_type": "version",
+        "timing": 4,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:34:58.289123+00:00"
+    },
+    {
+      "node_id": "ptt-0004",
+      "agent": "enumerator",
+      "kind": "service_enum",
+      "data": {
+        "service_list": [
+          {
+            "port": 21,
+            "name": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4",
+            "banner": "220 (vsFTPd 2.3.4)"
+          },
+          {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+          },
+          {
+            "port": 80,
+            "name": "http",
+            "product": "Apache httpd",
+            "version": "2.4.49",
+            "banner": ""
+          }
+        ],
+        "services": {
+          "21": {
+            "port": 21,
+            "name": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4",
+            "banner": "220 (vsFTPd 2.3.4)"
+          },
+          "22": {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+          },
+          "80": {
+            "port": 80,
+            "name": "http",
+            "product": "Apache httpd",
+            "version": "2.4.49",
+            "banner": ""
+          }
+        },
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:35:00.312548+00:00"
+    },
+    {
+      "node_id": "ptt-0005",
+      "agent": "vulnerability",
+      "kind": "llm_raw_response_vuln",
+      "data": {
+        "raw": "```json\n{\"ordre_cve_ids\": [\"CVE-2011-2523\", \"CVE-2021-42013\", \"CVE-2021-41773\", \"CVE-2023-38408\"], \"raison\": \"Priorit\u00e9 donn\u00e9e aux vuln\u00e9rabilit\u00e9s critiques les plus faciles \u00e0 exploiter : la backdoor FTP (CVE-2011-2523) offre un acc\u00e8s root imm\u00e9diat et trivial. CVE-2021-42013 est une RCE critique directement exploitable sur Apache HTTP. CVE-2021-41773 est le path traversal associ\u00e9, souvent cha\u00een\u00e9 avec le pr\u00e9c\u00e9dent pour obtenir une ex\u00e9cution de code. CVE-2023-38408 (high) n\u00e9cessite des conditions plus sp\u00e9cifiques (agent SSH forwarding avec PKCS11) et est class\u00e9e en dernier.\"}\n```",
+        "latency_s": 3.8603673429897754,
+        "fallback_reason": "call_or_parse_failed"
+      },
+      "timestamp": "2026-10-09T20:35:04.185453+00:00"
+    },
+    {
+      "node_id": "ptt-0006",
+      "agent": "vulnerability",
+      "kind": "vuln_analysis",
+      "data": {
+        "findings": [
+          {
+            "service": "ftp",
+            "product": "vsftpd",
+            "port": 21,
+            "cve_id": "CVE-2011-2523",
+            "severity": "critical",
+            "type": "backdoor",
+            "version": "2.3.4",
+            "source": "version_correlation"
+          },
+          {
+            "service": "http",
+            "product": "apache httpd",
+            "port": 80,
+            "cve_id": "CVE-2021-41773",
+            "severity": "critical",
+            "type": "path_traversal",
+            "version": "2.4.49",
+            "source": "version_correlation"
+          },
+          {
+            "service": "http",
+            "product": "apache httpd",
+            "port": 80,
+            "cve_id": "CVE-2021-42013",
+            "severity": "critical",
+            "type": "rce",
+            "version": "2.4.49",
+            "source": "version_correlation"
+          },
+          {
+            "service": "ssh",
+            "product": "openssh",
+            "port": 22,
+            "cve_id": "CVE-2023-38408",
+            "severity": "high",
+            "type": "pkcs11_rce",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "source": "version_correlation"
+          }
+        ],
+        "dvwa": null,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:35:04.185506+00:00"
+    },
+    {
+      "node_id": "ptt-0007",
+      "agent": "orchestrator",
+      "kind": "llm_raw_response",
+      "data": {
+        "raw": "```json\n{\"profil\": \"aggressive\", \"ports_cibles\": [21,22,23,25,53,80,110,135,139,443,445,3306,3389,8080], \"services_focus\": [\"http\",\"ssh\",\"smb\",\"ftp\",\"rdp\",\"database\"], \"lancer_boucle_evasion\": false, \"cycles\": 3, \"raison\": \"Detection rate 0.0 sur lab isole autorise : scan large et rapide pour maximiser la couverture et identifier les services/vulnerabilites avant toute necessite d'evasion.\"}\n```"
+      },
+      "timestamp": "2026-10-09T20:35:07.687897+00:00"
+    },
+    {
+      "node_id": "ptt-0008",
+      "agent": "orchestrator",
+      "kind": "llm_replan",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-09T20:35:07.687940+00:00"
+    },
+    {
+      "node_id": "ptt-0009",
+      "agent": "orchestrator",
+      "kind": "llm_decision",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-09T20:35:07.687961+00:00"
+    },
+    {
+      "node_id": "ptt-0010",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          5,
+          1,
+          31136374
+        ],
+        "next_state": [
+          1,
+          5,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.95,
+        "epsilon": 0.2,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:35:07.700489+00:00"
+    },
+    {
+      "node_id": "ptt-0011",
+      "agent": "attack",
+      "kind": "llm_raw_response_attack",
+      "data": {
+        "raw": "{\"ports_prioritaires\": [21, 80, 22], \"raison\": \"Port 21 prioris\u00e9 pour CVE-2011-2523 (backdoor vsftpd, RCE triviale critical). Port 80 ensuite pour CVE-2021-41773/42013 (path traversal/RCE Apache, critical). Port 22 en dernier, vuln\u00e9rabilit\u00e9 high (CVE-2023-38408) moins imm\u00e9diate \u00e0 exploiter.\"}",
+        "latency_s": 2.9770700489898445,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:35:10.679168+00:00"
+    },
+    {
+      "node_id": "ptt-0012",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:35:13.403157+00:00"
+    },
+    {
+      "node_id": "ptt-0013",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont identifi\u00e9 d'activit\u00e9 suspecte. Aucune alerte signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 alerte) et la probabilit\u00e9 RF est de 0.0, indiquant une absence totale d'indicateurs malveillants dans le trafic analys\u00e9.\"}",
+        "latency_s": 2.3713693369936664,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:35:15.778486+00:00"
+    },
+    {
+      "node_id": "ptt-0014",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont identifi\u00e9 d'activit\u00e9 suspecte. Aucune alerte signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 alerte) et la probabilit\u00e9 RF est de 0.0, indiquant une absence totale d'indicateurs malveillants dans le trafic analys\u00e9."
+      },
+      "timestamp": "2026-10-09T20:35:15.778607+00:00"
+    },
+    {
+      "node_id": "ptt-0015",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          5,
+          1,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.199,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:35:15.807426+00:00"
+    },
+    {
+      "node_id": "ptt-0016",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:35:18.474463+00:00"
+    },
+    {
+      "node_id": "ptt-0017",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"D\u00e9tection confirm\u00e9e par Suricata : la signature \u00ab ET SCAN Potential SSH Scan \u00bb a d\u00e9clench\u00e9 1 alerte, indiquant un comportement typique de balayage de ports SSH. Le mod\u00e8le RF n'a pas identifi\u00e9 cette activit\u00e9 comme malveillante (probabilit\u00e9 0.0), mais la fusion d\u00e9terministe privil\u00e9gie l'alerte signature-based de Suricata, qui est jug\u00e9e fiable pour ce type de scan r\u00e9seau. Le taux de d\u00e9tection global de 0.5 refl\u00e8te l'accord partiel entre les deux moteurs (1 sur 2 d\u00e9tecteurs ayant signal\u00e9 l'activit\u00e9). Conclusion : l'\u00e9v\u00e9nement est class\u00e9 comme d\u00e9tect\u00e9 sur la base de l'alerte Suricata, malgr\u00e9 l'absence de confirmation par le mod\u00e8le ML.\"}",
+        "latency_s": 3.930924504995346,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:35:22.407192+00:00"
+    },
+    {
+      "node_id": "ptt-0018",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": true,
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 1,
+        "signatures": [
+          "ET SCAN Potential SSH Scan"
+        ],
+        "detection_rate": 0.5,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "D\u00e9tection confirm\u00e9e par Suricata : la signature \u00ab ET SCAN Potential SSH Scan \u00bb a d\u00e9clench\u00e9 1 alerte, indiquant un comportement typique de balayage de ports SSH. Le mod\u00e8le RF n'a pas identifi\u00e9 cette activit\u00e9 comme malveillante (probabilit\u00e9 0.0), mais la fusion d\u00e9terministe privil\u00e9gie l'alerte signature-based de Suricata, qui est jug\u00e9e fiable pour ce type de scan r\u00e9seau. Le taux de d\u00e9tection global de 0.5 refl\u00e8te l'accord partiel entre les deux moteurs (1 sur 2 d\u00e9tecteurs ayant signal\u00e9 l'activit\u00e9)"
+      },
+      "timestamp": "2026-10-09T20:35:22.407226+00:00"
+    },
+    {
+      "node_id": "ptt-0019",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.198,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:35:22.417358+00:00"
+    },
+    {
+      "node_id": "ptt-0020",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:35:25.155297+00:00"
+    },
+    {
+      "node_id": "ptt-0021",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : ni Suricata (0 alerte, aucune signature d\u00e9clench\u00e9e) ni le mod\u00e8le RF (probabilit\u00e9 de 0.0) n'ont identifi\u00e9 d'activit\u00e9 suspecte dans ce flux. Le taux de d\u00e9tection de 0.33 refl\u00e8te une m\u00e9trique contextuelle ind\u00e9pendante, mais la fusion d\u00e9terministe des deux moteurs aboutit \u00e0 un verdict n\u00e9gatif global : le trafic analys\u00e9 est jug\u00e9 b\u00e9nin.\"}",
+        "latency_s": 2.683888287006994,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:35:27.841472+00:00"
+    },
+    {
+      "node_id": "ptt-0022",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.3333333333333333,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : ni Suricata (0 alerte, aucune signature d\u00e9clench\u00e9e) ni le mod\u00e8le RF (probabilit\u00e9 de 0.0) n'ont identifi\u00e9 d'activit\u00e9 suspecte dans ce flux. Le taux de d\u00e9tection de 0.33 refl\u00e8te une m\u00e9trique contextuelle ind\u00e9pendante, mais la fusion d\u00e9terministe des deux moteurs aboutit \u00e0 un verdict n\u00e9gatif global : le trafic analys\u00e9 est jug\u00e9 b\u00e9nin."
+      },
+      "timestamp": "2026-10-09T20:35:27.841560+00:00"
+    },
+    {
+      "node_id": "ptt-0023",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.197,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:35:27.858253+00:00"
+    },
+    {
+      "node_id": "ptt-0024",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:35:30.187079+00:00"
+    },
+    {
+      "node_id": "ptt-0025",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : ni Suricata (0 alerte, aucune signature d\u00e9clench\u00e9e) ni le mod\u00e8le RF (probabilit\u00e9 0.0) n'ont identifi\u00e9 d'activit\u00e9 suspecte dans ce flux. Le taux de d\u00e9tection de 0.25 refl\u00e8te la fr\u00e9quence historique du mod\u00e8le sur des \u00e9chantillons similaires, mais ne s'applique pas ici puisque les deux moteurs convergent sur une absence totale d'indicateur malveillant. La fusion d\u00e9terministe conclut donc \u00e0 un r\u00e9sultat n\u00e9gatif (non d\u00e9tect\u00e9).\"}",
+        "latency_s": 10.427460016013356,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:35:40.617827+00:00"
+    },
+    {
+      "node_id": "ptt-0026",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.25,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : ni Suricata (0 alerte, aucune signature d\u00e9clench\u00e9e) ni le mod\u00e8le RF (probabilit\u00e9 0.0) n'ont identifi\u00e9 d'activit\u00e9 suspecte dans ce flux. Le taux de d\u00e9tection de 0.25 refl\u00e8te la fr\u00e9quence historique du mod\u00e8le sur des \u00e9chantillons similaires, mais ne s'applique pas ici puisque les deux moteurs convergent sur une absence totale d'indicateur malveillant. La fusion d\u00e9terministe conclut donc \u00e0 un r\u00e9sultat n\u00e9gatif (non d\u00e9tect\u00e9)."
+      },
+      "timestamp": "2026-10-09T20:35:40.617918+00:00"
+    },
+    {
+      "node_id": "ptt-0027",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          4,
+          1,
+          31136374
+        ],
+        "next_state": [
+          2,
+          3,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.8,
+        "epsilon": 0.196,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:35:40.638408+00:00"
+    },
+    {
+      "node_id": "ptt-0028",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 300,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:35:42.550922+00:00"
+    },
+    {
+      "node_id": "ptt-0029",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF estime une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection de 0.2 refl\u00e8te un contexte global faible sans indicateur suffisant. Les deux couches concordent sur une \u00e9valuation b\u00e9nigne du trafic analys\u00e9.\"}",
+        "latency_s": 2.551763203999144,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:35:45.106468+00:00"
+    },
+    {
+      "node_id": "ptt-0030",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.2,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF estime une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection de 0.2 refl\u00e8te un contexte global faible sans indicateur suffisant. Les deux couches concordent sur une \u00e9valuation b\u00e9nigne du trafic analys\u00e9."
+      },
+      "timestamp": "2026-10-09T20:35:45.106500+00:00"
+    },
+    {
+      "node_id": "ptt-0031",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          3,
+          1,
+          31136374
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.195,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:35:45.113058+00:00"
+    },
+    {
+      "node_id": "ptt-0032",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:35:47.417316+00:00"
+    },
+    {
+      "node_id": "ptt-0033",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : ni Suricata (0 alerte sur les signatures) ni le mod\u00e8le RF (probabilit\u00e9 0.0) n'ont identifi\u00e9 d'activit\u00e9 suspecte dans ce flux. Le faible taux de d\u00e9tection global (\u224816,7%) refl\u00e8te l'ensemble des r\u00e8gles \u00e9valu\u00e9es, sans qu'aucune ne corresponde ici. La fusion d\u00e9terministe conclut donc \u00e0 une absence de menace d\u00e9tect\u00e9e.\"}",
+        "latency_s": 4.082482889003586,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:35:51.501247+00:00"
+    },
+    {
+      "node_id": "ptt-0034",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.16666666666666666,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : ni Suricata (0 alerte sur les signatures) ni le mod\u00e8le RF (probabilit\u00e9 0.0) n'ont identifi\u00e9 d'activit\u00e9 suspecte dans ce flux. Le faible taux de d\u00e9tection global (\u224816,7%) refl\u00e8te l'ensemble des r\u00e8gles \u00e9valu\u00e9es, sans qu'aucune ne corresponde ici. La fusion d\u00e9terministe conclut donc \u00e0 une absence de menace d\u00e9tect\u00e9e."
+      },
+      "timestamp": "2026-10-09T20:35:51.501367+00:00"
+    },
+    {
+      "node_id": "ptt-0035",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          4,
+          1,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1941,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:35:51.513213+00:00"
+    },
+    {
+      "node_id": "ptt-0036",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:35:54.201382+00:00"
+    },
+    {
+      "node_id": "ptt-0037",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF estime une probabilit\u00e9 de 0.0, bien en dessous du seuil de d\u00e9cision. Le taux de d\u00e9tection global de 14,3% refl\u00e8te l'historique du flux mais n'a pas suffi \u00e0 d\u00e9clencher une alerte sur cet \u00e9chantillon pr\u00e9cis. La fusion des deux moteurs conclut donc \u00e0 une absence de menace d\u00e9tect\u00e9e.\"}",
+        "latency_s": 6.756374938995577,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:00.961553+00:00"
+    },
+    {
+      "node_id": "ptt-0038",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.14285714285714285,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF estime une probabilit\u00e9 de 0.0, bien en dessous du seuil de d\u00e9cision. Le taux de d\u00e9tection global de 14,3% refl\u00e8te l'historique du flux mais n'a pas suffi \u00e0 d\u00e9clencher une alerte sur cet \u00e9chantillon pr\u00e9cis. La fusion des deux moteurs conclut donc \u00e0 une absence de menace d\u00e9tect\u00e9e."
+      },
+      "timestamp": "2026-10-09T20:36:00.961724+00:00"
+    },
+    {
+      "node_id": "ptt-0039",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1931,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:00.991276+00:00"
+    },
+    {
+      "node_id": "ptt-0040",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:36:03.682369+00:00"
+    },
+    {
+      "node_id": "ptt-0041",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : Suricata n'a d\u00e9clench\u00e9 aucune alerte (0 signature) et le mod\u00e8le RF estime une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection global de 0.125 refl\u00e8te le contexte historique des flux analys\u00e9s, mais aucun indicateur concret n'a \u00e9t\u00e9 relev\u00e9 sur cette source. La fusion d\u00e9terministe conclut donc \u00e0 l'absence de menace d\u00e9tect\u00e9e.\"}",
+        "latency_s": 6.196276833012234,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:09.881363+00:00"
+    },
+    {
+      "node_id": "ptt-0042",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.125,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : Suricata n'a d\u00e9clench\u00e9 aucune alerte (0 signature) et le mod\u00e8le RF estime une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection global de 0.125 refl\u00e8te le contexte historique des flux analys\u00e9s, mais aucun indicateur concret n'a \u00e9t\u00e9 relev\u00e9 sur cette source. La fusion d\u00e9terministe conclut donc \u00e0 l'absence de menace d\u00e9tect\u00e9e."
+      },
+      "timestamp": "2026-10-09T20:36:09.881478+00:00"
+    },
+    {
+      "node_id": "ptt-0043",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1921,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:09.893931+00:00"
+    },
+    {
+      "node_id": "ptt-0044",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:36:12.576357+00:00"
+    },
+    {
+      "node_id": "ptt-0045",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF attribue une probabilit\u00e9 de 0.0, indiquant l'absence de comportement malveillant identifi\u00e9. Le taux de d\u00e9tection de 11% refl\u00e8te le contexte global du flux analys\u00e9, mais aucun indicateur concret ne justifie un classement positif ici.\"}",
+        "latency_s": 4.0020021890086355,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:16.580693+00:00"
+    },
+    {
+      "node_id": "ptt-0046",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.1111111111111111,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF attribue une probabilit\u00e9 de 0.0, indiquant l'absence de comportement malveillant identifi\u00e9. Le taux de d\u00e9tection de 11% refl\u00e8te le contexte global du flux analys\u00e9, mais aucun indicateur concret ne justifie un classement positif ici."
+      },
+      "timestamp": "2026-10-09T20:36:16.580811+00:00"
+    },
+    {
+      "node_id": "ptt-0047",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "hold",
+        "state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1912,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:16.610421+00:00"
+    },
+    {
+      "node_id": "ptt-0048",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:36:19.319112+00:00"
+    },
+    {
+      "node_id": "ptt-0049",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont signal\u00e9 d'activit\u00e9 suspecte. Aucune alerte n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9e (alert_count=0, aucune signature d\u00e9clench\u00e9e) et la probabilit\u00e9 RF est nulle (0.0), bien en dessous du taux de d\u00e9tection de r\u00e9f\u00e9rence (0.1). La fusion d\u00e9terministe des deux sources conclut donc \u00e0 une absence de menace d\u00e9tect\u00e9e.\"}",
+        "latency_s": 2.5910639659996377,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:21.911203+00:00"
+    },
+    {
+      "node_id": "ptt-0050",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.1,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont signal\u00e9 d'activit\u00e9 suspecte. Aucune alerte n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9e (alert_count=0, aucune signature d\u00e9clench\u00e9e) et la probabilit\u00e9 RF est nulle (0.0), bien en dessous du taux de d\u00e9tection de r\u00e9f\u00e9rence (0.1). La fusion d\u00e9terministe des deux sources conclut donc \u00e0 une absence de menace d\u00e9tect\u00e9e."
+      },
+      "timestamp": "2026-10-09T20:36:21.911321+00:00"
+    },
+    {
+      "node_id": "ptt-0051",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1902,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:21.940553+00:00"
+    },
+    {
+      "node_id": "ptt-0052",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:36:24.260159+00:00"
+    },
+    {
+      "node_id": "ptt-0053",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont identifi\u00e9 d'activit\u00e9 suspecte. Aucune alerte signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 alerte) et la probabilit\u00e9 RF est nulle (0.0), confirmant l'absence d'indicateurs malveillants dans ce flux. Le taux de d\u00e9tection global (~9%) refl\u00e8te le contexte statistique g\u00e9n\u00e9ral et ne remet pas en cause ce r\u00e9sultat n\u00e9gatif.\"}",
+        "latency_s": 2.8505909610103117,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:27.112319+00:00"
+    },
+    {
+      "node_id": "ptt-0054",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.09090909090909091,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont identifi\u00e9 d'activit\u00e9 suspecte. Aucune alerte signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 alerte) et la probabilit\u00e9 RF est nulle (0.0), confirmant l'absence d'indicateurs malveillants dans ce flux. Le taux de d\u00e9tection global (~9%) refl\u00e8te le contexte statistique g\u00e9n\u00e9ral et ne remet pas en cause ce r\u00e9sultat n\u00e9gatif."
+      },
+      "timestamp": "2026-10-09T20:36:27.112440+00:00"
+    },
+    {
+      "node_id": "ptt-0055",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          4,
+          1,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1893,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:27.125196+00:00"
+    },
+    {
+      "node_id": "ptt-0056",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:36:29.846661+00:00"
+    },
+    {
+      "node_id": "ptt-0057",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune alerte Suricata n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 signature correspondante) et le mod\u00e8le RandomForest attribue une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection global observ\u00e9 (~8%) reste sous le seuil de d\u00e9cision. La fusion d\u00e9terministe des deux sources conclut donc \u00e0 une absence de d\u00e9tection pour ce trafic.\"}",
+        "latency_s": 3.0704423440038227,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:32.918182+00:00"
+    },
+    {
+      "node_id": "ptt-0058",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.08333333333333333,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune alerte Suricata n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 signature correspondante) et le mod\u00e8le RandomForest attribue une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection global observ\u00e9 (~8%) reste sous le seuil de d\u00e9cision. La fusion d\u00e9terministe des deux sources conclut donc \u00e0 une absence de d\u00e9tection pour ce trafic."
+      },
+      "timestamp": "2026-10-09T20:36:32.918332+00:00"
+    },
+    {
+      "node_id": "ptt-0059",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1883,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:32.947042+00:00"
+    },
+    {
+      "node_id": "ptt-0060",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:36:35.636985+00:00"
+    },
+    {
+      "node_id": "ptt-0061",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune alerte Suricata n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 signature correspondante) et le mod\u00e8le RF attribue une probabilit\u00e9 nulle (0.0) \u00e0 une activit\u00e9 malveillante, malgr\u00e9 un taux de d\u00e9tection global de l'ensemble de r\u00e8gles d'environ 7,7%. Les deux couches d'analyse convergent donc vers une conclusion n\u00e9gative : le trafic examin\u00e9 ne pr\u00e9sente aucun indicateur suspect, confirmant l'absence de d\u00e9tection.\"}",
+        "latency_s": 2.875724560013623,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:38.514065+00:00"
+    },
+    {
+      "node_id": "ptt-0062",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.07692307692307693,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune alerte Suricata n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 signature correspondante) et le mod\u00e8le RF attribue une probabilit\u00e9 nulle (0.0) \u00e0 une activit\u00e9 malveillante, malgr\u00e9 un taux de d\u00e9tection global de l'ensemble de r\u00e8gles d'environ 7,7%. Les deux couches d'analyse convergent donc vers une conclusion n\u00e9gative : le trafic examin\u00e9 ne pr\u00e9sente aucun indicateur suspect, confirmant l'absence de d\u00e9tection."
+      },
+      "timestamp": "2026-10-09T20:36:38.514183+00:00"
+    },
+    {
+      "node_id": "ptt-0063",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          0,
+          5,
+          1,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1874,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:38.532067+00:00"
+    },
+    {
+      "node_id": "ptt-0064",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:36:41.225509+00:00"
+    },
+    {
+      "node_id": "ptt-0065",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont signal\u00e9 d'activit\u00e9 malveillante. Aucune alerte de signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 alerte), et la probabilit\u00e9 RF est nulle (0.0). Le taux de d\u00e9tection global reste faible (~7%), confirmant l'absence d'indicateurs suspects dans ce flux.\"}",
+        "latency_s": 2.633637271996122,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:43.861719+00:00"
+    },
+    {
+      "node_id": "ptt-0066",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.07142857142857142,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont signal\u00e9 d'activit\u00e9 malveillante. Aucune alerte de signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 alerte), et la probabilit\u00e9 RF est nulle (0.0). Le taux de d\u00e9tection global reste faible (~7%), confirmant l'absence d'indicateurs suspects dans ce flux."
+      },
+      "timestamp": "2026-10-09T20:36:43.861846+00:00"
+    },
+    {
+      "node_id": "ptt-0067",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1864,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:43.893574+00:00"
+    },
+    {
+      "node_id": "ptt-0068",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:36:46.615486+00:00"
+    },
+    {
+      "node_id": "ptt-0069",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF attribue une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection global reste faible (6.7%), coh\u00e9rent avec un trafic jug\u00e9 b\u00e9nin par les deux couches d'analyse.\"}",
+        "latency_s": 2.366520171999582,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:48.983410+00:00"
+    },
+    {
+      "node_id": "ptt-0070",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.06666666666666667,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF attribue une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection global reste faible (6.7%), coh\u00e9rent avec un trafic jug\u00e9 b\u00e9nin par les deux couches d'analyse."
+      },
+      "timestamp": "2026-10-09T20:36:48.983447+00:00"
+    },
+    {
+      "node_id": "ptt-0071",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "hold",
+        "state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1855,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:49.017934+00:00"
+    },
+    {
+      "node_id": "ptt-0072",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:36:51.677673+00:00"
+    },
+    {
+      "node_id": "ptt-0073",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune menace d\u00e9tect\u00e9e : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF a \u00e9galement class\u00e9 le trafic comme b\u00e9nin (probabilit\u00e9 0.0). Le taux de d\u00e9tection global reste faible (6,25%), coh\u00e9rent avec une absence de comportement malveillant identifi\u00e9 par les deux moteurs d'analyse.\"}",
+        "latency_s": 2.5864315840008203,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:54.265566+00:00"
+    },
+    {
+      "node_id": "ptt-0074",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0625,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune menace d\u00e9tect\u00e9e : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF a \u00e9galement class\u00e9 le trafic comme b\u00e9nin (probabilit\u00e9 0.0). Le taux de d\u00e9tection global reste faible (6,25%), coh\u00e9rent avec une absence de comportement malveillant identifi\u00e9 par les deux moteurs d'analyse."
+      },
+      "timestamp": "2026-10-09T20:36:54.265614+00:00"
+    },
+    {
+      "node_id": "ptt-0075",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "next_state": [
+          1,
+          4,
+          0,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1846,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:54.275077+00:00"
+    },
+    {
+      "node_id": "ptt-0076",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:36:56.538520+00:00"
+    },
+    {
+      "node_id": "ptt-0077",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF a attribu\u00e9 une probabilit\u00e9 de 0.0, bien en dessous du seuil de classification. Le faible taux de d\u00e9tection global (5.9%) sur cette fen\u00eatre d'analyse confirme l'absence d'activit\u00e9 suspecte significative. Le trafic analys\u00e9 est donc consid\u00e9r\u00e9 comme b\u00e9nin par les deux couches de d\u00e9tection.\"}",
+        "latency_s": 2.643423770001391,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:36:59.183438+00:00"
+    },
+    {
+      "node_id": "ptt-0078",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.058823529411764705,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF a attribu\u00e9 une probabilit\u00e9 de 0.0, bien en dessous du seuil de classification. Le faible taux de d\u00e9tection global (5.9%) sur cette fen\u00eatre d'analyse confirme l'absence d'activit\u00e9 suspecte significative. Le trafic analys\u00e9 est donc consid\u00e9r\u00e9 comme b\u00e9nin par les deux couches de d\u00e9tection."
+      },
+      "timestamp": "2026-10-09T20:36:59.183558+00:00"
+    },
+    {
+      "node_id": "ptt-0079",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          4,
+          0,
+          31136374
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1837,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:36:59.214631+00:00"
+    },
+    {
+      "node_id": "ptt-0080",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:37:01.865180+00:00"
+    },
+    {
+      "node_id": "ptt-0081",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont signal\u00e9 d'activit\u00e9 suspecte. Aucune alerte de signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e et la probabilit\u00e9 RF est nulle (0.0), indiquant une absence de comportement malveillant identifiable dans le trafic analys\u00e9.\"}",
+        "latency_s": 2.1704426009964664,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:37:04.037409+00:00"
+    },
+    {
+      "node_id": "ptt-0082",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.05555555555555555,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : ni Suricata ni le mod\u00e8le RF n'ont signal\u00e9 d'activit\u00e9 suspecte. Aucune alerte de signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e et la probabilit\u00e9 RF est nulle (0.0), indiquant une absence de comportement malveillant identifiable dans le trafic analys\u00e9."
+      },
+      "timestamp": "2026-10-09T20:37:04.037538+00:00"
+    },
+    {
+      "node_id": "ptt-0083",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          0,
+          31136374
+        ],
+        "next_state": [
+          1,
+          4,
+          0,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1827,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:37:04.053439+00:00"
+    },
+    {
+      "node_id": "ptt-0084",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:37:06.330006+00:00"
+    },
+    {
+      "node_id": "ptt-0085",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF a attribu\u00e9 une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection global reste tr\u00e8s faible (~5,3%), confirmant l'absence d'indicateurs suspects dans ce flux r\u00e9seau. Les deux couches d'analyse convergent vers un verdict n\u00e9gatif.\"}",
+        "latency_s": 2.9136107150116004,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:37:09.245449+00:00"
+    },
+    {
+      "node_id": "ptt-0086",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.05263157894736842,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune d\u00e9tection : Suricata n'a g\u00e9n\u00e9r\u00e9 aucune alerte (0 signature d\u00e9clench\u00e9e) et le mod\u00e8le RF a attribu\u00e9 une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante. Le taux de d\u00e9tection global reste tr\u00e8s faible (~5,3%), confirmant l'absence d'indicateurs suspects dans ce flux r\u00e9seau. Les deux couches d'analyse convergent vers un verdict n\u00e9gatif."
+      },
+      "timestamp": "2026-10-09T20:37:09.245566+00:00"
+    },
+    {
+      "node_id": "ptt-0087",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          4,
+          0,
+          31136374
+        ],
+        "next_state": [
+          2,
+          3,
+          0,
+          31136374
+        ],
+        "detected": true,
+        "p_detect": 0.984375,
+        "reward": -1.7765625,
+        "epsilon": 0.1818,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:37:09.262253+00:00"
+    },
+    {
+      "node_id": "ptt-0088",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 21,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": false,
+            "ports": [
+              21,
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 300,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:37:11.188688+00:00"
+    },
+    {
+      "node_id": "ptt-0089",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Aucune alerte Suricata n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 signature) et le mod\u00e8le RF estime une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante, coh\u00e9rent avec un faible taux de d\u00e9tection global (0.05). La fusion d\u00e9terministe des deux moteurs conclut donc \u00e0 une absence de menace d\u00e9tect\u00e9e.\"}",
+        "latency_s": 3.76401192699268,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:37:14.954284+00:00"
+    },
+    {
+      "node_id": "ptt-0090",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.05,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Aucune alerte Suricata n'a \u00e9t\u00e9 d\u00e9clench\u00e9e (0 signature) et le mod\u00e8le RF estime une probabilit\u00e9 nulle (0.0) d'activit\u00e9 malveillante, coh\u00e9rent avec un faible taux de d\u00e9tection global (0.05). La fusion d\u00e9terministe des deux moteurs conclut donc \u00e0 une absence de menace d\u00e9tect\u00e9e."
+      },
+      "timestamp": "2026-10-09T20:37:14.954397+00:00"
+    }
+  ],
+  "recon_results": [
+    {
+      "host": "192.168.100.14",
+      "port": 21,
+      "state": "open",
+      "service": "ftp",
+      "product": "vsftpd",
+      "version": "2.3.4"
+    },
+    {
+      "host": "192.168.100.14",
+      "port": 22,
+      "state": "open",
+      "service": "ssh",
+      "product": "OpenSSH",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17"
+    },
+    {
+      "host": "192.168.100.14",
+      "port": 80,
+      "state": "open",
+      "service": "http",
+      "product": "Apache httpd",
+      "version": "2.4.49"
+    }
+  ],
+  "enumeration_results": [
+    {
+      "port": 21,
+      "name": "ftp",
+      "product": "vsftpd",
+      "version": "2.3.4",
+      "banner": "220 (vsFTPd 2.3.4)"
+    },
+    {
+      "port": 22,
+      "name": "ssh",
+      "product": "OpenSSH",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17",
+      "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+    },
+    {
+      "port": 80,
+      "name": "http",
+      "product": "Apache httpd",
+      "version": "2.4.49",
+      "banner": ""
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "service": "ftp",
+      "product": "vsftpd",
+      "port": 21,
+      "cve_id": "CVE-2011-2523",
+      "severity": "critical",
+      "type": "backdoor",
+      "version": "2.3.4",
+      "source": "version_correlation"
+    },
+    {
+      "service": "ssh",
+      "product": "openssh",
+      "port": 22,
+      "cve_id": "CVE-2023-38408",
+      "severity": "high",
+      "type": "pkcs11_rce",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17",
+      "source": "version_correlation"
+    },
+    {
+      "service": "http",
+      "product": "apache httpd",
+      "port": 80,
+      "cve_id": "CVE-2021-41773",
+      "severity": "critical",
+      "type": "path_traversal",
+      "version": "2.4.49",
+      "source": "version_correlation"
+    },
+    {
+      "service": "http",
+      "product": "apache httpd",
+      "port": 80,
+      "cve_id": "CVE-2021-42013",
+      "severity": "critical",
+      "type": "rce",
+      "version": "2.4.49",
+      "source": "version_correlation"
+    }
+  ],
+  "attack_attempts": [
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 21,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": false,
+      "ports": [
+        21,
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    }
+  ],
+  "evasion_strategy": {
+    "state": [
+      2,
+      3,
+      0,
+      31136374
+    ],
+    "action": "speed_up",
+    "epsilon": 0.18183125231650604
+  },
+  "evaluations": [
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": true,
+      "alert_details": {
+        "suricata_detected": true,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 1,
+        "signatures": [
+          "ET SCAN Potential SSH Scan"
+        ]
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "label": "ollama:hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest",
+  "provider": "openai_compatible",
+  "model": "hf.co/mradermacher/Dolphin3.0-Llama3.1-8B-GGUF:latest",
+  "ok": true,
+  "latency_s": 77.712,
+  "fallback_reason": null
+}

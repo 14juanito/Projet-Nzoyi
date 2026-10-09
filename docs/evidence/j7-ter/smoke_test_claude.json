@@ -1,0 +1,8 @@
+{
+  "label": "claude",
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "ok": true,
+  "latency_s": 3.246,
+  "fallback_reason": null
+}

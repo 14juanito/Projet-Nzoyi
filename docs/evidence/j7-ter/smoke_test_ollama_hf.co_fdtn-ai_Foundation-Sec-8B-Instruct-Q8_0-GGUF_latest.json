@@ -1,0 +1,8 @@
+{
+  "label": "ollama:hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest",
+  "provider": "openai_compatible",
+  "model": "hf.co/fdtn-ai/Foundation-Sec-8B-Instruct-Q8_0-GGUF:latest",
+  "ok": false,
+  "latency_s": 38.439,
+  "fallback_reason": "call_or_parse_failed"
+}

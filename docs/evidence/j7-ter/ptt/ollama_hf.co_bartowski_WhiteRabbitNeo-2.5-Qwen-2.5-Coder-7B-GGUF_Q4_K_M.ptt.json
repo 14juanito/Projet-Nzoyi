@@ -1,0 +1,3266 @@
+{
+  "target": "192.168.100.14",
+  "nodes": [
+    {
+      "node_id": "ptt-0001",
+      "agent": "orchestrator",
+      "kind": "llm_raw_response",
+      "data": {
+        "raw": "{\"profil\": \"stealth\", \"ports_cibles\": [22, 80, 443], \"services_focus\": [\"ssh\", \"http\", \"https\"], \"lancer_boucle_evasion\": false, \"cycles\": 3, \"raison\": \"Profil de s\u00e9curit\u00e9 \u00e9lev\u00e9, priorit\u00e9 sur la discr\u00e9tion et la minimisation des traces.\"}"
+      },
+      "timestamp": "2026-10-09T18:41:32.331117+00:00"
+    },
+    {
+      "node_id": "ptt-0002",
+      "agent": "orchestrator",
+      "kind": "llm_strategy",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          443
+        ],
+        "services_focus": [
+          "ssh",
+          "http",
+          "https"
+        ],
+        "lancer_boucle_evasion": false,
+        "cycles": 10,
+        "raison": "Profil de s\u00e9curit\u00e9 \u00e9lev\u00e9, priorit\u00e9 sur la discr\u00e9tion et la minimisation des traces."
+      },
+      "timestamp": "2026-10-09T18:41:32.331192+00:00"
+    },
+    {
+      "node_id": "ptt-0003",
+      "agent": "recon",
+      "kind": "port_scan",
+      "data": {
+        "target": "192.168.100.14",
+        "open_ports": [
+          21,
+          22,
+          80
+        ],
+        "ports": [
+          {
+            "host": "192.168.100.14",
+            "port": 21,
+            "state": "open",
+            "service": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4"
+          },
+          {
+            "host": "192.168.100.14",
+            "port": 22,
+            "state": "open",
+            "service": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17"
+          },
+          {
+            "host": "192.168.100.14",
+            "port": 80,
+            "state": "open",
+            "service": "http",
+            "product": "Apache httpd",
+            "version": "2.4.49"
+          }
+        ],
+        "scan_type": "version",
+        "timing": 4,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:41:39.809860+00:00"
+    },
+    {
+      "node_id": "ptt-0004",
+      "agent": "enumerator",
+      "kind": "service_enum",
+      "data": {
+        "service_list": [
+          {
+            "port": 21,
+            "name": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4",
+            "banner": "220 (vsFTPd 2.3.4)"
+          },
+          {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+          },
+          {
+            "port": 80,
+            "name": "http",
+            "product": "Apache httpd",
+            "version": "2.4.49",
+            "banner": ""
+          }
+        ],
+        "services": {
+          "21": {
+            "port": 21,
+            "name": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4",
+            "banner": "220 (vsFTPd 2.3.4)"
+          },
+          "22": {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+          },
+          "80": {
+            "port": 80,
+            "name": "http",
+            "product": "Apache httpd",
+            "version": "2.4.49",
+            "banner": ""
+          }
+        },
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:41:41.866893+00:00"
+    },
+    {
+      "node_id": "ptt-0005",
+      "agent": "vulnerability",
+      "kind": "llm_raw_response_vuln",
+      "data": {
+        "raw": "{\"ordre_cve_ids\": [\"CVE-2021-41773\", \"CVE-2021-42013\", \"CVE-2023-38408\", \"CVE-2011-2523\"], \"raison\": \"Les vuln\u00e9rabilit\u00e9s sont ordonn\u00e9es par priorit\u00e9 d'exploitation en fonction de leur s\u00e9v\u00e9rit\u00e9 et de leur facilit\u00e9 d'exploitation.\"}",
+        "latency_s": 56.27027843199903,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:42:38.188354+00:00"
+    },
+    {
+      "node_id": "ptt-0006",
+      "agent": "vulnerability",
+      "kind": "vuln_analysis",
+      "data": {
+        "findings": [
+          {
+            "service": "http",
+            "product": "apache httpd",
+            "port": 80,
+            "cve_id": "CVE-2021-41773",
+            "severity": "critical",
+            "type": "path_traversal",
+            "version": "2.4.49",
+            "source": "version_correlation"
+          },
+          {
+            "service": "http",
+            "product": "apache httpd",
+            "port": 80,
+            "cve_id": "CVE-2021-42013",
+            "severity": "critical",
+            "type": "rce",
+            "version": "2.4.49",
+            "source": "version_correlation"
+          },
+          {
+            "service": "ssh",
+            "product": "openssh",
+            "port": 22,
+            "cve_id": "CVE-2023-38408",
+            "severity": "high",
+            "type": "pkcs11_rce",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "source": "version_correlation"
+          },
+          {
+            "service": "ftp",
+            "product": "vsftpd",
+            "port": 21,
+            "cve_id": "CVE-2011-2523",
+            "severity": "critical",
+            "type": "backdoor",
+            "version": "2.3.4",
+            "source": "version_correlation"
+          }
+        ],
+        "dvwa": null,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:42:38.188437+00:00"
+    },
+    {
+      "node_id": "ptt-0007",
+      "agent": "orchestrator",
+      "kind": "llm_raw_response",
+      "data": {
+        "raw": "{\"profil\": \"stealth\", \"ports_cibles\": [22, 80, 443], \"services_focus\": [\"ssh\", \"http\", \"https\"], \"lancer_boucle_evasion\": false, \"cycles\": 3, \"raison\": \"Profil de s\u00e9curit\u00e9 \u00e9lev\u00e9, prioriser la reconnaissance et l'\u00e9num\u00e9ration des services.\"}"
+      },
+      "timestamp": "2026-10-09T18:43:12.906188+00:00"
+    },
+    {
+      "node_id": "ptt-0008",
+      "agent": "orchestrator",
+      "kind": "llm_replan",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          443
+        ],
+        "services_focus": [
+          "ssh",
+          "http",
+          "https"
+        ],
+        "lancer_boucle_evasion": false,
+        "cycles": 10,
+        "raison": "Profil de s\u00e9curit\u00e9 \u00e9lev\u00e9, prioriser la reconnaissance et l'\u00e9num\u00e9ration des services."
+      },
+      "timestamp": "2026-10-09T18:43:12.906259+00:00"
+    },
+    {
+      "node_id": "ptt-0009",
+      "agent": "orchestrator",
+      "kind": "llm_decision",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          443
+        ],
+        "services_focus": [
+          "ssh",
+          "http",
+          "https"
+        ],
+        "lancer_boucle_evasion": false,
+        "cycles": 10,
+        "raison": "Profil de s\u00e9curit\u00e9 \u00e9lev\u00e9, prioriser la reconnaissance et l'\u00e9num\u00e9ration des services."
+      },
+      "timestamp": "2026-10-09T18:43:12.906299+00:00"
+    },
+    {
+      "node_id": "ptt-0010",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.95,
+        "epsilon": 0.2,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:43:12.939123+00:00"
+    },
+    {
+      "node_id": "ptt-0011",
+      "agent": "attack",
+      "kind": "llm_raw_response_attack",
+      "data": {
+        "raw": "{\"ports_prioritaires\": [80, 22, 21], \"raison\": \"Les ports 80 et 22 sont prioritaires en raison des vuln\u00e9rabilit\u00e9s de s\u00e9v\u00e9rit\u00e9 critical, tandis que le port 21 est ajout\u00e9 en raison de la vuln\u00e9rabilit\u00e9 de s\u00e9v\u00e9rit\u00e9 critical.\"}",
+        "latency_s": 64.52370973299548,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:44:17.464944+00:00"
+    },
+    {
+      "node_id": "ptt-0012",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:44:19.762127+00:00"
+    },
+    {
+      "node_id": "ptt-0013",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat d'\u00e9valuation est indiqu\u00e9 comme non d\u00e9tect\u00e9 (detected: false). Suricata n'a pas d\u00e9tect\u00e9 d'alerte (suricata_detected: false). Le mod\u00e8le RF n'a pas d\u00e9tect\u00e9 d'alerte non plus (rf_detected: false). La probabilit\u00e9 de d\u00e9tection du mod\u00e8le RF est de 0.0 (rf_proba: 0.0). Il n'y a pas eu de d\u00e9tection par Suricata (alert_count: 0). Aucune signature n'a \u00e9t\u00e9 d\u00e9tect\u00e9e (signatures: []). La taux de d\u00e9tection est de 0.0 (detection_rate: 0.0). Le fichier d'\u00e9valuation provient de /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. Le test a \u00e9t\u00e9 effectu\u00e9 en mode dry_run (dry_run: false).\"}",
+        "latency_s": 97.08610302698798,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:45:56.857827+00:00"
+    },
+    {
+      "node_id": "ptt-0014",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat d'\u00e9valuation est indiqu\u00e9 comme non d\u00e9tect\u00e9 (detected: false). Suricata n'a pas d\u00e9tect\u00e9 d'alerte (suricata_detected: false). Le mod\u00e8le RF n'a pas d\u00e9tect\u00e9 d'alerte non plus (rf_detected: false). La probabilit\u00e9 de d\u00e9tection du mod\u00e8le RF est de 0.0 (rf_proba: 0.0). Il n'y a pas eu de d\u00e9tection par Suricata (alert_count: 0). Aucune signature n'a \u00e9t\u00e9 d\u00e9tect\u00e9e (signatures: []). La taux de d\u00e9tection est de 0.0 (detection_rate: 0.0). Le fichier d'\u00e9valuation provient de /tmp/claude-1000/-home-"
+      },
+      "timestamp": "2026-10-09T18:45:56.857912+00:00"
+    },
+    {
+      "node_id": "ptt-0015",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.199,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:45:56.878340+00:00"
+    },
+    {
+      "node_id": "ptt-0016",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:45:59.202988+00:00"
+    },
+    {
+      "node_id": "ptt-0017",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 54.57461151499592,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:46:53.779382+00:00"
+    },
+    {
+      "node_id": "ptt-0018",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:46:53.779447+00:00"
+    },
+    {
+      "node_id": "ptt-0019",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.198,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:46:53.795756+00:00"
+    },
+    {
+      "node_id": "ptt-0020",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:46:56.095350+00:00"
+    },
+    {
+      "node_id": "ptt-0021",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 53.18042431399226,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:47:49.277670+00:00"
+    },
+    {
+      "node_id": "ptt-0022",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:47:49.277749+00:00"
+    },
+    {
+      "node_id": "ptt-0023",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.197,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:47:49.299000+00:00"
+    },
+    {
+      "node_id": "ptt-0024",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:47:51.273936+00:00"
+    },
+    {
+      "node_id": "ptt-0025",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 50.52225796801213,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:48:41.797756+00:00"
+    },
+    {
+      "node_id": "ptt-0026",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:48:41.797817+00:00"
+    },
+    {
+      "node_id": "ptt-0027",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.196,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:48:41.811170+00:00"
+    },
+    {
+      "node_id": "ptt-0028",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:48:44.096134+00:00"
+    },
+    {
+      "node_id": "ptt-0029",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 51.75321531901136,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:49:35.853658+00:00"
+    },
+    {
+      "node_id": "ptt-0030",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:49:35.853716+00:00"
+    },
+    {
+      "node_id": "ptt-0031",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.195,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:49:35.869343+00:00"
+    },
+    {
+      "node_id": "ptt-0032",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T18:49:38.102291+00:00"
+    },
+    {
+      "node_id": "ptt-0033",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 51.96141564899881,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:50:30.066931+00:00"
+    },
+    {
+      "node_id": "ptt-0034",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:50:30.067013+00:00"
+    },
+    {
+      "node_id": "ptt-0035",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1941,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:50:30.089972+00:00"
+    },
+    {
+      "node_id": "ptt-0036",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T18:50:32.367629+00:00"
+    },
+    {
+      "node_id": "ptt-0037",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 51.649949422993814,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:51:24.020921+00:00"
+    },
+    {
+      "node_id": "ptt-0038",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:51:24.020998+00:00"
+    },
+    {
+      "node_id": "ptt-0039",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1931,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:51:24.042889+00:00"
+    },
+    {
+      "node_id": "ptt-0040",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T18:51:25.975519+00:00"
+    },
+    {
+      "node_id": "ptt-0041",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 50.210317388991825,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:52:16.188388+00:00"
+    },
+    {
+      "node_id": "ptt-0042",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:52:16.188479+00:00"
+    },
+    {
+      "node_id": "ptt-0043",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1921,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:52:16.212938+00:00"
+    },
+    {
+      "node_id": "ptt-0044",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T18:52:18.475725+00:00"
+    },
+    {
+      "node_id": "ptt-0045",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 49.66090159799205,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:53:08.138430+00:00"
+    },
+    {
+      "node_id": "ptt-0046",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:53:08.138492+00:00"
+    },
+    {
+      "node_id": "ptt-0047",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1912,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:53:08.155963+00:00"
+    },
+    {
+      "node_id": "ptt-0048",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:53:10.453787+00:00"
+    },
+    {
+      "node_id": "ptt-0049",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 49.482529050001176,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:53:59.939466+00:00"
+    },
+    {
+      "node_id": "ptt-0050",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:53:59.939529+00:00"
+    },
+    {
+      "node_id": "ptt-0051",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "hold",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1902,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:53:59.957785+00:00"
+    },
+    {
+      "node_id": "ptt-0052",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:54:02.297595+00:00"
+    },
+    {
+      "node_id": "ptt-0053",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 51.659903249004856,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:54:53.961412+00:00"
+    },
+    {
+      "node_id": "ptt-0054",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:54:53.961473+00:00"
+    },
+    {
+      "node_id": "ptt-0055",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1893,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:54:53.978222+00:00"
+    },
+    {
+      "node_id": "ptt-0056",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:54:55.879577+00:00"
+    },
+    {
+      "node_id": "ptt-0057",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 49.92212028600625,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:55:45.806826+00:00"
+    },
+    {
+      "node_id": "ptt-0058",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:55:45.806889+00:00"
+    },
+    {
+      "node_id": "ptt-0059",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          2,
+          3,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.8,
+        "epsilon": 0.1883,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:55:45.828787+00:00"
+    },
+    {
+      "node_id": "ptt-0060",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 300,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:55:47.547211+00:00"
+    },
+    {
+      "node_id": "ptt-0061",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 48.32931976900727,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:56:35.880306+00:00"
+    },
+    {
+      "node_id": "ptt-0062",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:56:35.880366+00:00"
+    },
+    {
+      "node_id": "ptt-0063",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          3,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1874,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:56:35.897837+00:00"
+    },
+    {
+      "node_id": "ptt-0064",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T18:56:37.840994+00:00"
+    },
+    {
+      "node_id": "ptt-0065",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 50.16091791399231,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:57:28.003284+00:00"
+    },
+    {
+      "node_id": "ptt-0066",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:57:28.003363+00:00"
+    },
+    {
+      "node_id": "ptt-0067",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1864,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:57:28.018541+00:00"
+    },
+    {
+      "node_id": "ptt-0068",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T18:57:29.948460+00:00"
+    },
+    {
+      "node_id": "ptt-0069",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 48.99869537699851,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:58:18.951575+00:00"
+    },
+    {
+      "node_id": "ptt-0070",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:58:18.951632+00:00"
+    },
+    {
+      "node_id": "ptt-0071",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          2,
+          3,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 0.984375,
+        "reward": -1.7765625,
+        "epsilon": 0.1855,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:58:18.966908+00:00"
+    },
+    {
+      "node_id": "ptt-0072",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 300,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T18:58:20.592045+00:00"
+    },
+    {
+      "node_id": "ptt-0073",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 50.262837166999816,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T18:59:10.858647+00:00"
+    },
+    {
+      "node_id": "ptt-0074",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T18:59:10.858708+00:00"
+    },
+    {
+      "node_id": "ptt-0075",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          3,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1846,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T18:59:10.876804+00:00"
+    },
+    {
+      "node_id": "ptt-0076",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T18:59:12.791030+00:00"
+    },
+    {
+      "node_id": "ptt-0077",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 49.62372078400222,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T19:00:02.416333+00:00"
+    },
+    {
+      "node_id": "ptt-0078",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T19:00:02.416394+00:00"
+    },
+    {
+      "node_id": "ptt-0079",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1837,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T19:00:02.435632+00:00"
+    },
+    {
+      "node_id": "ptt-0080",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T19:00:04.349167+00:00"
+    },
+    {
+      "node_id": "ptt-0081",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 49.326747387996875,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T19:00:53.677747+00:00"
+    },
+    {
+      "node_id": "ptt-0082",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T19:00:53.677804+00:00"
+    },
+    {
+      "node_id": "ptt-0083",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "hold",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1827,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T19:00:53.693993+00:00"
+    },
+    {
+      "node_id": "ptt-0084",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T19:00:55.621951+00:00"
+    },
+    {
+      "node_id": "ptt-0085",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 51.41240698599722,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T19:01:47.036048+00:00"
+    },
+    {
+      "node_id": "ptt-0086",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T19:01:47.036131+00:00"
+    },
+    {
+      "node_id": "ptt-0087",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          2,
+          3,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.8,
+        "epsilon": 0.1818,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T19:01:47.070147+00:00"
+    },
+    {
+      "node_id": "ptt-0088",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 300,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T19:01:48.741906+00:00"
+    },
+    {
+      "node_id": "ptt-0089",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run.\"}",
+        "latency_s": 50.36738730700745,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T19:02:39.113123+00:00"
+    },
+    {
+      "node_id": "ptt-0090",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le r\u00e9sultat indique que l'analyse n'a pas d\u00e9tect\u00e9 de menace. Suricata n'a pas d\u00e9clench\u00e9 d'alerte, et le mod\u00e8le RF a \u00e9galement indiqu\u00e9 une probabilit\u00e9 de 0.0 pour la d\u00e9tection d'une menace. Aucune signature n'a \u00e9t\u00e9 d\u00e9clench\u00e9e, et la taux de d\u00e9tection est de 0.0. Le fichier d'entr\u00e9e utilis\u00e9 est /tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json. L'analyse a \u00e9t\u00e9 effectu\u00e9e en mode dry_run."
+      },
+      "timestamp": "2026-10-09T19:02:39.113180+00:00"
+    }
+  ],
+  "recon_results": [
+    {
+      "host": "192.168.100.14",
+      "port": 21,
+      "state": "open",
+      "service": "ftp",
+      "product": "vsftpd",
+      "version": "2.3.4"
+    },
+    {
+      "host": "192.168.100.14",
+      "port": 22,
+      "state": "open",
+      "service": "ssh",
+      "product": "OpenSSH",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17"
+    },
+    {
+      "host": "192.168.100.14",
+      "port": 80,
+      "state": "open",
+      "service": "http",
+      "product": "Apache httpd",
+      "version": "2.4.49"
+    }
+  ],
+  "enumeration_results": [
+    {
+      "port": 21,
+      "name": "ftp",
+      "product": "vsftpd",
+      "version": "2.3.4",
+      "banner": "220 (vsFTPd 2.3.4)"
+    },
+    {
+      "port": 22,
+      "name": "ssh",
+      "product": "OpenSSH",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17",
+      "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+    },
+    {
+      "port": 80,
+      "name": "http",
+      "product": "Apache httpd",
+      "version": "2.4.49",
+      "banner": ""
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "service": "ftp",
+      "product": "vsftpd",
+      "port": 21,
+      "cve_id": "CVE-2011-2523",
+      "severity": "critical",
+      "type": "backdoor",
+      "version": "2.3.4",
+      "source": "version_correlation"
+    },
+    {
+      "service": "ssh",
+      "product": "openssh",
+      "port": 22,
+      "cve_id": "CVE-2023-38408",
+      "severity": "high",
+      "type": "pkcs11_rce",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17",
+      "source": "version_correlation"
+    },
+    {
+      "service": "http",
+      "product": "apache httpd",
+      "port": 80,
+      "cve_id": "CVE-2021-41773",
+      "severity": "critical",
+      "type": "path_traversal",
+      "version": "2.4.49",
+      "source": "version_correlation"
+    },
+    {
+      "service": "http",
+      "product": "apache httpd",
+      "port": 80,
+      "cve_id": "CVE-2021-42013",
+      "severity": "critical",
+      "type": "rce",
+      "version": "2.4.49",
+      "source": "version_correlation"
+    }
+  ],
+  "attack_attempts": [
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    }
+  ],
+  "evasion_strategy": {
+    "state": [
+      2,
+      3,
+      1,
+      2907638143
+    ],
+    "action": "speed_up",
+    "epsilon": 0.18183125231650604
+  },
+  "evaluations": [
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "label": "ollama:hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest",
+  "provider": "openai_compatible",
+  "model": "hf.co/mradermacher/Lily-Cybersecurity-7B-v0.2-GGUF:latest",
+  "ok": true,
+  "latency_s": 104.001,
+  "fallback_reason": null
+}

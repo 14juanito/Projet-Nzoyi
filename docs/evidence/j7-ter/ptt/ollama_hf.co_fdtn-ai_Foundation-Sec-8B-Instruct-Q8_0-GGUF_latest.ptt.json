@@ -1,0 +1,3253 @@
+{
+  "target": "192.168.100.14",
+  "nodes": [
+    {
+      "node_id": "ptt-0001",
+      "agent": "orchestrator",
+      "kind": "llm_strategy",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          21
+        ],
+        "services_focus": [],
+        "lancer_boucle_evasion": true,
+        "cycles": 100,
+        "raison": "fallback hors-ligne"
+      },
+      "timestamp": "2026-10-09T20:05:51.658629+00:00"
+    },
+    {
+      "node_id": "ptt-0002",
+      "agent": "recon",
+      "kind": "port_scan",
+      "data": {
+        "target": "192.168.100.14",
+        "open_ports": [
+          21,
+          22,
+          80
+        ],
+        "ports": [
+          {
+            "host": "192.168.100.14",
+            "port": 21,
+            "state": "open",
+            "service": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4"
+          },
+          {
+            "host": "192.168.100.14",
+            "port": 22,
+            "state": "open",
+            "service": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17"
+          },
+          {
+            "host": "192.168.100.14",
+            "port": 80,
+            "state": "open",
+            "service": "http",
+            "product": "Apache httpd",
+            "version": "2.4.49"
+          }
+        ],
+        "scan_type": "version",
+        "timing": 4,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:05:58.805118+00:00"
+    },
+    {
+      "node_id": "ptt-0003",
+      "agent": "enumerator",
+      "kind": "service_enum",
+      "data": {
+        "service_list": [
+          {
+            "port": 21,
+            "name": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4",
+            "banner": "220 (vsFTPd 2.3.4)"
+          },
+          {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+          },
+          {
+            "port": 80,
+            "name": "http",
+            "product": "Apache httpd",
+            "version": "2.4.49",
+            "banner": ""
+          }
+        ],
+        "services": {
+          "21": {
+            "port": 21,
+            "name": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4",
+            "banner": "220 (vsFTPd 2.3.4)"
+          },
+          "22": {
+            "port": 22,
+            "name": "ssh",
+            "product": "OpenSSH",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+          },
+          "80": {
+            "port": 80,
+            "name": "http",
+            "product": "Apache httpd",
+            "version": "2.4.49",
+            "banner": ""
+          }
+        },
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:06:00.824952+00:00"
+    },
+    {
+      "node_id": "ptt-0004",
+      "agent": "vulnerability",
+      "kind": "llm_raw_response_vuln",
+      "data": {
+        "raw": "{\"ordre_cve_ids\": [\"CVE-2021-42013\", \"CVE-2021-41773\", \"CVE-2011-2523\", \"CVE-2023-38408\"], \"raison\": \"Les vuln\u00e9rabilit\u00e9s sont tri\u00e9es par s\u00e9v\u00e9rit\u00e9 d\u00e9croissante et facilit\u00e9 d'exploitation croissante, bas\u00e9es sur les informations fournies.\"}",
+        "latency_s": 85.35002040999825,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:07:26.196343+00:00"
+    },
+    {
+      "node_id": "ptt-0005",
+      "agent": "vulnerability",
+      "kind": "vuln_analysis",
+      "data": {
+        "findings": [
+          {
+            "service": "http",
+            "product": "apache httpd",
+            "port": 80,
+            "cve_id": "CVE-2021-42013",
+            "severity": "critical",
+            "type": "rce",
+            "version": "2.4.49",
+            "source": "version_correlation"
+          },
+          {
+            "service": "http",
+            "product": "apache httpd",
+            "port": 80,
+            "cve_id": "CVE-2021-41773",
+            "severity": "critical",
+            "type": "path_traversal",
+            "version": "2.4.49",
+            "source": "version_correlation"
+          },
+          {
+            "service": "ftp",
+            "product": "vsftpd",
+            "port": 21,
+            "cve_id": "CVE-2011-2523",
+            "severity": "critical",
+            "type": "backdoor",
+            "version": "2.3.4",
+            "source": "version_correlation"
+          },
+          {
+            "service": "ssh",
+            "product": "openssh",
+            "port": 22,
+            "cve_id": "CVE-2023-38408",
+            "severity": "high",
+            "type": "pkcs11_rce",
+            "version": "8.9p1 Ubuntu 3ubuntu0.17",
+            "source": "version_correlation"
+          }
+        ],
+        "dvwa": null,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:07:26.196392+00:00"
+    },
+    {
+      "node_id": "ptt-0006",
+      "agent": "orchestrator",
+      "kind": "llm_raw_response",
+      "data": {
+        "raw": "{\"profil\": \"stealth\", \"ports_cibles\": [22, 80, 443], \"services_focus\": [\"ssh\", \"http\", \"https\"], \"lancer_boucle_evasion\": false, \"cycles\": 3, \"raison\": \"Le profil stealth est choisi pour minimiser la d\u00e9tection. Les ports SSH, HTTP et HTTPS sont prioritaires pour l'authentification et le reconnaissance des services. 3 cycles sont planifi\u00e9s pour une exploration compl\u00e8te sans \u00e9vasion active.\"}"
+      },
+      "timestamp": "2026-10-09T20:08:35.675634+00:00"
+    },
+    {
+      "node_id": "ptt-0007",
+      "agent": "orchestrator",
+      "kind": "llm_replan",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          443
+        ],
+        "services_focus": [
+          "ssh",
+          "http",
+          "https"
+        ],
+        "lancer_boucle_evasion": false,
+        "cycles": 10,
+        "raison": "Le profil stealth est choisi pour minimiser la d\u00e9tection. Les ports SSH, HTTP et HTTPS sont prioritaires pour l'authentification et le reconnaissance des services. 3 cycles sont planifi\u00e9s pour une exploration compl\u00e8te sans \u00e9vasion active."
+      },
+      "timestamp": "2026-10-09T20:08:35.675683+00:00"
+    },
+    {
+      "node_id": "ptt-0008",
+      "agent": "orchestrator",
+      "kind": "llm_decision",
+      "data": {
+        "profil": "stealth",
+        "ports_cibles": [
+          22,
+          80,
+          443
+        ],
+        "services_focus": [
+          "ssh",
+          "http",
+          "https"
+        ],
+        "lancer_boucle_evasion": false,
+        "cycles": 10,
+        "raison": "Le profil stealth est choisi pour minimiser la d\u00e9tection. Les ports SSH, HTTP et HTTPS sont prioritaires pour l'authentification et le reconnaissance des services. 3 cycles sont planifi\u00e9s pour une exploration compl\u00e8te sans \u00e9vasion active."
+      },
+      "timestamp": "2026-10-09T20:08:35.675708+00:00"
+    },
+    {
+      "node_id": "ptt-0009",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.95,
+        "epsilon": 0.2,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:08:35.688669+00:00"
+    },
+    {
+      "node_id": "ptt-0010",
+      "agent": "attack",
+      "kind": "llm_raw_response_attack",
+      "data": {
+        "raw": "{\"ports_prioritaires\": [80, 21, 22], \"raison\": \"Le port 80 pr\u00e9sente deux vuln\u00e9rabilit\u00e9s critiques, ce qui le rend prioritaire. Le port 21 a une vuln\u00e9rabilit\u00e9 critique non sur le m\u00eame port mais est inclus pour sa s\u00e9v\u00e9rit\u00e9 \u00e9lev\u00e9e. Le port 22 a une vuln\u00e9rabilit\u00e9 de s\u00e9v\u00e9rit\u00e9 'high' mais est prioritaire car il s'agit du SSH, souvent exploit\u00e9 en premier dans les pentests.\"}",
+        "latency_s": 79.45054447000439,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:09:55.140544+00:00"
+    },
+    {
+      "node_id": "ptt-0011",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:09:57.368877+00:00"
+    },
+    {
+      "node_id": "ptt-0012",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucune alerte n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9e et la d\u00e9tection globale est consid\u00e9r\u00e9e comme n\u00e9gative.\"}",
+        "latency_s": 89.52837516000727,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:11:26.902327+00:00"
+    },
+    {
+      "node_id": "ptt-0013",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucune alerte n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9e et l"
+      },
+      "timestamp": "2026-10-09T20:11:26.902372+00:00"
+    },
+    {
+      "node_id": "ptt-0014",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.199,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:11:26.912297+00:00"
+    },
+    {
+      "node_id": "ptt-0015",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:11:29.133708+00:00"
+    },
+    {
+      "node_id": "ptt-0016",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.35656372399535,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:12:39.493253+00:00"
+    },
+    {
+      "node_id": "ptt-0017",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:12:39.493300+00:00"
+    },
+    {
+      "node_id": "ptt-0018",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.198,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:12:39.503885+00:00"
+    },
+    {
+      "node_id": "ptt-0019",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:12:41.713806+00:00"
+    },
+    {
+      "node_id": "ptt-0020",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 73.25599234600668,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:13:54.971377+00:00"
+    },
+    {
+      "node_id": "ptt-0021",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:13:54.971431+00:00"
+    },
+    {
+      "node_id": "ptt-0022",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.197,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:13:54.983016+00:00"
+    },
+    {
+      "node_id": "ptt-0023",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:13:56.937341+00:00"
+    },
+    {
+      "node_id": "ptt-0024",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 76.57343849899189,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:15:13.512501+00:00"
+    },
+    {
+      "node_id": "ptt-0025",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:15:13.512553+00:00"
+    },
+    {
+      "node_id": "ptt-0026",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.196,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:15:13.529325+00:00"
+    },
+    {
+      "node_id": "ptt-0027",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:15:15.768337+00:00"
+    },
+    {
+      "node_id": "ptt-0028",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 74.284467407997,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:16:30.054765+00:00"
+    },
+    {
+      "node_id": "ptt-0029",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:16:30.054811+00:00"
+    },
+    {
+      "node_id": "ptt-0030",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.195,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:16:30.067267+00:00"
+    },
+    {
+      "node_id": "ptt-0031",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:16:32.298059+00:00"
+    },
+    {
+      "node_id": "ptt-0032",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 72.65817397800856,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:17:44.958585+00:00"
+    },
+    {
+      "node_id": "ptt-0033",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:17:44.958632+00:00"
+    },
+    {
+      "node_id": "ptt-0034",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1941,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:17:44.969452+00:00"
+    },
+    {
+      "node_id": "ptt-0035",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:17:47.209582+00:00"
+    },
+    {
+      "node_id": "ptt-0036",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 72.02159196599678,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:18:59.234453+00:00"
+    },
+    {
+      "node_id": "ptt-0037",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:18:59.234508+00:00"
+    },
+    {
+      "node_id": "ptt-0038",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1931,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:18:59.247651+00:00"
+    },
+    {
+      "node_id": "ptt-0039",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:19:01.182829+00:00"
+    },
+    {
+      "node_id": "ptt-0040",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 73.194430345,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:20:14.380334+00:00"
+    },
+    {
+      "node_id": "ptt-0041",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:20:14.380387+00:00"
+    },
+    {
+      "node_id": "ptt-0042",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1921,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:20:14.393524+00:00"
+    },
+    {
+      "node_id": "ptt-0043",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:20:16.630215+00:00"
+    },
+    {
+      "node_id": "ptt-0044",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.76178930500464,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:21:27.395268+00:00"
+    },
+    {
+      "node_id": "ptt-0045",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:21:27.395323+00:00"
+    },
+    {
+      "node_id": "ptt-0046",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          0,
+          5,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1912,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:21:27.408290+00:00"
+    },
+    {
+      "node_id": "ptt-0047",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:21:29.644738+00:00"
+    },
+    {
+      "node_id": "ptt-0048",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 71.16745671599347,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:22:40.813590+00:00"
+    },
+    {
+      "node_id": "ptt-0049",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:22:40.813661+00:00"
+    },
+    {
+      "node_id": "ptt-0050",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "hold",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -2.0,
+        "epsilon": 0.1902,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:22:40.834838+00:00"
+    },
+    {
+      "node_id": "ptt-0051",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 0,
+            "scan_delay_ms": 500,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 0,
+        "scan_delay_ms": 500,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:22:43.043960+00:00"
+    },
+    {
+      "node_id": "ptt-0052",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.69948772099451,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:23:53.744416+00:00"
+    },
+    {
+      "node_id": "ptt-0053",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:23:53.744462+00:00"
+    },
+    {
+      "node_id": "ptt-0054",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          0,
+          5,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1893,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:23:53.756436+00:00"
+    },
+    {
+      "node_id": "ptt-0055",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:23:55.681589+00:00"
+    },
+    {
+      "node_id": "ptt-0056",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.64219353199587,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:25:06.326182+00:00"
+    },
+    {
+      "node_id": "ptt-0057",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:25:06.326232+00:00"
+    },
+    {
+      "node_id": "ptt-0058",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          2,
+          3,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.8,
+        "epsilon": 0.1883,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:25:06.340398+00:00"
+    },
+    {
+      "node_id": "ptt-0059",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 300,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:25:07.941810+00:00"
+    },
+    {
+      "node_id": "ptt-0060",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 71.0469754730002,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:26:18.990351+00:00"
+    },
+    {
+      "node_id": "ptt-0061",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:26:18.990773+00:00"
+    },
+    {
+      "node_id": "ptt-0062",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          3,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1874,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:26:19.002490+00:00"
+    },
+    {
+      "node_id": "ptt-0063",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:26:20.966392+00:00"
+    },
+    {
+      "node_id": "ptt-0064",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.55639755800075,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:27:31.525615+00:00"
+    },
+    {
+      "node_id": "ptt-0065",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:27:31.525670+00:00"
+    },
+    {
+      "node_id": "ptt-0066",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1864,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:27:31.541324+00:00"
+    },
+    {
+      "node_id": "ptt-0067",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:27:33.450232+00:00"
+    },
+    {
+      "node_id": "ptt-0068",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.54184815200279,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:28:43.995842+00:00"
+    },
+    {
+      "node_id": "ptt-0069",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:28:43.995898+00:00"
+    },
+    {
+      "node_id": "ptt-0070",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          2,
+          3,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 0.984375,
+        "reward": -1.7765625,
+        "epsilon": 0.1855,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:28:44.016569+00:00"
+    },
+    {
+      "node_id": "ptt-0071",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 300,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:28:45.664547+00:00"
+    },
+    {
+      "node_id": "ptt-0072",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.4752552860009,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:29:56.142282+00:00"
+    },
+    {
+      "node_id": "ptt-0073",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:29:56.142330+00:00"
+    },
+    {
+      "node_id": "ptt-0074",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "slow_down",
+        "state": [
+          2,
+          3,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1846,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:29:56.155453+00:00"
+    },
+    {
+      "node_id": "ptt-0075",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": false,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": false
+      },
+      "timestamp": "2026-10-09T20:29:58.015766+00:00"
+    },
+    {
+      "node_id": "ptt-0076",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.28448363200005,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:31:08.301333+00:00"
+    },
+    {
+      "node_id": "ptt-0077",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:31:08.301381+00:00"
+    },
+    {
+      "node_id": "ptt-0078",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "enable_fragment",
+        "state": [
+          1,
+          4,
+          0,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1837,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:31:08.314667+00:00"
+    },
+    {
+      "node_id": "ptt-0079",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:31:10.194803+00:00"
+    },
+    {
+      "node_id": "ptt-0080",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.79449932700663,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:32:20.991293+00:00"
+    },
+    {
+      "node_id": "ptt-0081",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:32:20.991362+00:00"
+    },
+    {
+      "node_id": "ptt-0082",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "hold",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.9,
+        "epsilon": 0.1827,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:32:21.015419+00:00"
+    },
+    {
+      "node_id": "ptt-0083",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 1,
+            "scan_delay_ms": 400,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 1,
+        "scan_delay_ms": 400,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:32:22.882057+00:00"
+    },
+    {
+      "node_id": "ptt-0084",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.01148100600403,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:33:32.895122+00:00"
+    },
+    {
+      "node_id": "ptt-0085",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:33:32.895170+00:00"
+    },
+    {
+      "node_id": "ptt-0086",
+      "agent": "evasion",
+      "kind": "evasion_step",
+      "data": {
+        "action": "speed_up",
+        "state": [
+          1,
+          4,
+          1,
+          2907638143
+        ],
+        "next_state": [
+          2,
+          3,
+          1,
+          2907638143
+        ],
+        "detected": true,
+        "p_detect": 1.0,
+        "reward": -1.8,
+        "epsilon": 0.1818,
+        "dry_run": false
+      },
+      "timestamp": "2026-10-09T20:33:32.909026+00:00"
+    },
+    {
+      "node_id": "ptt-0087",
+      "agent": "attack",
+      "kind": "attack_plan",
+      "data": {
+        "attempts": [
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 80,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          },
+          {
+            "target": "192.168.100.14",
+            "scan_type": "stealth",
+            "timing": 2,
+            "scan_delay_ms": 300,
+            "fragment": true,
+            "ports": [
+              80,
+              22
+            ],
+            "host": "192.168.100.14",
+            "port": 22,
+            "executed": true,
+            "timed_out": false,
+            "dry_run": false
+          }
+        ],
+        "executed": true,
+        "timed_out": false,
+        "dry_run": false,
+        "timing": 2,
+        "scan_delay_ms": 300,
+        "fragment": true
+      },
+      "timestamp": "2026-10-09T20:33:34.473519+00:00"
+    },
+    {
+      "node_id": "ptt-0088",
+      "agent": "evaluation",
+      "kind": "llm_raw_response_evaluation",
+      "data": {
+        "raw": "{\"rationale\": \"Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t\u00e9 g\u00e9n\u00e9r\u00e9, et la d\u00e9tection_rate est de 0.0, ce qui refl\u00e8te le fait qu'aucune activit\u00e9 n'a \u00e9t\u00e9 identifi\u00e9e comme potentiellement malveillante.\"}",
+        "latency_s": 70.53077851599664,
+        "fallback_reason": null
+      },
+      "timestamp": "2026-10-09T20:34:45.006451+00:00"
+    },
+    {
+      "node_id": "ptt-0089",
+      "agent": "evaluation",
+      "kind": "ids_feedback",
+      "data": {
+        "detected": false,
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": [],
+        "detection_rate": 0.0,
+        "source": "/tmp/claude-1000/-home-roy/19cc5a56-acf4-47f7-8f76-0e4c273d4f96/scratchpad/j7/eve_mirror.json",
+        "dry_run": false,
+        "llm_rationale": "Le syst\u00e8me de d\u00e9tection a analys\u00e9 les donn\u00e9es collect\u00e9es par Suricata et l'algorithme de machine learning RF (Random Forest) dans le fichier sp\u00e9cifi\u00e9. Suricata n'a d\u00e9tect\u00e9 aucune alerte, ce qui signifie qu'aucun comportement suspect n'a \u00e9t\u00e9 identifi\u00e9 par les signatures pr\u00e9existantes. De plus, l'algorithme RF n'a pas class\u00e9 l'activit\u00e9 comme suspecte, avec une probabilit\u00e9 de 0.0, ce qui indique une confiance absolue dans le fait que l'activit\u00e9 est normale. Ainsi, aucun r\u00e9sultat de d\u00e9tection n'a \u00e9t"
+      },
+      "timestamp": "2026-10-09T20:34:45.006507+00:00"
+    }
+  ],
+  "recon_results": [
+    {
+      "host": "192.168.100.14",
+      "port": 21,
+      "state": "open",
+      "service": "ftp",
+      "product": "vsftpd",
+      "version": "2.3.4"
+    },
+    {
+      "host": "192.168.100.14",
+      "port": 22,
+      "state": "open",
+      "service": "ssh",
+      "product": "OpenSSH",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17"
+    },
+    {
+      "host": "192.168.100.14",
+      "port": 80,
+      "state": "open",
+      "service": "http",
+      "product": "Apache httpd",
+      "version": "2.4.49"
+    }
+  ],
+  "enumeration_results": [
+    {
+      "port": 21,
+      "name": "ftp",
+      "product": "vsftpd",
+      "version": "2.3.4",
+      "banner": "220 (vsFTPd 2.3.4)"
+    },
+    {
+      "port": 22,
+      "name": "ssh",
+      "product": "OpenSSH",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17",
+      "banner": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.17"
+    },
+    {
+      "port": 80,
+      "name": "http",
+      "product": "Apache httpd",
+      "version": "2.4.49",
+      "banner": ""
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "service": "ftp",
+      "product": "vsftpd",
+      "port": 21,
+      "cve_id": "CVE-2011-2523",
+      "severity": "critical",
+      "type": "backdoor",
+      "version": "2.3.4",
+      "source": "version_correlation"
+    },
+    {
+      "service": "ssh",
+      "product": "openssh",
+      "port": 22,
+      "cve_id": "CVE-2023-38408",
+      "severity": "high",
+      "type": "pkcs11_rce",
+      "version": "8.9p1 Ubuntu 3ubuntu0.17",
+      "source": "version_correlation"
+    },
+    {
+      "service": "http",
+      "product": "apache httpd",
+      "port": 80,
+      "cve_id": "CVE-2021-41773",
+      "severity": "critical",
+      "type": "path_traversal",
+      "version": "2.4.49",
+      "source": "version_correlation"
+    },
+    {
+      "service": "http",
+      "product": "apache httpd",
+      "port": 80,
+      "cve_id": "CVE-2021-42013",
+      "severity": "critical",
+      "type": "rce",
+      "version": "2.4.49",
+      "source": "version_correlation"
+    }
+  ],
+  "attack_attempts": [
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 0,
+      "scan_delay_ms": 500,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": false,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 1,
+      "scan_delay_ms": 400,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 80,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    },
+    {
+      "target": "192.168.100.14",
+      "scan_type": "stealth",
+      "timing": 2,
+      "scan_delay_ms": 300,
+      "fragment": true,
+      "ports": [
+        80,
+        22
+      ],
+      "host": "192.168.100.14",
+      "port": 22,
+      "executed": true,
+      "timed_out": false,
+      "dry_run": false
+    }
+  ],
+  "evasion_strategy": {
+    "state": [
+      2,
+      3,
+      1,
+      2907638143
+    ],
+    "action": "speed_up",
+    "epsilon": 0.18183125231650604
+  },
+  "evaluations": [
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    },
+    {
+      "detected": false,
+      "alert_details": {
+        "suricata_detected": false,
+        "rf_detected": false,
+        "rf_proba": 0.0,
+        "alert_count": 0,
+        "signatures": []
+      }
+    }
+  ]
+}

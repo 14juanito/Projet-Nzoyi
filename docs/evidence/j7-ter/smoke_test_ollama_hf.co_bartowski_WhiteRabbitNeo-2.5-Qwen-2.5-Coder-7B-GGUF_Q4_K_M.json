@@ -1,0 +1,8 @@
+{
+  "label": "ollama:hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M",
+  "provider": "openai_compatible",
+  "model": "hf.co/bartowski/WhiteRabbitNeo-2.5-Qwen-2.5-Coder-7B-GGUF:Q4_K_M",
+  "ok": true,
+  "latency_s": 19.319,
+  "fallback_reason": null
+}
