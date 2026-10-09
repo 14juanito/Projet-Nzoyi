@@ -31,6 +31,7 @@ from nzoyi.llm.backend import LLMBackend, LLMBackendError
 from nzoyi.llm.backends.anthropic_backend import AnthropicBackend
 from nzoyi.llm.backends.openai_compat_backend import OpenAICompatibleBackend
 from nzoyi.llm.evaluation_rationale_llm import EvaluationRationaleLLM
+from nzoyi.llm.json_utils import strip_markdown_fences
 from nzoyi.llm.orchestrator_llm import LLMOrchestrator
 from nzoyi.llm.vuln_triage_llm import VulnTriageLLM
 from nzoyi.rl.qlearning import EvasionAction, EvasionQLearner, EvasionState
@@ -118,6 +119,30 @@ def test_evasion_state_as_key_includes_target_signature() -> bool:
         and key_b[3] == 222
         and key_a != key_b
     )
+
+
+def test_strip_markdown_fences_json_language_tag() -> bool:
+    """Fences ```json ... ``` (cas Claude/J7-ter) — doivent être retirées."""
+    raw = '```json\n{"a": 1}\n```'
+    return strip_markdown_fences(raw) == '{"a": 1}'
+
+
+def test_strip_markdown_fences_bare() -> bool:
+    """Fences nues ``` ... ``` (sans identifiant de langage)."""
+    raw = '```\n{"a": 1}\n```'
+    return strip_markdown_fences(raw) == '{"a": 1}'
+
+
+def test_strip_markdown_fences_absent_unchanged() -> bool:
+    """Réponse sans fences — doit rester inchangée (hors strip() des bords)."""
+    raw = '{"a": 1}'
+    return strip_markdown_fences(raw) == '{"a": 1}'
+
+
+def test_strip_markdown_fences_surrounding_whitespace() -> bool:
+    """Espaces/retours à la ligne superflus avant/après les fences."""
+    raw = '\n\n  ```json\n{"a": 1}\n```  \n\n'
+    return strip_markdown_fences(raw) == '{"a": 1}'
 
 
 def test_stealth_profile() -> bool:
@@ -1690,6 +1715,10 @@ def run_all_tests() -> dict[str, bool]:
         "Suricata ignore bruit décodeur": test_suricata_ignores_decoder_noise(),
         "Q-Learning epsilon decay": test_qlearning_convergence(),
         "Q-Learning — as_key() inclut target_signature (J7)": test_evasion_state_as_key_includes_target_signature(),
+        "JSON LLM — strip fences ```json...``` (J7-ter)": test_strip_markdown_fences_json_language_tag(),
+        "JSON LLM — strip fences nues ```...```": test_strip_markdown_fences_bare(),
+        "JSON LLM — sans fences, inchangé": test_strip_markdown_fences_absent_unchanged(),
+        "JSON LLM — espaces/retours à la ligne superflus": test_strip_markdown_fences_surrounding_whitespace(),
         "Q-Learning save/load": test_qlearning_save_load(),
         "PTT thread safety": test_ptt_thread_safety(),
         "Recon agent — scan réel (mocké)": test_recon_agent_real_scan(),

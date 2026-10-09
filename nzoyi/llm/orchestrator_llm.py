@@ -31,6 +31,7 @@ from nzoyi.llm.backend_resolver import (
     VALID_PROVIDERS,
     resolve_backend,
 )
+from nzoyi.llm.json_utils import strip_markdown_fences
 
 logger = logging.getLogger("nzoyi.llm.orchestrator")
 
@@ -124,7 +125,7 @@ class LLMOrchestrator:
             text = self.backend.decide(SYSTEM_PROMPT, user_message)
             self.last_raw_response = text
             logger.info("LLM réponse: %s", text)
-            plan = self._sanitize(json.loads(text))
+            plan = self._sanitize(json.loads(strip_markdown_fences(text)))
             return plan
         except Exception as exc:
             # Couvre LLMBackendError (échec du backend) et toute erreur de

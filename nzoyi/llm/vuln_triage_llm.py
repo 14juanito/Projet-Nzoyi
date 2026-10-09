@@ -23,6 +23,7 @@ import time
 
 from nzoyi.llm.backend import LLMBackend
 from nzoyi.llm.backend_resolver import resolve_backend
+from nzoyi.llm.json_utils import strip_markdown_fences
 
 logger = logging.getLogger("nzoyi.llm.vuln_triage")
 
@@ -139,7 +140,7 @@ class VulnTriageLLM:
             self.last_latency_s = time.perf_counter() - t0
             self.last_raw_response = text
             logger.info("Triage vuln réponse: %s", text)
-            sanitized = self._sanitize(json.loads(text), findings)
+            sanitized = self._sanitize(json.loads(strip_markdown_fences(text)), findings)
             self.last_fallback_reason = None
             return sanitized
         except Exception as exc:
