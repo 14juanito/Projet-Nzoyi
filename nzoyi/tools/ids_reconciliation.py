@@ -2,6 +2,29 @@
 latence de lecture (J7-ter, voir docs/evidence/j7-ter/README.md § «
 Vérifications complémentaires »).
 
+⚠️ NON FIABLE EN L'ÉTAT — NE PAS UTILISER POUR PRODUIRE DE NOUVEAUX
+CHIFFRES SANS AVOIR VÉRIFIÉ LA CONDITION CI-DESSOUS.
+
+Ce module réattribue les alertes par leur horodatage EMBARQUÉ (horloge de
+la machine qui a généré l'événement IDS), comparé à des fenêtres de cycle
+construites sur l'horloge LOCALE (celle qui a écrit les nœuds PTT). Ces
+deux résultats ne sont comparables QUE SI les deux horloges sont
+synchronisées — ce qui n'était PAS le cas lors de la campagne J7-ter
+originale (poste Kali sans NTP actif, ~38 min de décalage mesurés par
+moments, voir docs/evidence/j7-ter/README.md § « Correction majeure »).
+Dans ces conditions, ce module a produit de fausses "pertes d'alertes"
+pour WhiteRabbitNeo-2-8B/Foundation-Sec-8B-Instruct (chiffres non
+confirmés, jamais validés par une méthode fiable) — et aurait tout aussi
+bien pu en masquer ou en inventer d'autres.
+
+AVANT toute utilisation : vérifier le décalage d'horloge avec
+``run_j7_campaign.check_clock_skew()`` (ajouté précisément pour ça) — un
+décalage significatif invalide tout résultat produit ici. Pour un
+diagnostic fiable indépendamment de l'horloge, préférer
+``nzoyi.agents.evaluation.EvaluationAgent``/``SuricataLogReader.last_debug``
+(champ ``eval_debug`` du PTT, positions de curseur/octet — immunisées par
+construction à tout décalage d'horloge entre les machines).
+
 Contexte du bug corrigé ICI (en post-traitement, jamais en direct) :
 ``EvaluationAgent.run()`` lit Suricata puis appelle
 ``EvaluationRationaleLLM`` (latence 3-95s selon le backend) avant de
@@ -21,6 +44,7 @@ causalement, par horodatage Suricata (pas par ordre d'arrivée locale).
 from __future__ import annotations
 
 import json
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -141,6 +165,15 @@ def reconcile(
     ``detected`` recombiné comme le fait ``EvaluationAgent.run()``
     (``suricata_detected or rf_detected``).
     """
+    warnings.warn(
+        "ids_reconciliation.reconcile() compare un horodatage EMBARQUÉ "
+        "(horloge de la machine qui a généré l'alerte) à des fenêtres "
+        "construites sur l'horloge LOCALE (PTT) — résultat invalide si les "
+        "deux horloges ne sont pas synchronisées (vérifier au préalable "
+        "avec run_j7_campaign.check_clock_skew()). Voir le bandeau "
+        "d'avertissement en tête de ce module pour le contexte (J7-ter).",
+        stacklevel=2,
+    )
     feedback_nodes = load_ids_feedback(ptt_path)
     alerts = load_security_alerts(mirror_path, attacker_ip, target_ip)
     timestamps = [_parse_ts(n["timestamp"]) for n in feedback_nodes]
