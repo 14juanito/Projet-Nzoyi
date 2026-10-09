@@ -105,6 +105,21 @@ def test_qlearning_update() -> bool:
     )
 
 
+def test_evasion_state_as_key_includes_target_signature() -> bool:
+    """Garde-fou J7 : as_key() doit inclure target_signature (4-uplet), pas
+    seulement (timing, delay_bucket, fragment) — sinon le Q-learning ne
+    distingue plus les contextes de cible, même si la seed diverge bien."""
+    state_a = EvasionState(timing=2, delay_bucket=1, fragment=0, target_signature=111)
+    state_b = EvasionState(timing=2, delay_bucket=1, fragment=0, target_signature=222)
+    key_a, key_b = state_a.as_key(), state_b.as_key()
+    return (
+        len(key_a) == 4
+        and key_a[3] == 111
+        and key_b[3] == 222
+        and key_a != key_b
+    )
+
+
 def test_stealth_profile() -> bool:
     profile = load_profile("stealth")
     return (
@@ -1674,6 +1689,7 @@ def run_all_tests() -> dict[str, bool]:
         "Suricata timestamp +0000": test_suricata_parses_plus0000_timestamp(),
         "Suricata ignore bruit décodeur": test_suricata_ignores_decoder_noise(),
         "Q-Learning epsilon decay": test_qlearning_convergence(),
+        "Q-Learning — as_key() inclut target_signature (J7)": test_evasion_state_as_key_includes_target_signature(),
         "Q-Learning save/load": test_qlearning_save_load(),
         "PTT thread safety": test_ptt_thread_safety(),
         "Recon agent — scan réel (mocké)": test_recon_agent_real_scan(),

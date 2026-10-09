@@ -15,9 +15,16 @@ class EvasionState:
     timing: int
     delay_bucket: int
     fragment: int
+    #: Signature dérivée de l'ORDRE de priorisation des ports/CVE transmis
+    #: par le plan stratégique (0 = pas de plan / LLM désactivé). Permet au
+    #: Q-learning de distinguer deux contextes de cible différents dans sa
+    #: représentation d'état — n'affecte QUE la clé de hachage (via
+    #: ``as_key()``) : choose_action()/update() (formule Q-learning) restent
+    #: inchangés, ils continuent d'opérer génériquement sur l'état fourni.
+    target_signature: int = 0
 
     def as_key(self) -> Hashable:
-        return (self.timing, self.delay_bucket, self.fragment)
+        return (self.timing, self.delay_bucket, self.fragment, self.target_signature)
 
 
 @dataclass
@@ -90,7 +97,16 @@ class EvasionQLearner:
         fragment = state.fragment
         if action.toggle_fragment:
             fragment = 1 - fragment
-        return EvasionState(timing=timing, delay_bucket=delay_bucket, fragment=fragment)
+        # target_signature n'est jamais modifié par une action d'évasion —
+        # c'est une propriété du contexte de cible (plan stratégique), pas
+        # de la transition RL. Il doit juste survivre d'un état à l'autre,
+        # sinon il repartirait à 0 à chaque transition.
+        return EvasionState(
+            timing=timing,
+            delay_bucket=delay_bucket,
+            fragment=fragment,
+            target_signature=state.target_signature,
+        )
 
     @property
     def iterations(self) -> int:

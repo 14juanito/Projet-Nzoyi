@@ -540,6 +540,24 @@ class LearningRunner:
             )
             live.start()
 
+        # Couche stratégique LLM — jusqu'à ce correctif (diagnostic J7),
+        # LearningRunner ne l'appelait JAMAIS, contrairement à
+        # OrchestratorAgent.run()/.learn()/.finetune_online() : le plan
+        # stratégique (triage CVE, priorisation de ports) n'avait donc aucun
+        # effet sur la campagne, ni sur AttackAgent.target_ports/focus_services
+        # ni (transitivement) sur EvasionAgent — voir _apply_plan().
+        #
+        # `--profile` reste l'autorité de CE runner : on gèle explicitement
+        # le profil choisi en CLI après chaque appel stratégique, pour que
+        # le LLM puisse influencer target_ports/focus_services (et donc
+        # EvasionAgent.target_signature) SANS jamais pouvoir remplacer en
+        # silence le profil d'attaque demandé par l'opérateur — un second
+        # facteur de variance non contrôlé que l'on ne veut pas introduire
+        # dans un comparatif inter-backends (J7).
+        frozen_profile = orchestrator.profile
+        orchestrator._strategic_plan()
+        orchestrator._apply_profile(frozen_profile)
+
         # Run recon/enum/vuln once.
         for agent in orchestrator.pipeline[:3]:
             live.push_agent_event(agent.name, "running")
@@ -571,6 +589,22 @@ class LearningRunner:
             )
             orchestrator._write_ptt_state()
             return {"convergence": [], "final_detection_rate": 0.0, "aborted": True}
+
+        # Replan stratégique UNE fois, PTT maintenant enrichi par
+        # recon/enum/vuln (ports réels, CVE corrélées) — c'est cet appel qui
+        # peuple réellement AttackAgent.target_ports/focus_services ET
+        # EvasionAgent.target_ports via _apply_plan(). `plan["lancer_boucle_
+        # evasion"]` est DÉLIBÉRÉMENT ignoré ici : `cycles` reste la seule
+        # autorité de ce runner (contrat déjà documenté par
+        # OrchestratorAgent.learning_loop() pour l'argument `cycles`) — un
+        # plan qui déciderait de ne pas lancer l'évasion ne doit jamais
+        # produire une campagne à 0 cycle non sollicitée par l'opérateur,
+        # surtout pour un harness de comparatif (J7) qui exige un nombre de
+        # cycles fixe et identique par backend.
+        replan = orchestrator._strategic_replan()
+        orchestrator._apply_profile(frozen_profile)
+        orchestrator.ptt.add(orchestrator.name, "llm_decision", replan, allow_duplicate=True)
+        orchestrator._apply_plan(replan)
 
         ports = [p["port"] for p in orchestrator.ptt.get_recon_results()]
         vulns = len(orchestrator.ptt.get_vulnerabilities())

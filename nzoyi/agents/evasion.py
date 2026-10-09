@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import random
+import zlib
 from typing import Any
 
 from nzoyi.agents.base import BaseAgent
@@ -28,6 +29,12 @@ class EvasionAgent(BaseAgent):
         super().__init__(ptt, profile)
         self.learner = learner or EvasionQLearner()
         self.oracle = oracle if oracle is not None else self._load_oracle()
+        # Ordre de priorisation des ports/CVE issu du plan stratégique LLM
+        # (fixé par OrchestratorAgent._apply_plan() — voir orchestrator.py).
+        # None/vide quand aucun plan n'a encore été appliqué (LLM désactivé,
+        # ou runner qui n'appelle pas la couche stratégique) : le
+        # comportement reste alors identique à avant ce correctif.
+        self.target_ports: list[int] | None = None
         # RL bookkeeping for a single transition s --a--> s':
         #   _last_prev_state  = s   (state the agent acted from)
         #   _last_action      = a   (action chosen in s)
@@ -53,16 +60,39 @@ class EvasionAgent(BaseAgent):
             )
             return None
 
+    def _target_signature(self) -> int:
+        """Signature stable dérivée de l'ORDRE de self.target_ports.
+
+        Volontairement basée sur l'ordre (pas sur le simple nombre de ports,
+        ni sur leur ensemble non ordonné) : J7 a confirmé que chaque modèle
+        du panel LLM réordonne différemment les mêmes CVE au triage — c'est
+        cette variance d'ordre, pas le compte de ports, qui doit se
+        répercuter jusqu'ici. ``0`` quand aucun plan n'a encore été appliqué
+        (``target_ports`` vide/``None``), pour un comportement inchangé par
+        rapport à avant ce correctif.
+        """
+        if not self.target_ports:
+            return 0
+        ordered = ",".join(str(p) for p in self.target_ports)
+        return zlib.crc32(ordered.encode("utf-8"))
+
     def _initial_state(self) -> EvasionState:
         timing_map = {"T2": 2, "T3": 3, "T4": 4}
         return EvasionState(
             timing=timing_map.get(self.profile.nmap_timing, 3),
             delay_bucket=min(5, self.profile.scan_delay_ms // 100),
             fragment=int(self.profile.packet_fragment),
+            target_signature=self._target_signature(),
         )
 
     def run(self, dry_run: bool = False, detected: bool | None = None) -> dict[str, Any]:
-        rng = random.Random(42 + self.learner.iterations)
+        # La seed reste déterministe pour la reproductibilité scientifique
+        # (même plan + même cycle ⇒ même tirage, toujours rejouable) mais
+        # dépend désormais du plan stratégique (target_signature) — avant ce
+        # correctif, elle ne dépendait que du numéro de cycle
+        # (self.learner.iterations), ce qui garantissait un trafic identique
+        # quel que soit le panel LLM testé (voir diagnostic J7).
+        rng = random.Random(42 + self.learner.iterations + self._target_signature())
         state = self._initial_state()
         if self._last_state is not None:
             state = self._last_state

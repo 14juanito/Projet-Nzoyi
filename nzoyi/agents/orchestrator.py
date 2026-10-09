@@ -160,9 +160,17 @@ class OrchestratorAgent(BaseAgent):
         classement, ainsi que ``services_focus``, à :class:`AttackAgent` via
         les attributs ``target_ports``/``focus_services`` — c'est
         :meth:`AttackAgent.run` qui applique concrètement ce filtrage/tri.
+
+        Transmet aussi l'ordre de ``ports_cibles`` à :class:`EvasionAgent`
+        (``self.evasion.target_ports``) : jusqu'à ce correctif (diagnostic
+        J7), le plan stratégique n'avait AUCUN effet sur le Q-learning —
+        ``EvasionAgent`` ne lisait jamais aucune donnée issue de la couche
+        stratégique, et son état/sa seed ne dépendaient que du profil et du
+        numéro de cycle. Voir :meth:`EvasionAgent._target_signature`.
         """
         self.attack.target_ports = list(plan.get("ports_cibles", []))
         self.attack.focus_services = list(plan.get("services_focus", []))
+        self.evasion.target_ports = list(plan.get("ports_cibles", []))
 
     def _strategic_plan(self) -> dict[str, Any]:
         """Exécute la couche stratégique LLM UNE fois (jamais dans la boucle RL).
@@ -453,6 +461,17 @@ class OrchestratorAgent(BaseAgent):
         Returns:
             A dict with convergence data, output paths and the sim-to-real gap
             (online final detection rate minus offline final detection rate).
+
+        Note:
+            ``warm_qtable`` sauvegardé AVANT l'ajout de ``target_signature``
+            à :class:`~nzoyi.rl.qlearning.EvasionState` (diagnostic J7)
+            reste chargeable sans plantage — ses clés sont des chaînes à
+            3-uplet (``"(t, d, f):action"``), simplement jamais retrouvées
+            par les nouveaux lookups qui utilisent des clés à 4-uplet
+            (``"(t, d, f, sig):action"``). Son contenu appris devient donc
+            silencieusement mort (jamais relu) après ce correctif — il faut
+            régénérer le pré-entraînement offline (:mod:`nzoyi.training.offline`)
+            pour retrouver un warm-start réellement exploité.
         """
         self._strategic_plan()
 
