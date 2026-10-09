@@ -133,6 +133,27 @@ général au formatage de sortie du modèle, pas spécifique à un prompt).
 
 ### Run #2bis (2026-10-09, 18:48 UTC+1) — Claude ajouté (`ANTHROPIC_API_KEY` créditée)
 
+**Statut de Claude dans ce run — clarifié, sans ambiguïté** : il s'agit
+d'un changement de décision explicite de l'utilisateur entre deux étapes
+de la même session, **pas** d'un résidu de configuration. Chronologie
+exacte (horodatages serveur, fuseau du poste = UTC+1) :
+
+| Horodatage | Événement |
+|---|---|
+| 16:13 | `smoke_test_run2.json` écrit — 5 backends locaux uniquement, Claude pas encore tenté. |
+| 16:22 (commit `aac8d6c`) | Run #2 figé, Claude **explicitement marqué `absent`** (« pas de crédits ») dans `results/j7_llm_panel_comparison.*` et le README. |
+| 18:41 (commit `d09d00e`) | Documentation de la limitation `attack_priority` finalisée — Claude toujours `absent` à ce stade. |
+| *(entre les deux)* | L'utilisateur fournit un message explicite : *« Voici aussi l'api de claude et j'ai acheter les credit »* + la clé `sk-ant-usr-177p3U...`. |
+| 18:45 | `.env` modifié : `ANTHROPIC_API_KEY` renseignée (mtime fichier confirmé). |
+| 18:48:43 | `smoke_test_claude.json` écrit (OK, après le fix SDK ci-dessous). |
+| 18:48:51–18:49:41 | Campagne réelle Claude (8 cycles), horodatages PTT `docs/evidence/j7/ptt/claude.ptt.json`. |
+| 18:52 (commit `a647ae1`) | Résultat fusionné dans les rapports, README mis à jour. |
+
+La décision « absent » du Run #2 (16:22) précède donc de plus de 2h
+l'ajout de la clé créditée (18:45) — ce n'est ni une clé restée active par
+erreur, ni une campagne relancée sans autorisation : c'est une suite
+logique et demandée explicitement une fois les crédits achetés.
+
 Clé Anthropic réelle fournie par l'utilisateur après achat de crédits,
 renseignée dans `.env` (gitignored, jamais committée). Premier smoke test
 en **échec instantané** (`call_or_parse_failed`, latence `0.001s` — avant
@@ -208,6 +229,81 @@ l'opérateur avant implémentation :
 Ce fichier n'a pas été modifié : `nzoyi/agents/evasion.py` et
 `nzoyi/rl/qlearning.py` restent hors de portée, et aucune campagne n'a été
 relancée pour cette tâche.
+
+### Analyse de la clusterisation 12.5% (lecture seule des PTT, aucun nouveau run)
+
+4 backends indépendants (`claude`, `WhiteRabbitNeo-2.5-Qwen-7B`,
+`Dolphin3.0-8B`, `Lily-Cybersecurity-7B`) terminent à la même valeur
+12.5% (1 détection/8). Inspection des nœuds `ids_feedback` (détection réelle
+Suricata/RF par cycle) et `evasion_step` (action Q-Learning par cycle) des
+6 PTT (`docs/evidence/j7/ptt/*.ptt.json`) :
+
+**Numéro de cycle détecté, par run** :
+
+| Backend | Cycle détecté (1–8) | Signature |
+|---|---|---|
+| claude | **2** | `ET SCAN Potential SSH Scan` |
+| WhiteRabbitNeo-2.5-Qwen-7B | **1** | `ET SCAN Potential SSH Scan` |
+| Dolphin3.0-8B | **6** | `ET SCAN Potential SSH Scan` |
+| Lily-Cybersecurity-7B | **6** | `ET SCAN Potential SSH Scan` |
+| WhiteRabbitNeo-2-8B | *aucun* (0/8) | — |
+| Foundation-Sec-8B-Instruct | *aucun* (0/8) | — |
+
+→ **3 cycles différents parmi les 4** (2, 1, 6, 6) : pas le même cycle pour
+tous, mais Dolphin3.0 et Lily-Cybersecurity coïncident exactement sur le
+cycle 6. Sur un échantillon de 8 cycles et 4 runs indépendants, un
+chevauchement partiel comme celui-ci reste compatible avec une
+coïncidence statistique (petit échantillon) — mais la vérification des
+actions ci-dessous apporte un résultat plus net que la seule coïncidence
+de cycle.
+
+**Comparaison des actions `evasion_step`, cycle par cycle** : la séquence
+complète des 8 actions (`action`, `state`, `next_state`) est **strictement
+identique, octet pour octet, pour les 6 backends** — y compris les deux à
+0% :
+
+```
+cycle 1: slow_down  [2,5,1] → [1,5,1]
+cycle 2: speed_up   [1,5,1] → [2,4,1]
+cycle 3: slow_down  [2,4,1] → [1,5,1]
+cycle 4: slow_down  [1,5,1] → [0,5,1]
+cycle 5: slow_down  [0,5,1] → [0,5,1]
+cycle 6: speed_up   [0,5,1] → [1,4,1]
+cycle 7: slow_down  [1,4,1] → [0,5,1]
+cycle 8: hold       [0,5,1] → [0,5,1]
+```
+
+Cause : `EvasionAgent.run()` (`nzoyi/agents/evasion.py:65`) tire son action
+avec `random.Random(42 + self.learner.iterations)` — un RNG **seedé de
+façon déterministe**, indépendant de tout contenu LLM, et la Q-table
+démarre identique à chaque run (nouvel `OrchestratorAgent`/`EvasionAgent`
+par backend). Combiné à la limitation déjà documentée (`target_ports`
+jamais peuplé, donc aucun paramètre issu du LLM n'atteint `AttackAgent`),
+**le stimulus réseau envoyé à la cible est rigoureusement identique quel
+que soit le panel LLM testé** — triage et rationale n'influencent ni
+`EvasionAgent` ni `AttackAgent` dans cette campagne.
+
+**Conclusion — hypothèse confirmée, et renforcée** : le résultat de
+détection (quel cycle déclenche une alerte Suricata, voire aucun) dépend
+exclusivement d'un effet **structurel** (`EvasionAgent`/`AttackAgent`,
+partagés et déterministes), jamais du panel LLM lui-même. La variance
+observée entre backends sur *quel* cycle déclenche l'alerte (2, 1, 6, 6, ou
+aucun) provient du comportement réel, non déterministe, de la cible/IDS
+(Suricata) face à un trafic réseau réel — pas d'une différence de décision
+stratégique entre modèles, puisqu'aucune décision stratégique n'atteint
+jamais le stimulus réseau dans cette campagne. Piste plausible (non
+vérifiée ici, hors périmètre lecture-seule) : les durées de campagne
+diffèrent radicalement entre backends (57.7s pour claude vs 295–809s en
+local), ce qui change l'espacement temporel réel entre les 8 cycles de
+scan — un facteur qui peut influencer des règles Suricata sensibles à des
+fenêtres temporelles (ex. seuils de connexions par intervalle), sans que
+cela ait de rapport avec la qualité du LLM.
+
+**Vérification des 2 runs à 0%** (WhiteRabbitNeo-2-8B,
+Foundation-Sec-8B-Instruct) : les 8 nœuds `ids_feedback` de chaque run
+confirment `detected: false`, `alert_count: 0`, `signatures: []` sur
+l'intégralité des 8 cycles, sans exception — aucune anomalie de logging,
+le 0.0% rapporté est cohérent avec l'évidence PTT complète.
 
 ---
 
