@@ -1,0 +1,8 @@
+{
+  "label": "ollama:hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M",
+  "provider": "openai_compatible",
+  "model": "hf.co/mradermacher/Llama-3.1-WhiteRabbitNeo-2-8B-GGUF:Q5_K_M",
+  "ok": false,
+  "latency_s": 96.92,
+  "fallback_reason": "call_or_parse_failed"
+}
